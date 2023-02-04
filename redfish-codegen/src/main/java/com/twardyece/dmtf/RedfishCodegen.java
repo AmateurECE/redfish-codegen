@@ -62,6 +62,10 @@ public class RedfishCodegen {
                 System.out.println("[WARN] no handler matched model " + schema.getValue().getName());
             }
         }
+
+        for (ModuleFile module : modules.values()) {
+            module.generate();
+        }
     }
 
     public void generateApis() {

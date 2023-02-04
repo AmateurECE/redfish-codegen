@@ -21,17 +21,20 @@ public class ModelFile {
         for (String component : this.module) {
             if (!"".equals(path)) {
                 modules.get(path).addSubmodule(component);
+            } else {
+                path = "src/" + RustConfig.MODELS_BASE_MODULE;
             }
 
-            path += component;
+            path += "/" + component;
             if (!modules.containsKey(path)) {
-                modules.put(component, new ModuleFile(path));
+                modules.put(path, new ModuleFile(path + RustConfig.FILE_EXTENSION));
             }
         }
     }
 
     public void generate() throws IOException {
-        String path = String.join("/", this.module) + "/" + this.schema.getName();
+        String path = "src/" + RustConfig.MODELS_BASE_MODULE + "/" + String.join("/", this.module) + "/"
+                + this.schema.getName() + RustConfig.FILE_EXTENSION;
         File modelFile = new File(path);
         File parent = modelFile.getParentFile();
         if (!parent.exists()) {

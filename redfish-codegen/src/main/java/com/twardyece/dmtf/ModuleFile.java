@@ -6,7 +6,6 @@ import java.util.ArrayList;
 
 public class ModuleFile {
     private String path;
-
     private ArrayList<String> submodules;
 
     public ModuleFile(String path) {
