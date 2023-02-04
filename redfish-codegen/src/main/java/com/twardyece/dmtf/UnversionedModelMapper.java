@@ -5,24 +5,23 @@ import io.swagger.v3.oas.models.media.Schema;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-public class SimpleModelMapper implements IModelFileMapper {
-    Pattern pattern;
-    String module;
+public class UnversionedModelMapper implements IModelFileMapper {
+    // The redfish document consistently names models of the form Module_vXX_XX_XX_Model
+    private Pattern pattern;
 
-    public SimpleModelMapper(Pattern regex, String module) {
-        this.pattern = regex;
-        this.module = module;
+    public UnversionedModelMapper() {
+        this.pattern = Pattern.compile("(?<module>[a-zA-z0-9]*)_(?<model>[a-zA-Z0-9]+)");
     }
 
     @Override
     public ModelFile matches(Schema model) {
-        Matcher matcher = this.pattern.matcher(model.getName());
+        Matcher matcher = pattern.matcher(model.getName());
         if (!matcher.find()) {
             return null;
         }
 
         String[] module = new String[1];
-        module[0] = this.module;
+        module[0] = matcher.group("module");
 
         model.setName(matcher.group("model"));
         return new ModelFile(module, model);

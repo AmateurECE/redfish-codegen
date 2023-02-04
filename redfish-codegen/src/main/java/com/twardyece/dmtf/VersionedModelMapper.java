@@ -5,11 +5,11 @@ import io.swagger.v3.oas.models.media.Schema;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-public class RedfishModelMapper implements IModelFileMapper {
+public class VersionedModelMapper implements IModelFileMapper {
     // The redfish document consistently names models of the form Module_vXX_XX_XX_Model
     private Pattern pattern;
 
-    public RedfishModelMapper() {
+    public VersionedModelMapper() {
         this.pattern = Pattern.compile("(?<module>[a-zA-z0-9]*)_(?<version>v[0-9]+_[0-9]+_[0-9]+)_(?<model>[a-zA-Z0-9]+)");
     }
 

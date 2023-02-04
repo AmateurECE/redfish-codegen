@@ -1,20 +1,14 @@
 package com.twardyece.dmtf;
 
-import com.github.fge.jsonschema.core.exceptions.InvalidSchemaException;
 import io.swagger.v3.parser.core.models.ParseOptions;
 import io.swagger.v3.oas.models.OpenAPI;
 import io.swagger.v3.oas.models.media.Schema;
 import io.swagger.v3.parser.OpenAPIV3Parser;
 import org.apache.commons.cli.*;
 
-import java.io.File;
 import java.io.IOException;
-import java.security.InvalidParameterException;
-import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Map;
-import java.util.Set;
-import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 /**
@@ -33,8 +27,11 @@ public class RedfishCodegen {
         this.apiDirectory = apiDirectory;
         this.crateDirectory = crateDirectory;
 
-        this.mappers = new IModelFileMapper[1];
-        this.mappers[0] = new RedfishModelMapper();
+        this.mappers = new IModelFileMapper[4];
+        this.mappers[0] = new VersionedModelMapper();
+        this.mappers[1] = new SimpleModelMapper(Pattern.compile("Redfish(?<model>[a-zA-Z0-9]*)"), "redfish");
+        this.mappers[2] = new SimpleModelMapper(Pattern.compile("odata-v4_(?<model>[a-zA-Z0-9]*)"), "odata_v4");
+        this.mappers[3] = new UnversionedModelMapper();
 
         ParseOptions parseOptions = new ParseOptions();
         parseOptions.setResolve(true);
