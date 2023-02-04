@@ -25,65 +25,41 @@ public class RedfishCodegen {
     private String apiDirectory;
     private String crateDirectory;
 
+    private IModelFileMapper[] mappers;
+
     private OpenAPI document;
 
     RedfishCodegen(String apiDirectory, String crateDirectory) {
         this.apiDirectory = apiDirectory;
         this.crateDirectory = crateDirectory;
 
+        this.mappers = new IModelFileMapper[1];
+        this.mappers[0] = new RedfishModelMapper();
 
         ParseOptions parseOptions = new ParseOptions();
         parseOptions.setResolve(true);
-//        parseOptions.setResolveFully(true);
-//        parseOptions.setLegacyYamlDeserialization(true);
         this.document = new OpenAPIV3Parser().read(this.apiDirectory + "/openapi.yaml", null, parseOptions);
         if (null == this.document) {
             throw new RuntimeException("Couldn't parse " + this.apiDirectory + "/openapi.yaml");
         }
     }
 
-    private void generateModel(Schema schema, String module) throws IOException {
-        // TODO: Render the template!
-        File modelFile = new File(this.crateDirectory + "/src/models/" + module + "/" + schema.getName() + ".rs");
-        modelFile.createNewFile();
-    }
-
-    private void generateModelModuleFile(String moduleName, Set<String> versions) throws IOException {
-        // TODO: Render the template!
-        File moduleFile = new File(this.crateDirectory + "/src/models/" + moduleName + ".rs");
-        moduleFile.createNewFile();
-    }
-
-    private void generateModelVersionFile(String version, ArrayList<String> models, String module) throws IOException {
-        // TODO: Render the template!
-        File versionFile = new File(this.crateDirectory + "/src/models" + module + "/" + version + ".rs");
-        versionFile.createNewFile();
-    }
-
     public void generateModels() throws IOException {
-        HashMap<String, HashMap<String, ArrayList<String>>> modules = new HashMap<>();
+        HashMap<String, ModuleFile> modules = new HashMap<>();
         for (Map.Entry<String, Schema> schema : this.document.getComponents().getSchemas().entrySet()) {
-            // The redfish document consistently names models of the form Module_vXX_XX_XX_Model
-            Pattern pattern = Pattern.compile("(?<module>[a-zA-z0-9]*)_(?<version>v[0-9]+_[0-9]+_[0-9]+)_(?<model>[a-zA-Z0-9]+)");
-            Matcher matcher = pattern.matcher(schema.getKey());
-            if (!matcher.find()) {
-                throw new InvalidParameterException("Schema name " + schema.getKey() + " does not match expected format!");
+            schema.getValue().setName(schema.getKey());
+            boolean handled = false;
+            for (IModelFileMapper mapper : this.mappers) {
+                ModelFile modelFile = mapper.matches(schema.getValue());
+                if (null != modelFile) {
+                    handled = true;
+                    modelFile.registerModel(modules);
+                    modelFile.generate();
+                }
             }
 
-            // The actual name of the model is the suffix
-            schema.getValue().setName(matcher.group("model"));
-
-            // Add the model name and version to the collection for this module.
-            ((ArrayList<String>) modules.getOrDefault(matcher.group("module"), new HashMap())
-                    .getOrDefault(matcher.group("version"), new ArrayList())).add(matcher.group("model"));
-
-            generateModel(schema.getValue(), matcher.group("module") + "/" + matcher.group("version"));
-        }
-
-        for (Map.Entry<String, HashMap<String, ArrayList<String>>> module : modules.entrySet()) {
-            generateModelModuleFile(module.getKey(), module.getValue().keySet());
-            for (Map.Entry<String, ArrayList<String>> versions : module.getValue().entrySet()) {
-                generateModelVersionFile(versions.getKey(), versions.getValue(), module.getKey());
+            if (!handled) {
+                System.out.println("[WARN] no handler matched model " + schema.getValue().getName());
             }
         }
     }
