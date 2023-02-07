@@ -19,7 +19,14 @@ public class SnakeCaseName implements ICaseConvertible {
         this.words = new ArrayList<>();
         Matcher matcher = snakeCase.matcher(name);
         while (matcher.find()) {
+            if (null == matcher.group(1)) {
+                throw new CaseConversionError("snake_case", name);
+            }
             this.words.add(new Word(matcher.group(1)));
+        }
+
+        if (this.words.size() == 0 && !"".equals(name)) {
+            throw new CaseConversionError("snake_case", name);
         }
     }
 

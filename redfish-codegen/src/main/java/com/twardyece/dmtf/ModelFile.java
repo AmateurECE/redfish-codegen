@@ -15,6 +15,9 @@ public class ModelFile {
     public ModelFile(SnakeCaseName[] module, Schema schema) {
         this.schema = schema;
         this.module = module;
+
+        // Ensure that the model name is PascalCase'd
+        schema.setName(CaseConversion.toPascalCase(schema.getName()).toString());
     }
 
     public void registerModel(Map<String, ModuleFile> modules) {
@@ -38,8 +41,14 @@ public class ModelFile {
         for (SnakeCaseName component : this.module) {
             module.add(component.toString());
         }
+
+        SnakeCaseName modelName = new SnakeCaseName(new PascalCasedName(this.schema.getName()));
+        if ("".equals(modelName.toString())) {
+            System.out.println("[WARN] modelName is empty for model " + this.schema.getName());
+        }
         String path = "src/" + RustConfig.MODELS_BASE_MODULE + "/" + String.join("/", module) + "/"
-                + this.schema.getName() + RustConfig.FILE_EXTENSION;
+                + modelName.toString() + RustConfig.FILE_EXTENSION;
+
         File modelFile = new File(path);
         File parent = modelFile.getParentFile();
         if (!parent.exists()) {
