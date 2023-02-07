@@ -8,8 +8,7 @@ import java.util.regex.Pattern;
 public class SnakeCaseName implements ICaseConvertible {
     private ArrayList<IWord> words;
 
-    private static final Pattern snakeCase = Pattern.compile("([a-z0-9]*?)_([a-z0-9])");
-    private static final Pattern isUpperCase = Pattern.compile("[A-Z0-9]*");
+    private static final Pattern snakeCase = Pattern.compile("([a-z0-9]+)");
 
     public SnakeCaseName(ICaseConvertible originalCase) {
         this.words = new ArrayList<>();
@@ -20,13 +19,7 @@ public class SnakeCaseName implements ICaseConvertible {
         this.words = new ArrayList<>();
         Matcher matcher = snakeCase.matcher(name);
         while (matcher.find()) {
-            String word = matcher.group(1);
-            Matcher upperCase = isUpperCase.matcher(word);
-            if (upperCase.find()) {
-                this.words.add(new Abbreviation(word));
-            } else {
-                this.words.add(new Word(word));
-            }
+            this.words.add(new Word(matcher.group(1)));
         }
     }
 

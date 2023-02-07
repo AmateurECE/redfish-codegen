@@ -22,7 +22,7 @@ public class VersionedModelMapper implements IModelFileMapper {
 
         SnakeCaseName[] module = new SnakeCaseName[2];
         module[0] = new SnakeCaseName(new PascalCasedName(matcher.group("module")));
-        module[1] = new SnakeCaseName(new PascalCasedName(matcher.group("version")));
+        module[1] = new SnakeCaseName(matcher.group("version"));
 
         model.setName(matcher.group("model"));
         return new ModelFile(module, model);
