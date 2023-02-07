@@ -5,7 +5,7 @@ import java.util.Collection;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-public class SnakeCaseName implements ICaseConvertible {
+public class SnakeCaseName implements ICaseConvertible, Comparable<SnakeCaseName> {
     private ArrayList<IWord> words;
 
     private static final Pattern snakeCase = Pattern.compile("([a-z0-9]+)");
@@ -43,5 +43,19 @@ public class SnakeCaseName implements ICaseConvertible {
         }
 
         return String.join("_", words);
+    }
+
+    @Override
+    public int compareTo(SnakeCaseName o) {
+        return this.toString().compareTo(o.toString());
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (o instanceof SnakeCaseName) {
+            return this.toString().equals(o.toString());
+        } else {
+            return false;
+        }
     }
 }

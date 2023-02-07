@@ -14,14 +14,14 @@ import java.util.ArrayList;
 import java.util.Map;
 
 public class ModelFile {
-    private Schema schema;
     private SnakeCaseName[] module;
     private Mustache template;
+    private SnakeCaseName modelModule;
     private String path;
     private String basePath;
+    private ModelContext context;
 
     public ModelFile(SnakeCaseName[] module, Schema schema, Mustache template, String modelsBasePath) {
-        this.schema = schema;
         this.module = module;
         this.template = template;
 
@@ -33,30 +33,34 @@ public class ModelFile {
             moduleAsString.add(component.toString());
         }
 
-        SnakeCaseName modelName = new SnakeCaseName(new PascalCasedName(this.schema.getName()));
-        if ("".equals(modelName.toString())) {
-            System.out.println("[WARN] modelName is empty for model " + this.schema.getName());
+        this.modelModule = new SnakeCaseName(new PascalCasedName(schema.getName()));
+        if ("".equals(modelModule.toString())) {
+            System.out.println("[WARN] modelName is empty for model " + schema.getName());
         }
 
-        this.path = modelsBasePath + "/" + String.join("/", moduleAsString) + "/" + modelName.toString()
+        this.path = modelsBasePath + "/" + String.join("/", moduleAsString) + "/" + modelModule.toString()
                 + RustConfig.FILE_EXTENSION;
         this.basePath = modelsBasePath;
+        this.context = new ModelContext(schema);
     }
 
     public void registerModel(Map<String, ModuleFile> modules, FileFactory factory) {
-        String path = "";
+        String path = this.basePath;
         for (SnakeCaseName component : this.module) {
-            if (!"".equals(path)) {
-                modules.get(path).addSubmodule(component);
-            } else {
-                path = this.basePath;
-            }
-
-            path += "/" + component;
             if (!modules.containsKey(path)) {
                 modules.put(path, factory.makeModuleFile(path + RustConfig.FILE_EXTENSION));
             }
+
+            modules.get(path).addSubmodule(component);
+            path += "/" + component;
         }
+
+        // Can't forget to add this model as a module!
+        if (!modules.containsKey(path)) {
+            modules.put(path, factory.makeModuleFile(path + RustConfig.FILE_EXTENSION));
+        }
+
+        modules.get(path).addSubmodule(this.modelModule);
     }
 
     public void generate() throws IOException {
@@ -70,7 +74,7 @@ public class ModelFile {
         // Render the template
         Writer writer = new PrintWriter(modelFile);
         // TODO: Convert schema to ModelContext
-        this.template.execute(writer, this);
+        this.template.execute(writer, this.context);
         writer.flush();
     }
 }

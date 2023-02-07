@@ -1,11 +1,15 @@
 package com.twardyece.dmtf;
 
+import com.fasterxml.jackson.databind.Module;
 import com.github.mustachejava.Mustache;
 import com.twardyece.dmtf.text.SnakeCaseName;
 
 import java.io.File;
 import java.io.IOException;
+import java.io.PrintWriter;
+import java.io.Writer;
 import java.util.ArrayList;
+import java.util.stream.Collectors;
 
 public class ModuleFile {
     private String path;
@@ -23,8 +27,19 @@ public class ModuleFile {
     }
 
     public void generate() throws IOException {
-        // TODO: Render the template!
-        File versionFile = new File(this.path);
-        versionFile.createNewFile();
+        File moduleFile = new File(this.path);
+        File parent = moduleFile.getParentFile();
+        if (!parent.exists()) {
+            parent.mkdirs();
+        }
+        moduleFile.createNewFile();
+
+        // Construct context
+        ModuleContext context = new ModuleContext(this.submodules.stream().sorted().distinct().collect(Collectors.toList()));
+
+        // Render the template
+        Writer writer = new PrintWriter(moduleFile);
+        this.template.execute(writer, context);
+        writer.flush();
     }
 }
