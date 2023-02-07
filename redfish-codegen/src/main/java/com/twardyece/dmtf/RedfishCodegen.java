@@ -1,5 +1,6 @@
 package com.twardyece.dmtf;
 
+import com.github.mustachejava.DefaultMustacheFactory;
 import io.swagger.v3.parser.core.models.ParseOptions;
 import io.swagger.v3.oas.models.OpenAPI;
 import io.swagger.v3.oas.models.media.Schema;
@@ -23,15 +24,19 @@ public class RedfishCodegen {
 
     private OpenAPI document;
 
+    private FileFactory fileFactory;
+
     RedfishCodegen(String apiDirectory, String crateDirectory) {
         this.apiDirectory = apiDirectory;
         this.crateDirectory = crateDirectory;
+        this.fileFactory = new FileFactory(new DefaultMustacheFactory(), this.crateDirectory,
+                "src/" + RustConfig.MODELS_BASE_MODULE);
 
         this.mappers = new IModelFileMapper[4];
-        this.mappers[0] = new VersionedModelMapper();
-        this.mappers[1] = new SimpleModelMapper(Pattern.compile("Redfish(?<model>[a-zA-Z0-9]*)"), new SnakeCaseName("redfish"));
-        this.mappers[2] = new SimpleModelMapper(Pattern.compile("odata-v4_(?<model>[a-zA-Z0-9]*)"), new SnakeCaseName("odata_v4"));
-        this.mappers[3] = new UnversionedModelMapper();
+        this.mappers[0] = new VersionedModelMapper(this.fileFactory);
+        this.mappers[1] = new SimpleModelMapper(Pattern.compile("Redfish(?<model>[a-zA-Z0-9]*)"), new SnakeCaseName("redfish"), this.fileFactory);
+        this.mappers[2] = new SimpleModelMapper(Pattern.compile("odata-v4_(?<model>[a-zA-Z0-9]*)"), new SnakeCaseName("odata_v4"), this.fileFactory);
+        this.mappers[3] = new UnversionedModelMapper(this.fileFactory);
 
         ParseOptions parseOptions = new ParseOptions();
         parseOptions.setResolve(true);
@@ -50,7 +55,7 @@ public class RedfishCodegen {
                 ModelFile modelFile = mapper.matches(schema.getValue());
                 if (null != modelFile) {
                     handled = true;
-                    modelFile.registerModel(modules);
+                    modelFile.registerModel(modules, this.fileFactory);
                     modelFile.generate();
                 }
             }

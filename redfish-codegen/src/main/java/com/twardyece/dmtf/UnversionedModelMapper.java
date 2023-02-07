@@ -8,9 +8,11 @@ import java.util.regex.Pattern;
 public class UnversionedModelMapper implements IModelFileMapper {
     // The redfish document consistently names models of the form Module_vXX_XX_XX_Model
     private Pattern pattern;
+    private FileFactory factory;
 
-    public UnversionedModelMapper() {
+    public UnversionedModelMapper(FileFactory factory) {
         this.pattern = Pattern.compile("(?<module>[a-zA-z0-9]*)_(?<model>[a-zA-Z0-9]+)");
+        this.factory = factory;
     }
 
     @Override
@@ -24,6 +26,6 @@ public class UnversionedModelMapper implements IModelFileMapper {
         module[0] = new SnakeCaseName(new PascalCasedName(matcher.group("module")));
 
         model.setName(matcher.group("model"));
-        return new ModelFile(module, model);
+        return this.factory.makeModelFile(module, model);
     }
 }

@@ -6,12 +6,14 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 public class SimpleModelMapper implements IModelFileMapper {
-    Pattern pattern;
-    SnakeCaseName module;
+    private Pattern pattern;
+    private SnakeCaseName module;
+    private FileFactory factory;
 
-    public SimpleModelMapper(Pattern regex, SnakeCaseName module) {
+    public SimpleModelMapper(Pattern regex, SnakeCaseName module, FileFactory factory) {
         this.pattern = regex;
         this.module = module;
+        this.factory = factory;
     }
 
     @Override
@@ -25,6 +27,6 @@ public class SimpleModelMapper implements IModelFileMapper {
         module[0] = this.module;
 
         model.setName(matcher.group("model"));
-        return new ModelFile(module, model);
+        return this.factory.makeModelFile(module, model);
     }
 }

@@ -8,9 +8,11 @@ import java.util.regex.Pattern;
 public class VersionedModelMapper implements IModelFileMapper {
     // The redfish document consistently names models of the form Module_vXX_XX_XX_Model
     private Pattern pattern;
+    private FileFactory factory;
 
-    public VersionedModelMapper() {
+    public VersionedModelMapper(FileFactory factory) {
         this.pattern = Pattern.compile("(?<module>[a-zA-z0-9]*)_(?<version>v[0-9]+_[0-9]+_[0-9]+)_(?<model>[a-zA-Z0-9]+)");
+        this.factory = factory;
     }
 
     @Override
@@ -25,6 +27,6 @@ public class VersionedModelMapper implements IModelFileMapper {
         module[1] = new SnakeCaseName(matcher.group("version"));
 
         model.setName(matcher.group("model"));
-        return new ModelFile(module, model);
+        return this.factory.makeModelFile(module, model);
     }
 }
