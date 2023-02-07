@@ -1,5 +1,6 @@
-package com.twardyece.dmtf;
+package com.twardyece.dmtf.mapper;
 
+import com.twardyece.dmtf.ModelFile;
 import io.swagger.v3.oas.models.media.Schema;
 
 public interface IModelFileMapper {

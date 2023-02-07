@@ -1,5 +1,10 @@
-package com.twardyece.dmtf;
+package com.twardyece.dmtf.mapper;
 
+import com.twardyece.dmtf.FileFactory;
+import com.twardyece.dmtf.ModelFile;
+import com.twardyece.dmtf.mapper.IModelFileMapper;
+import com.twardyece.dmtf.text.PascalCasedName;
+import com.twardyece.dmtf.text.SnakeCaseName;
 import io.swagger.v3.oas.models.media.Schema;
 
 import java.util.regex.Matcher;

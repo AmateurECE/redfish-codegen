@@ -1,4 +1,4 @@
-package com.twardyece.dmtf;
+package com.twardyece.dmtf.text;
 
 public class CaseConversion {
     public static PascalCasedName toPascalCase(String name) {

@@ -1,4 +1,4 @@
-package com.twardyece.dmtf;
+package com.twardyece.dmtf.text;
 
 import java.util.Collection;
 

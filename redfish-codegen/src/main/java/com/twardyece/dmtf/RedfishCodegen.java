@@ -1,6 +1,11 @@
 package com.twardyece.dmtf;
 
 import com.github.mustachejava.DefaultMustacheFactory;
+import com.twardyece.dmtf.mapper.IModelFileMapper;
+import com.twardyece.dmtf.mapper.SimpleModelMapper;
+import com.twardyece.dmtf.mapper.UnversionedModelMapper;
+import com.twardyece.dmtf.mapper.VersionedModelMapper;
+import com.twardyece.dmtf.text.SnakeCaseName;
 import io.swagger.v3.parser.core.models.ParseOptions;
 import io.swagger.v3.oas.models.OpenAPI;
 import io.swagger.v3.oas.models.media.Schema;

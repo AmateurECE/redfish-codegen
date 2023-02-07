@@ -1,4 +1,4 @@
-package com.twardyece.dmtf;
+package com.twardyece.dmtf.text;
 
 public class Abbreviation implements IWord {
     private String abbreviation;

@@ -1,4 +1,6 @@
-package com.twardyece.dmtf;
+package com.twardyece.dmtf.text;
+
+import com.twardyece.dmtf.text.IWord;
 
 public class Word implements IWord {
     private String word;

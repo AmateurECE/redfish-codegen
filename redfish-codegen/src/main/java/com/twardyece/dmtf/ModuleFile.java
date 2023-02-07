@@ -1,6 +1,7 @@
 package com.twardyece.dmtf;
 
 import com.github.mustachejava.Mustache;
+import com.twardyece.dmtf.text.SnakeCaseName;
 
 import java.io.File;
 import java.io.IOException;

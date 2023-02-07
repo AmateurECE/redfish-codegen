@@ -1,4 +1,4 @@
-package com.twardyece.dmtf;
+package com.twardyece.dmtf.text;
 
 public interface IWord {
     public String toUpperCase();

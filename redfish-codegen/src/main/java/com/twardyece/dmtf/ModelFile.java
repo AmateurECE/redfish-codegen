@@ -1,9 +1,9 @@
 package com.twardyece.dmtf;
 
-import com.fasterxml.jackson.databind.Module;
-import com.github.mustachejava.DefaultMustacheFactory;
 import com.github.mustachejava.Mustache;
-import com.github.mustachejava.MustacheFactory;
+import com.twardyece.dmtf.text.CaseConversion;
+import com.twardyece.dmtf.text.PascalCasedName;
+import com.twardyece.dmtf.text.SnakeCaseName;
 import io.swagger.v3.oas.models.media.Schema;
 
 import java.io.File;
