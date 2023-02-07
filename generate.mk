@@ -8,7 +8,7 @@
 #
 # CREATED:          01/29/2023
 #
-# LAST EDITED:	    01/29/2023
+# LAST EDITED:	    02/07/2023
 #
 ####
 
@@ -17,7 +17,7 @@ RELEASE_FILE=DSP8010_2022.3.zip
 
 OPENAPI_DOCUMENT=api/openapi/openapi.yaml
 
-all: src/lib.rs
+all: src/models
 
 $(RELEASE_FILE):
 	curl -L -O $(RELEASE_LINK)/$(RELEASE_FILE)
@@ -25,17 +25,13 @@ $(RELEASE_FILE):
 api/openapi/openapi.yaml: $(RELEASE_FILE)
 	unzip -o -DD -d api $(RELEASE_FILE)
 
-OPENAPI_MODULE=openapi-generator-cli
-OPENAPI_VERSION=6.3.0-SNAPSHOT
-REPOSITORY=$(HOME)/.m2/repository/org/openapitools/$(OPENAPI_MODULE)
-JAR=$(REPOSITORY)/$(OPENAPI_VERSION)/$(OPENAPI_MODULE)-$(OPENAPI_VERSION).jar
-
+JAR_FILE=redfish-codegen/target/redfish-codegen-1.0-SNAPSHOT.jar
 JVM_ARGS=-DmaxYamlCodePoints=6291456 -Dfile.encoding=UTF-8
 
-src/lib.rs: api/openapi/openapi.yaml
-	java $(JVM_ARGS) -jar $(JAR) generate \
-		-g rust-server \
-		-i $< \
-		-c config.yaml
+$(JAR_FILE): redfish-codegen/pom.xml
+	(cd redfish-codegen && mvn clean package)
+
+src/models: api/openapi/openapi.yaml $(JAR_FILE)
+	java $(JVM_ARGS) -jar $(JAR_FILE) -apiDirectory api -crateDirectory .
 
 ###############################################################################
