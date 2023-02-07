@@ -7,9 +7,9 @@ import java.util.regex.Pattern;
 
 public class SimpleModelMapper implements IModelFileMapper {
     Pattern pattern;
-    String module;
+    SnakeCaseName module;
 
-    public SimpleModelMapper(Pattern regex, String module) {
+    public SimpleModelMapper(Pattern regex, SnakeCaseName module) {
         this.pattern = regex;
         this.module = module;
     }
@@ -21,7 +21,7 @@ public class SimpleModelMapper implements IModelFileMapper {
             return null;
         }
 
-        String[] module = new String[1];
+        SnakeCaseName[] module = new SnakeCaseName[1];
         module[0] = this.module;
 
         model.setName(matcher.group("model"));

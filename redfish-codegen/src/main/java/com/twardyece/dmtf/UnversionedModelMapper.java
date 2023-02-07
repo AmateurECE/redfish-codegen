@@ -20,8 +20,8 @@ public class UnversionedModelMapper implements IModelFileMapper {
             return null;
         }
 
-        String[] module = new String[1];
-        module[0] = matcher.group("module");
+        SnakeCaseName[] module = new SnakeCaseName[1];
+        module[0] = new SnakeCaseName(new PascalCasedName(matcher.group("module")));
 
         model.setName(matcher.group("model"));
         return new ModelFile(module, model);

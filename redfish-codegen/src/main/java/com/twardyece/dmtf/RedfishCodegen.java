@@ -29,8 +29,8 @@ public class RedfishCodegen {
 
         this.mappers = new IModelFileMapper[4];
         this.mappers[0] = new VersionedModelMapper();
-        this.mappers[1] = new SimpleModelMapper(Pattern.compile("Redfish(?<model>[a-zA-Z0-9]*)"), "redfish");
-        this.mappers[2] = new SimpleModelMapper(Pattern.compile("odata-v4_(?<model>[a-zA-Z0-9]*)"), "odata_v4");
+        this.mappers[1] = new SimpleModelMapper(Pattern.compile("Redfish(?<model>[a-zA-Z0-9]*)"), new SnakeCaseName("redfish"));
+        this.mappers[2] = new SimpleModelMapper(Pattern.compile("odata-v4_(?<model>[a-zA-Z0-9]*)"), new SnakeCaseName("odata_v4"));
         this.mappers[3] = new UnversionedModelMapper();
 
         ParseOptions parseOptions = new ParseOptions();

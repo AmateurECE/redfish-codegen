@@ -6,14 +6,14 @@ import java.util.ArrayList;
 
 public class ModuleFile {
     private String path;
-    private ArrayList<String> submodules;
+    private ArrayList<SnakeCaseName> submodules;
 
     public ModuleFile(String path) {
         this.path = path;
         this.submodules = new ArrayList<>();
     }
 
-    public void addSubmodule(String name) {
+    public void addSubmodule(SnakeCaseName name) {
         this.submodules.add(name);
     }
 
