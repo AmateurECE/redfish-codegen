@@ -11,10 +11,10 @@ public class FileFactory {
     private Mustache moduleTemplate;
     private String modelsBasePath;
 
-    public FileFactory(MustacheFactory factory, String templatePath, String modelsBasePath) {
+    public FileFactory(MustacheFactory factory, String modelsBasePath) {
         this.factory = factory;
-        this.modelTemplate = factory.compile(templatePath + "templates/model.mustache");
-        this.moduleTemplate = factory.compile(templatePath + "templates/module.mustache");
+        this.modelTemplate = factory.compile("templates/model.mustache");
+        this.moduleTemplate = factory.compile("templates/module.mustache");
         this.modelsBasePath = modelsBasePath;
     }
 

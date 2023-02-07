@@ -34,7 +34,7 @@ public class RedfishCodegen {
     RedfishCodegen(String apiDirectory, String crateDirectory) {
         this.apiDirectory = apiDirectory;
         this.crateDirectory = crateDirectory;
-        this.fileFactory = new FileFactory(new DefaultMustacheFactory(), this.crateDirectory,
+        this.fileFactory = new FileFactory(new DefaultMustacheFactory(),
                 "src/" + RustConfig.MODELS_BASE_MODULE);
 
         this.mappers = new IModelFileMapper[4];
