@@ -8,7 +8,7 @@
 #
 # CREATED:          01/29/2023
 #
-# LAST EDITED:	    02/07/2023
+# LAST EDITED:	    02/08/2023
 #
 ####
 
@@ -17,7 +17,7 @@ RELEASE_FILE=DSP8010_2022.3.zip
 
 OPENAPI_DOCUMENT=api/openapi/openapi.yaml
 
-all: src/models
+all: api/openapi/openapi.yaml
 
 $(RELEASE_FILE):
 	curl -L -O $(RELEASE_LINK)/$(RELEASE_FILE)

@@ -1,10 +1,13 @@
 package com.twardyece.dmtf;
 
 import com.github.mustachejava.Mustache;
+import com.twardyece.dmtf.openapi.DocumentParser;
 import com.twardyece.dmtf.text.CaseConversion;
 import com.twardyece.dmtf.text.PascalCasedName;
 import com.twardyece.dmtf.text.SnakeCaseName;
 import io.swagger.v3.oas.models.media.Schema;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.io.File;
 import java.io.IOException;
@@ -20,6 +23,7 @@ public class ModelFile {
     private String path;
     private String basePath;
     private ModelContext context;
+    final Logger LOGGER = LoggerFactory.getLogger(ModelFile.class);
 
     public ModelFile(SnakeCaseName[] module, Schema schema, Mustache template, String modelsBasePath) {
         this.module = module;
@@ -35,7 +39,7 @@ public class ModelFile {
 
         this.modelModule = new SnakeCaseName(new PascalCasedName(schema.getName()));
         if ("".equals(modelModule.toString())) {
-            System.out.println("[WARN] modelName is empty for model " + schema.getName());
+            LOGGER.warn("modelModule is empty for model " + schema.getName());
         }
 
         this.path = modelsBasePath + "/" + String.join("/", moduleAsString) + "/" + modelModule.toString()
