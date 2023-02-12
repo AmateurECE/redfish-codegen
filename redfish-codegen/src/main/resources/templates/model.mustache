@@ -15,7 +15,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#[derive(Clone, Debug, Deserialize, Serialize)]
+#[derive(Clone, Debug, serde::Deserialize, serde::Serialize)]
 pub struct {{name}} {
 {{#properties}}
     {{#serdeType}}#[serde(rename = "{{{serdeType}}}")]{{/serdeType}}
