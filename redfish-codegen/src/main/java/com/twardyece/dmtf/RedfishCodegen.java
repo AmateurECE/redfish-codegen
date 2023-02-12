@@ -35,6 +35,7 @@ public class RedfishCodegen {
         this.fileFactory = new FileFactory(new DefaultMustacheFactory(),
                 "src/" + RustConfig.MODELS_BASE_MODULE);
 
+        // TODO: Add some string substitutions to prevent gauging strings like "PCIe", "VLan", and "Id" during case conversion.
         this.mappers = new IModelFileMapper[4];
         this.mappers[0] = new VersionedModelMapper(this.fileFactory);
         this.mappers[1] = new SimpleModelMapper(Pattern.compile("Redfish(?<model>[a-zA-Z0-9]*)"), new SnakeCaseName("redfish"), this.fileFactory);
