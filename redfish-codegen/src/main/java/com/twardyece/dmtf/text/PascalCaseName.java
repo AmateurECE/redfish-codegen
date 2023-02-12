@@ -5,11 +5,11 @@ import java.util.Collection;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-public class PascalCasedName implements ICaseConvertible {
+public class PascalCaseName implements ICaseConvertible {
     ArrayList<IWord> words;
     private static final Pattern pascalCase = Pattern.compile("([A-Z][a-z][a-z]+)|([A-Z]+)(?=[A-Z][a-z][a-z])|([A-Z0-9]+)");
 
-    public PascalCasedName(String name) {
+    public PascalCaseName(String name) {
         this.words = new ArrayList<>();
         Matcher matcher = pascalCase.matcher(name);
 
@@ -30,7 +30,7 @@ public class PascalCasedName implements ICaseConvertible {
         }
     }
 
-    public PascalCasedName(ICaseConvertible originalCase) {
+    public PascalCaseName(ICaseConvertible originalCase) {
         this.words = new ArrayList<>();
         this.words.addAll(originalCase.words());
     }

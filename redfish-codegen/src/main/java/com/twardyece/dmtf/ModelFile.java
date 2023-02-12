@@ -1,9 +1,8 @@
 package com.twardyece.dmtf;
 
 import com.github.mustachejava.Mustache;
-import com.twardyece.dmtf.openapi.DocumentParser;
 import com.twardyece.dmtf.text.CaseConversion;
-import com.twardyece.dmtf.text.PascalCasedName;
+import com.twardyece.dmtf.text.PascalCaseName;
 import com.twardyece.dmtf.text.SnakeCaseName;
 import io.swagger.v3.oas.models.media.Schema;
 import org.slf4j.Logger;
@@ -37,7 +36,7 @@ public class ModelFile {
             moduleAsString.add(component.toString());
         }
 
-        this.modelModule = new SnakeCaseName(new PascalCasedName(schema.getName()));
+        this.modelModule = new SnakeCaseName(new PascalCaseName(schema.getName()));
         if ("".equals(modelModule.toString())) {
             LOGGER.warn("modelModule is empty for model " + schema.getName());
         }

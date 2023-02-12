@@ -1,13 +1,12 @@
 package com.twardyece.dmtf;
 
 import com.twardyece.dmtf.text.CaseConversion;
-import com.twardyece.dmtf.text.ICaseConvertible;
-import com.twardyece.dmtf.text.PascalCasedName;
 import com.twardyece.dmtf.text.SnakeCaseName;
 import io.swagger.v3.oas.models.media.Schema;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.util.Arrays;
 import java.util.Map;
 import java.util.List;
 import java.util.regex.Matcher;
@@ -32,19 +31,22 @@ public class ModelContext {
     }
 
     private static Property toProperty(Map.Entry<String, Schema> property) {
-        return new Property(sanitizePropertyName(property.getKey()), typeFromSchema(property.getValue()));
+        String sanitizedName = sanitizePropertyName(property.getKey());
+        String serdeType = null;
+        if (!sanitizedName.equals(property.getKey())) {
+            serdeType = property.getKey();
+        }
+        return new Property(sanitizedName, typeFromSchema(property.getValue()), serdeType);
     }
 
     private static String sanitizePropertyName(String name) {
-        String safeName = replaceInvalidCharacters(removeReservedCharactersInFirstPosition(name));
-        SnakeCaseName postCasedName = null;
-        try {
-            PascalCasedName preCasedName = new PascalCasedName(safeName);
-            postCasedName = new SnakeCaseName(preCasedName);
-        } catch (ICaseConvertible.CaseConversionError e) {
-            postCasedName = new SnakeCaseName(safeName);
-        }
-        return postCasedName.toString();
+        List<SnakeCaseName> safeName = Arrays.stream(
+                replaceInvalidCharacters(
+                        removeReservedCharactersInFirstPosition(name))
+                .split(" "))
+                .map((identifier) -> CaseConversion.toSnakeCase(identifier))
+                .collect(Collectors.toList());
+        return new SnakeCaseName(safeName).toString();
     }
 
     private static String removeReservedCharactersInFirstPosition(String name) {
@@ -59,7 +61,7 @@ public class ModelContext {
     private static String replaceInvalidCharacters(String name) {
         Matcher matcher = invalidCharacters.matcher(name);
         if (matcher.find()) {
-            return matcher.replaceAll("_");
+            return matcher.replaceAll(" ");
         } else {
             return name;
         }
@@ -80,12 +82,14 @@ public class ModelContext {
     }
 
     static class Property {
-        Property(String name, String type) {
+        Property(String name, String type, String serdeType) {
             this.name = name;
             this.type = type;
+            this.serdeType = serdeType;
         }
 
         String name;
         String type;
+        String serdeType;
     }
 }

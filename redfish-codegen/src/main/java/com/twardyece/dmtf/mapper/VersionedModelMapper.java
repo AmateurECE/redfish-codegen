@@ -2,8 +2,7 @@ package com.twardyece.dmtf.mapper;
 
 import com.twardyece.dmtf.FileFactory;
 import com.twardyece.dmtf.ModelFile;
-import com.twardyece.dmtf.mapper.IModelFileMapper;
-import com.twardyece.dmtf.text.PascalCasedName;
+import com.twardyece.dmtf.text.PascalCaseName;
 import com.twardyece.dmtf.text.SnakeCaseName;
 import io.swagger.v3.oas.models.media.Schema;
 
@@ -28,7 +27,7 @@ public class VersionedModelMapper implements IModelFileMapper {
         }
 
         SnakeCaseName[] module = new SnakeCaseName[2];
-        module[0] = new SnakeCaseName(new PascalCasedName(matcher.group("module")));
+        module[0] = new SnakeCaseName(new PascalCaseName(matcher.group("module")));
         module[1] = new SnakeCaseName(matcher.group("version"));
 
         model.setName(matcher.group("model"));
