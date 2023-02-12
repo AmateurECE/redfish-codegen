@@ -1,17 +1,25 @@
 package com.twardyece.dmtf;
 
+import com.twardyece.dmtf.text.CaseConversion;
+import com.twardyece.dmtf.text.ICaseConvertible;
+import com.twardyece.dmtf.text.PascalCasedName;
+import com.twardyece.dmtf.text.SnakeCaseName;
 import io.swagger.v3.oas.models.media.Schema;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.util.Map;
 import java.util.List;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
 public class ModelContext {
     String name;
     List<Property> properties;
     static final Logger LOGGER = LoggerFactory.getLogger(ModelFile.class);
+    static final Pattern reservedCharactersInFirstPosition = Pattern.compile("^@");
+    static final Pattern invalidCharacters = Pattern.compile("[@.]");
 
     public ModelContext(Schema schema) {
         this.name = schema.getName();
@@ -24,7 +32,37 @@ public class ModelContext {
     }
 
     private static Property toProperty(Map.Entry<String, Schema> property) {
-        return new Property(property.getKey(), typeFromSchema(property.getValue()));
+        return new Property(sanitizePropertyName(property.getKey()), typeFromSchema(property.getValue()));
+    }
+
+    private static String sanitizePropertyName(String name) {
+        String safeName = replaceInvalidCharacters(removeReservedCharactersInFirstPosition(name));
+        SnakeCaseName postCasedName = null;
+        try {
+            PascalCasedName preCasedName = new PascalCasedName(safeName);
+            postCasedName = new SnakeCaseName(preCasedName);
+        } catch (ICaseConvertible.CaseConversionError e) {
+            postCasedName = new SnakeCaseName(safeName);
+        }
+        return postCasedName.toString();
+    }
+
+    private static String removeReservedCharactersInFirstPosition(String name) {
+        Matcher matcher = reservedCharactersInFirstPosition.matcher(name);
+        if (matcher.find()) {
+            return matcher.replaceFirst("");
+        } else {
+            return name;
+        }
+    }
+
+    private static String replaceInvalidCharacters(String name) {
+        Matcher matcher = invalidCharacters.matcher(name);
+        if (matcher.find()) {
+            return matcher.replaceAll("_");
+        } else {
+            return name;
+        }
     }
 
     private static String typeFromSchema(Schema schema) {
