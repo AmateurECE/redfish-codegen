@@ -1,12 +1,7 @@
 package com.twardyece.dmtf;
 
 import com.github.mustachejava.Mustache;
-import com.twardyece.dmtf.text.CaseConversion;
-import com.twardyece.dmtf.text.PascalCaseName;
 import com.twardyece.dmtf.text.SnakeCaseName;
-import io.swagger.v3.oas.models.media.Schema;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import java.io.File;
 import java.io.IOException;
@@ -18,11 +13,9 @@ import java.util.Map;
 public class ModelFile {
     private SnakeCaseName[] module;
     private Mustache template;
-    private SnakeCaseName modelModule;
     private String path;
     private String basePath;
     private ModelContext context;
-    final Logger LOGGER = LoggerFactory.getLogger(ModelFile.class);
 
     public ModelFile(SnakeCaseName[] module, ModelContext context, Mustache template, String modelsBasePath) {
         this.module = module;
@@ -68,7 +61,6 @@ public class ModelFile {
 
         // Render the template
         Writer writer = new PrintWriter(modelFile);
-        // TODO: Convert schema to ModelContext
         this.template.execute(writer, this.context);
         writer.flush();
     }

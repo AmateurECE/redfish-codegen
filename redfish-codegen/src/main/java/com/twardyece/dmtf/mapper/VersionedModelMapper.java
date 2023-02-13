@@ -1,7 +1,5 @@
 package com.twardyece.dmtf.mapper;
 
-import com.twardyece.dmtf.FileFactory;
-import com.twardyece.dmtf.ModelFile;
 import com.twardyece.dmtf.text.PascalCaseName;
 import com.twardyece.dmtf.text.SnakeCaseName;
 import io.swagger.v3.oas.models.media.Schema;

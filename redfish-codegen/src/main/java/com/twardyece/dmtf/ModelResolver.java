@@ -1,7 +1,6 @@
 package com.twardyece.dmtf;
 
 import com.twardyece.dmtf.mapper.IModelFileMapper;
-import com.twardyece.dmtf.text.SnakeCaseName;
 import io.swagger.v3.oas.models.media.Schema;
 
 public class ModelResolver {

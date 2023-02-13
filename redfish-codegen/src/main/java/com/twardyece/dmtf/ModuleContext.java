@@ -2,7 +2,6 @@ package com.twardyece.dmtf;
 
 import com.twardyece.dmtf.text.SnakeCaseName;
 
-import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
 

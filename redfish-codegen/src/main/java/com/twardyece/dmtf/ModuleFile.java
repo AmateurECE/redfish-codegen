@@ -1,6 +1,5 @@
 package com.twardyece.dmtf;
 
-import com.fasterxml.jackson.databind.Module;
 import com.github.mustachejava.Mustache;
 import com.twardyece.dmtf.text.SnakeCaseName;
 

@@ -40,8 +40,6 @@ public class ModelContext {
 
     public SnakeCaseName getModule() { return this.modelModule; }
 
-    public String module() { return this.modelModule.toString(); }
-
     private static Property toProperty(Map.Entry<String, Schema> property) {
         String sanitizedName = sanitizePropertyName(property.getKey());
         String serdeType = null;
