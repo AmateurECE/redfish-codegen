@@ -18,10 +18,4 @@ public class RustConfig {
         typeMap.put("number", "f64");
         RUST_TYPE_MAP = Collections.unmodifiableMap(typeMap);
     }
-
-//    public static String openApiTypeToRustType(String type) {
-//        if (rustTypes.containsKey(type)) {
-//            return rustTypes.get(type);
-//        }
-//    }
 }

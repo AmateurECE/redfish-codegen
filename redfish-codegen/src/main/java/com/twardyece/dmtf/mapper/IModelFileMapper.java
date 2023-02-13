@@ -5,7 +5,7 @@ import com.twardyece.dmtf.text.SnakeCaseName;
 import io.swagger.v3.oas.models.media.Schema;
 
 public interface IModelFileMapper {
-    ModelMatchResult matches(String name, Schema model);
+    ModelMatchResult matches(String name);
 
     class ModelMatchResult {
         public ModelMatchResult(SnakeCaseName[] path, PascalCaseName model) {

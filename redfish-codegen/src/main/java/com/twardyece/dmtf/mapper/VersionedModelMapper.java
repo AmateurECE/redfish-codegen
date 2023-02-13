@@ -16,7 +16,7 @@ public class VersionedModelMapper implements IModelFileMapper {
     }
 
     @Override
-    public ModelMatchResult matches(String name, Schema schema) {
+    public ModelMatchResult matches(String name) {
         Matcher matcher = pattern.matcher(name);
         if (!matcher.find()) {
             return null;

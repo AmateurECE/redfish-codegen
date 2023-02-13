@@ -33,30 +33,30 @@ public class ModelContext {
         Map<String, Schema> properties = schema.getProperties();
         if (null != properties) {
             this.properties = (List<Property>) schema.getProperties().entrySet().stream()
-                    .map((s) -> toProperty((Map.Entry<String, Schema>)s))
+                    .map((s) -> toProperty((Map.Entry<String, Schema>)s, resolver))
                     .collect(Collectors.toList());
         }
     }
 
     public SnakeCaseName getModule() { return this.modelModule; }
 
-    private static Property toProperty(Map.Entry<String, Schema> property) {
-        String sanitizedName = sanitizePropertyName(property.getKey());
+    private static Property toProperty(Map.Entry<String, Schema> property, ModelResolver resolver) {
+        SnakeCaseName sanitizedName = sanitizePropertyName(property.getKey());
         String serdeType = null;
-        if (!sanitizedName.equals(property.getKey())) {
+        if (!sanitizedName.toString().equals(property.getKey())) {
             serdeType = property.getKey();
         }
-        return new Property(sanitizedName, typeFromSchema(property.getValue()), serdeType);
+        return new Property(sanitizedName, resolver.resolveType(property.getValue()), serdeType);
     }
 
-    private static String sanitizePropertyName(String name) {
+    private static SnakeCaseName sanitizePropertyName(String name) {
         List<SnakeCaseName> safeName = Arrays.stream(
                 replaceInvalidCharacters(
                         removeReservedCharactersInFirstPosition(name))
                 .split(" "))
                 .map((identifier) -> CaseConversion.toSnakeCase(identifier))
                 .collect(Collectors.toList());
-        return new SnakeCaseName(safeName).toString();
+        return new SnakeCaseName(safeName);
     }
 
     private static String removeReservedCharactersInFirstPosition(String name) {
@@ -77,29 +77,18 @@ public class ModelContext {
         }
     }
 
-    private static String typeFromSchema(Schema schema) {
-        String type = schema.getType();
-        if (null == type) {
-            return schema.get$ref();
-        } else if ("array".equals(type)) {
-            return "Vec<" + typeFromSchema(schema.getItems()) + ">";
-        } else {
-            if (!RustConfig.RUST_TYPE_MAP.containsKey(type)) {
-                LOGGER.warn("No mapping for type " + type);
-            }
-            return RustConfig.RUST_TYPE_MAP.get(type);
-        }
-    }
-
     static class Property {
-        Property(String name, String type, String serdeType) {
-            this.name = name;
-            this.type = type;
+        Property(SnakeCaseName name, RustType type, String serdeType) {
+            this.propertyName = name;
+            this.propertyType = type;
             this.serdeType = serdeType;
         }
 
-        String name;
-        String type;
+        public String name() { return this.propertyName.toString(); }
+        public String type() { return this.propertyType.toString(); }
+
+        SnakeCaseName propertyName;
+        RustType propertyType;
         String serdeType;
     }
 }

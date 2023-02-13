@@ -17,7 +17,7 @@ public class SimpleModelMapper implements IModelFileMapper {
     }
 
     @Override
-    public ModelMatchResult matches(String name, Schema schema) {
+    public ModelMatchResult matches(String name) {
         Matcher matcher = this.pattern.matcher(name);
         if (!matcher.find()) {
             return null;

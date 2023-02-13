@@ -28,7 +28,7 @@ public class RedfishCodegen {
     private ModelResolver resolver;
     private OpenAPI document;
     private FileFactory fileFactory;
-    static final Logger LOGGER = LoggerFactory.getLogger(ModelFile.class);
+    static final Logger LOGGER = LoggerFactory.getLogger(RedfishCodegen.class);
 
     RedfishCodegen(String apiDirectory, String crateDirectory) {
         this.apiDirectory = apiDirectory;
@@ -60,7 +60,7 @@ public class RedfishCodegen {
     public void generateModels() throws IOException {
         HashMap<String, ModuleFile> modules = new HashMap<>();
         for (Map.Entry<String, Schema> schema : this.document.getComponents().getSchemas().entrySet()) {
-            IModelFileMapper.ModelMatchResult result = this.resolver.resolve(schema.getKey(), schema.getValue());
+            IModelFileMapper.ModelMatchResult result = this.resolver.resolve(schema.getKey());
             if (null == result) {
                 LOGGER.warn("no match for model " + schema.getValue().getName());
                 continue;
