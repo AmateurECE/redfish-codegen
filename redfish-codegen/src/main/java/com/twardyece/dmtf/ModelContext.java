@@ -1,6 +1,7 @@
 package com.twardyece.dmtf;
 
 import com.twardyece.dmtf.text.CaseConversion;
+import com.twardyece.dmtf.text.PascalCaseName;
 import com.twardyece.dmtf.text.SnakeCaseName;
 import io.swagger.v3.oas.models.media.Schema;
 import org.slf4j.Logger;
@@ -16,12 +17,19 @@ import java.util.stream.Collectors;
 public class ModelContext {
     String name;
     List<Property> properties;
+    SnakeCaseName modelModule;
+
     static final Logger LOGGER = LoggerFactory.getLogger(ModelFile.class);
     static final Pattern reservedCharactersInFirstPosition = Pattern.compile("^@");
     static final Pattern invalidCharacters = Pattern.compile("[@.]");
 
-    public ModelContext(Schema schema) {
-        this.name = schema.getName();
+    public ModelContext(PascalCaseName name, Schema schema, ModelResolver resolver) {
+        this.name = name.toString();
+        this.modelModule = new SnakeCaseName(name);
+        if ("".equals(modelModule.toString())) {
+            LOGGER.warn("modelModule is empty for model " + schema.getName());
+        }
+
         Map<String, Schema> properties = schema.getProperties();
         if (null != properties) {
             this.properties = (List<Property>) schema.getProperties().entrySet().stream()
@@ -29,6 +37,10 @@ public class ModelContext {
                     .collect(Collectors.toList());
         }
     }
+
+    public SnakeCaseName getModule() { return this.modelModule; }
+
+    public String module() { return this.modelModule.toString(); }
 
     private static Property toProperty(Map.Entry<String, Schema> property) {
         String sanitizedName = sanitizePropertyName(property.getKey());

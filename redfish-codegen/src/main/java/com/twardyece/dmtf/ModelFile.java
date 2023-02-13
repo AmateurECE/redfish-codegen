@@ -24,27 +24,19 @@ public class ModelFile {
     private ModelContext context;
     final Logger LOGGER = LoggerFactory.getLogger(ModelFile.class);
 
-    public ModelFile(SnakeCaseName[] module, Schema schema, Mustache template, String modelsBasePath) {
+    public ModelFile(SnakeCaseName[] module, ModelContext context, Mustache template, String modelsBasePath) {
         this.module = module;
         this.template = template;
-
-        // Ensure that the model name is PascalCase'd
-        schema.setName(CaseConversion.toPascalCase(schema.getName()).toString());
 
         ArrayList<String> moduleAsString = new ArrayList<>();
         for (SnakeCaseName component : this.module) {
             moduleAsString.add(component.toString());
         }
 
-        this.modelModule = new SnakeCaseName(new PascalCaseName(schema.getName()));
-        if ("".equals(modelModule.toString())) {
-            LOGGER.warn("modelModule is empty for model " + schema.getName());
-        }
-
-        this.path = modelsBasePath + "/" + String.join("/", moduleAsString) + "/" + modelModule.toString()
-                + RustConfig.FILE_EXTENSION;
+        this.path = modelsBasePath + "/" + String.join("/", moduleAsString) + "/"
+                + context.getModule().toString() + RustConfig.FILE_EXTENSION;
         this.basePath = modelsBasePath;
-        this.context = new ModelContext(schema);
+        this.context = context;
     }
 
     public void registerModel(Map<String, ModuleFile> modules, FileFactory factory) {
@@ -63,7 +55,7 @@ public class ModelFile {
             modules.put(path, factory.makeModuleFile(path + RustConfig.FILE_EXTENSION));
         }
 
-        modules.get(path).addSubmodule(this.modelModule);
+        modules.get(path).addSubmodule(this.context.getModule());
     }
 
     public void generate() throws IOException {

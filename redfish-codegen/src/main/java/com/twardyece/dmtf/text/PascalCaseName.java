@@ -44,11 +44,11 @@ public class PascalCaseName implements ICaseConvertible {
                     //   3. It's in the middle of the string (result is three strings)
                     else {
                         String first = identifier.substring(0, index);
-                        String second = identifier.substring(index, abbreviation.length());
+                        String second = identifier.substring(index, index + abbreviation.length());
                         String third = identifier.substring(index + abbreviation.length());
                         identifiers.set(i, first);
                         identifiers.add(i + 1, second);
-                        identifiers.add(i + 2, second);
+                        identifiers.add(i + 2, third);
                     }
                 }
             }

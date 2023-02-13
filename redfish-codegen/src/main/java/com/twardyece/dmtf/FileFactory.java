@@ -2,6 +2,7 @@ package com.twardyece.dmtf;
 
 import com.github.mustachejava.Mustache;
 import com.github.mustachejava.MustacheFactory;
+import com.twardyece.dmtf.text.PascalCaseName;
 import com.twardyece.dmtf.text.SnakeCaseName;
 import io.swagger.v3.oas.models.media.Schema;
 
@@ -10,16 +11,19 @@ public class FileFactory {
     private Mustache modelTemplate;
     private Mustache moduleTemplate;
     private String modelsBasePath;
+    private ModelResolver resolver;
 
-    public FileFactory(MustacheFactory factory, String modelsBasePath) {
+    public FileFactory(MustacheFactory factory, SnakeCaseName modelsModule, ModelResolver resolver) {
         this.factory = factory;
         this.modelTemplate = factory.compile("templates/model.mustache");
         this.moduleTemplate = factory.compile("templates/module.mustache");
-        this.modelsBasePath = modelsBasePath;
+        this.modelsBasePath = "src/" + modelsModule.toString();
+        this.resolver = resolver;
     }
 
-    public ModelFile makeModelFile(SnakeCaseName[] module, Schema schema) {
-        return new ModelFile(module, schema, this.modelTemplate, modelsBasePath);
+    public ModelFile makeModelFile(SnakeCaseName[] module, PascalCaseName name, Schema schema) {
+        ModelContext context = new ModelContext(name, schema, this.resolver);
+        return new ModelFile(module, context, this.modelTemplate, modelsBasePath);
     }
 
     public ModuleFile makeModuleFile(String path) {

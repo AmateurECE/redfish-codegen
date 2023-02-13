@@ -10,6 +10,8 @@ import com.twardyece.dmtf.text.SnakeCaseName;
 import io.swagger.v3.oas.models.OpenAPI;
 import io.swagger.v3.oas.models.media.Schema;
 import org.apache.commons.cli.*;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
 import java.util.*;
@@ -21,26 +23,27 @@ import java.util.regex.Pattern;
  */
 public class RedfishCodegen {
     private String apiDirectory;
+    // TODO: Seems like this is no longer being used. Consider whether to fix that, or remove it.
     private String crateDirectory;
-
-    private IModelFileMapper[] mappers;
-
+    private ModelResolver resolver;
     private OpenAPI document;
-
     private FileFactory fileFactory;
+    static final Logger LOGGER = LoggerFactory.getLogger(ModelFile.class);
 
     RedfishCodegen(String apiDirectory, String crateDirectory) {
         this.apiDirectory = apiDirectory;
         this.crateDirectory = crateDirectory;
-        this.fileFactory = new FileFactory(new DefaultMustacheFactory(),
-                "src/" + RustConfig.MODELS_BASE_MODULE);
 
         // TODO: Add some string substitutions to prevent gauging strings like "PCIe", "VLan", and "Id" during case conversion.
-        this.mappers = new IModelFileMapper[4];
-        this.mappers[0] = new VersionedModelMapper(this.fileFactory);
-        this.mappers[1] = new SimpleModelMapper(Pattern.compile("Redfish(?<model>[a-zA-Z0-9]*)"), new SnakeCaseName("redfish"), this.fileFactory);
-        this.mappers[2] = new SimpleModelMapper(Pattern.compile("odata-v4_(?<model>[a-zA-Z0-9]*)"), new SnakeCaseName("odata_v4"), this.fileFactory);
-        this.mappers[3] = new UnversionedModelMapper(this.fileFactory);
+        IModelFileMapper[] mappers = new IModelFileMapper[4];
+        mappers[0] = new VersionedModelMapper();
+        mappers[1] = new SimpleModelMapper(Pattern.compile("Redfish(?<model>[a-zA-Z0-9]*)"), new SnakeCaseName("redfish"));
+        mappers[2] = new SimpleModelMapper(Pattern.compile("odata-v4_(?<model>[a-zA-Z0-9]*)"), new SnakeCaseName("odata_v4"));
+        mappers[3] = new UnversionedModelMapper();
+
+        this.resolver = new ModelResolver(mappers);
+        this.fileFactory = new FileFactory(new DefaultMustacheFactory(),
+                new SnakeCaseName(RustConfig.MODELS_BASE_MODULE), this.resolver);
 
         DocumentParser parser = new DocumentParser(this.apiDirectory + "/openapi.yaml");
 
@@ -57,20 +60,15 @@ public class RedfishCodegen {
     public void generateModels() throws IOException {
         HashMap<String, ModuleFile> modules = new HashMap<>();
         for (Map.Entry<String, Schema> schema : this.document.getComponents().getSchemas().entrySet()) {
-            schema.getValue().setName(schema.getKey());
-            boolean handled = false;
-            for (IModelFileMapper mapper : this.mappers) {
-                ModelFile modelFile = mapper.matches(schema.getValue());
-                if (null != modelFile) {
-                    handled = true;
-                    modelFile.registerModel(modules, this.fileFactory);
-                    modelFile.generate();
-                }
+            IModelFileMapper.ModelMatchResult result = this.resolver.resolve(schema.getKey(), schema.getValue());
+            if (null == result) {
+                LOGGER.warn("no match for model " + schema.getValue().getName());
+                continue;
             }
 
-            if (!handled) {
-                System.out.println("[WARN] no handler matched model " + schema.getValue().getName());
-            }
+            ModelFile modelFile = this.fileFactory.makeModelFile(result.path, result.model, schema.getValue());
+            modelFile.registerModel(modules, this.fileFactory);
+            modelFile.generate();
         }
 
         for (ModuleFile module : modules.values()) {

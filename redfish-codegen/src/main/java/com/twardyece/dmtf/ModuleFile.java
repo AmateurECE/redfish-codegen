@@ -23,7 +23,9 @@ public class ModuleFile {
     }
 
     public void addSubmodule(SnakeCaseName name) {
-        this.submodules.add(name);
+        if (!this.submodules.contains(name)) {
+            this.submodules.add(name);
+        }
     }
 
     public void generate() throws IOException {

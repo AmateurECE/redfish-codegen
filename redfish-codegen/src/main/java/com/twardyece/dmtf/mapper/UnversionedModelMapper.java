@@ -12,16 +12,14 @@ import java.util.regex.Pattern;
 public class UnversionedModelMapper implements IModelFileMapper {
     // The redfish document consistently names models of the form Module_vXX_XX_XX_Model
     private Pattern pattern;
-    private FileFactory factory;
 
-    public UnversionedModelMapper(FileFactory factory) {
+    public UnversionedModelMapper() {
         this.pattern = Pattern.compile("(?<module>[a-zA-z0-9]*)_(?<model>[a-zA-Z0-9]+)");
-        this.factory = factory;
     }
 
     @Override
-    public ModelFile matches(Schema model) {
-        Matcher matcher = pattern.matcher(model.getName());
+    public ModelMatchResult matches(String name, Schema schema) {
+        Matcher matcher = pattern.matcher(name);
         if (!matcher.find()) {
             return null;
         }
@@ -29,7 +27,7 @@ public class UnversionedModelMapper implements IModelFileMapper {
         SnakeCaseName[] module = new SnakeCaseName[1];
         module[0] = new SnakeCaseName(new PascalCaseName(matcher.group("module")));
 
-        model.setName(matcher.group("model"));
-        return this.factory.makeModelFile(module, model);
+        String model = matcher.group("model");
+        return new ModelMatchResult(module, new PascalCaseName(model));
     }
 }
