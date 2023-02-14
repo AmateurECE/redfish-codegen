@@ -1,9 +1,11 @@
 package com.twardyece.dmtf.mapper;
 
+import com.twardyece.dmtf.text.CaseConversion;
 import com.twardyece.dmtf.text.PascalCaseName;
 import com.twardyece.dmtf.text.SnakeCaseName;
-import io.swagger.v3.oas.models.media.Schema;
 
+import java.util.List;
+import java.util.ArrayList;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -22,9 +24,9 @@ public class VersionedModelMapper implements IModelFileMapper {
             return null;
         }
 
-        SnakeCaseName[] module = new SnakeCaseName[2];
-        module[0] = new SnakeCaseName(new PascalCaseName(matcher.group("module")));
-        module[1] = new SnakeCaseName(matcher.group("version"));
+        List<SnakeCaseName> module = new ArrayList<>();
+        module.add(CaseConversion.toSnakeCase(matcher.group("module")));
+        module.add(new SnakeCaseName(matcher.group("version")));
 
         String model = matcher.group("model");
         return new ModelMatchResult(module, new PascalCaseName(model));

@@ -57,7 +57,7 @@ public class ModelResolver {
             // Get the schema name
             String name = matcher.replaceFirst("");
             IModelFileMapper.ModelMatchResult result = this.resolve(name);
-            return new RustType(CratePath.crateLocal(List.of(result.path)), result.model);
+            return new RustType(result.path, result.model);
         } else if ("array".equals(schema.getType())) {
             // It's an array type
             return new RustType(null, VEC_NAME, this.resolveType(schema.getItems()));

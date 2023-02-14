@@ -10,25 +10,22 @@ public class FileFactory {
     private MustacheFactory factory;
     private Mustache modelTemplate;
     private Mustache moduleTemplate;
-    private String modelsBasePath;
     private ModelResolver resolver;
 
-    public FileFactory(MustacheFactory factory, SnakeCaseName modelsModule, ModelResolver resolver) {
+    public FileFactory(MustacheFactory factory, ModelResolver resolver) {
         this.factory = factory;
         this.modelTemplate = factory.compile("templates/model.mustache");
         this.moduleTemplate = factory.compile("templates/module.mustache");
-        this.modelsBasePath = "src/" + modelsModule.toString();
         this.resolver = resolver;
     }
 
-    // TODO: Make module a List<>
-    public ModelFile makeModelFile(SnakeCaseName[] module, PascalCaseName name, Schema schema) {
+    public ModelFile makeModelFile(CratePath module, PascalCaseName name, Schema schema) {
         ModelContext context = new ModelContext(name, schema, this.resolver);
-        // TODO: Make modelsBasePath a CratePath here, and add method to CratePath to convert to Path.
-        return new ModelFile(module, context, this.modelTemplate, modelsBasePath);
+        return new ModelFile(module, context, this.modelTemplate);
     }
 
-    public ModuleFile makeModuleFile(String path) {
+    // TODO: makeModuleFile should also take a CratePath
+    public ModuleFile makeModuleFile(CratePath path) {
         return new ModuleFile(path, this.moduleTemplate);
     }
 }

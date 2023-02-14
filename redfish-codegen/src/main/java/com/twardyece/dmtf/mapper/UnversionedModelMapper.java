@@ -1,9 +1,12 @@
 package com.twardyece.dmtf.mapper;
 
+import com.twardyece.dmtf.text.CaseConversion;
 import com.twardyece.dmtf.text.PascalCaseName;
 import com.twardyece.dmtf.text.SnakeCaseName;
 import io.swagger.v3.oas.models.media.Schema;
 
+import java.util.ArrayList;
+import java.util.List;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -22,8 +25,8 @@ public class UnversionedModelMapper implements IModelFileMapper {
             return null;
         }
 
-        SnakeCaseName[] module = new SnakeCaseName[1];
-        module[0] = new SnakeCaseName(new PascalCaseName(matcher.group("module")));
+        List<SnakeCaseName> module = new ArrayList<>();
+        module.add(CaseConversion.toSnakeCase(matcher.group("module")));
 
         String model = matcher.group("model");
         return new ModelMatchResult(module, new PascalCaseName(model));

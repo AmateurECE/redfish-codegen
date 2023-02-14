@@ -11,11 +11,11 @@ import java.util.ArrayList;
 import java.util.stream.Collectors;
 
 public class ModuleFile {
-    private String path;
+    private CratePath path;
     private ArrayList<SnakeCaseName> submodules;
     private Mustache template;
 
-    public ModuleFile(String path, Mustache template) {
+    public ModuleFile(CratePath path, Mustache template) {
         this.path = path;
         this.submodules = new ArrayList<>();
         this.template = template;
@@ -28,7 +28,7 @@ public class ModuleFile {
     }
 
     public void generate() throws IOException {
-        File moduleFile = new File(this.path);
+        File moduleFile = this.path.toPath().toFile();
         File parent = moduleFile.getParentFile();
         if (!parent.exists()) {
             parent.mkdirs();

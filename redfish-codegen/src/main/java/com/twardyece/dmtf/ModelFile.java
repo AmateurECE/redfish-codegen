@@ -8,52 +8,44 @@ import java.io.IOException;
 import java.io.PrintWriter;
 import java.io.Writer;
 import java.util.ArrayList;
+import java.util.List;
 import java.util.Map;
 
 public class ModelFile {
-    private SnakeCaseName[] module;
+    private CratePath module;
     private Mustache template;
-    private String path;
-    private String basePath;
     private ModelContext context;
 
-    // TODO: Make module a List<>
-    public ModelFile(SnakeCaseName[] module, ModelContext context, Mustache template, String modelsBasePath) {
+    public ModelFile(CratePath module, ModelContext context, Mustache template) {
         this.module = module;
         this.template = template;
-
-        ArrayList<String> moduleAsString = new ArrayList<>();
-        for (SnakeCaseName component : this.module) {
-            moduleAsString.add(component.toString());
-        }
-
-        this.path = modelsBasePath + "/" + String.join("/", moduleAsString) + "/"
-                + context.getModule().toString() + RustConfig.FILE_EXTENSION;
-        this.basePath = modelsBasePath;
         this.context = context;
     }
 
     public void registerModel(Map<String, ModuleFile> modules, FileFactory factory) {
-        String path = this.basePath;
-        for (SnakeCaseName component : this.module) {
-            if (!modules.containsKey(path)) {
-                modules.put(path, factory.makeModuleFile(path + RustConfig.FILE_EXTENSION));
+        CratePath path = CratePath.empty();
+        for (SnakeCaseName component : this.module.getComponents()) {
+            if (!path.isEmpty()) {
+                if (!modules.containsKey(path.toString())) {
+                    modules.put(path.toString(), factory.makeModuleFile(path));
+                }
+
+                modules.get(path.toString()).addSubmodule(component);
             }
 
-            modules.get(path).addSubmodule(component);
-            path += "/" + component;
+            path = path.append(component);
         }
 
         // Can't forget to add this model as a module!
-        if (!modules.containsKey(path)) {
-            modules.put(path, factory.makeModuleFile(path + RustConfig.FILE_EXTENSION));
+        if (!modules.containsKey(path.toString())) {
+            modules.put(path.toString(), factory.makeModuleFile(path));
         }
 
-        modules.get(path).addSubmodule(this.context.getModule());
+        modules.get(path.toString()).addSubmodule(this.context.getModule());
     }
 
     public void generate() throws IOException {
-        File modelFile = new File(this.path);
+        File modelFile = this.module.append(context.modelModule).toPath().toFile();
         File parent = modelFile.getParentFile();
         if (!parent.exists()) {
             parent.mkdirs();

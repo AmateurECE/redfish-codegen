@@ -1,20 +1,23 @@
 package com.twardyece.dmtf.mapper;
 
+import com.twardyece.dmtf.CratePath;
+import com.twardyece.dmtf.RustConfig;
 import com.twardyece.dmtf.text.PascalCaseName;
 import com.twardyece.dmtf.text.SnakeCaseName;
-import io.swagger.v3.oas.models.media.Schema;
+
+import java.util.List;
 
 public interface IModelFileMapper {
     ModelMatchResult matches(String name);
 
     class ModelMatchResult {
-        public ModelMatchResult(SnakeCaseName[] path, PascalCaseName model) {
-            this.path = path;
+        public ModelMatchResult(List<SnakeCaseName> path, PascalCaseName model) {
+            path.add(0, RustConfig.MODELS_BASE_MODULE);
+            this.path = CratePath.crateLocal(path);
             this.model = model;
         }
 
-        // TODO: Do a list here, instead of an array
-        public SnakeCaseName[] path;
+        public CratePath path;
         public PascalCaseName model;
     }
 }
