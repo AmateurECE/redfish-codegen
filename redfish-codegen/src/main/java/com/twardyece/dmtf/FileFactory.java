@@ -21,8 +21,10 @@ public class FileFactory {
         this.resolver = resolver;
     }
 
+    // TODO: Make module a List<>
     public ModelFile makeModelFile(SnakeCaseName[] module, PascalCaseName name, Schema schema) {
         ModelContext context = new ModelContext(name, schema, this.resolver);
+        // TODO: Make modelsBasePath a CratePath here, and add method to CratePath to convert to Path.
         return new ModelFile(module, context, this.modelTemplate, modelsBasePath);
     }
 

@@ -42,8 +42,7 @@ public class RedfishCodegen {
         mappers[3] = new UnversionedModelMapper();
 
         this.resolver = new ModelResolver(mappers);
-        this.fileFactory = new FileFactory(new DefaultMustacheFactory(),
-                new SnakeCaseName(RustConfig.MODELS_BASE_MODULE), this.resolver);
+        this.fileFactory = new FileFactory(new DefaultMustacheFactory(), RustConfig.MODELS_BASE_MODULE, this.resolver);
 
         DocumentParser parser = new DocumentParser(this.apiDirectory + "/openapi.yaml");
 

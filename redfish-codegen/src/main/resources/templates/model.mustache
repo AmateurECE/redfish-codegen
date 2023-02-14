@@ -15,6 +15,10 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+{{#imports}}
+use {{{name}}};
+{{/imports}}
+
 #[derive(Clone, Debug, serde::Deserialize, serde::Serialize)]
 pub struct {{name}} {
 {{#properties}}

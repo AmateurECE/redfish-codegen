@@ -4,8 +4,11 @@ import com.twardyece.dmtf.text.ICaseConvertible;
 import com.twardyece.dmtf.text.PascalCaseName;
 import com.twardyece.dmtf.text.SnakeCaseName;
 
+import java.util.Arrays;
+import java.util.stream.Collectors;
+
 public class RustType {
-    private SnakeCaseName[] path;
+    private CratePath path;
     private ICaseConvertible name;
     private RustType innerType;
 
@@ -13,12 +16,12 @@ public class RustType {
         this.name = name;
     }
 
-    public RustType(SnakeCaseName[] path, PascalCaseName name) {
+    public RustType(CratePath path, PascalCaseName name) {
         this.path = path;
         this.name = name;
     }
 
-    public RustType(SnakeCaseName[] path, PascalCaseName name, RustType innerType) {
+    public RustType(CratePath path, PascalCaseName name, RustType innerType) {
         this.path = path;
         this.name = name;
         this.innerType = innerType;
@@ -32,4 +35,9 @@ public class RustType {
             return this.name.toString();
         }
     }
+
+    public CratePath getPath() { return this.path; }
+
+    // A type is primitive if it does not require importing its containing module.
+    public boolean isPrimitive() { return null == this.path; }
 }

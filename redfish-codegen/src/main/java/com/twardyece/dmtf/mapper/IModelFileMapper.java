@@ -13,6 +13,7 @@ public interface IModelFileMapper {
             this.model = model;
         }
 
+        // TODO: Do a list here, instead of an array
         public SnakeCaseName[] path;
         public PascalCaseName model;
     }

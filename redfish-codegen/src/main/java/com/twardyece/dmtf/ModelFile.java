@@ -17,6 +17,7 @@ public class ModelFile {
     private String basePath;
     private ModelContext context;
 
+    // TODO: Make module a List<>
     public ModelFile(SnakeCaseName[] module, ModelContext context, Mustache template, String modelsBasePath) {
         this.module = module;
         this.template = template;
