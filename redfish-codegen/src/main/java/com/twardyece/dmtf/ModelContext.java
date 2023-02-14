@@ -48,7 +48,7 @@ public class ModelContext {
             if (!property.propertyType.isPrimitive() && property.propertyType.getPath().isCrateLocal()) {
                 List<SnakeCaseName> components = property.propertyType.getPath().getComponents();
                 if (components.size() > 1) {
-                    List<SnakeCaseName> front = components.subList(0, 1);
+                    List<SnakeCaseName> front = components.subList(0, 2);
                     List<SnakeCaseName> back = components.subList(1, components.size());
                     CratePath importPath = CratePath.relative(front);
                     imports.add(importPath.toString());
