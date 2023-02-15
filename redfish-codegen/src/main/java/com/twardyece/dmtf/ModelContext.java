@@ -4,7 +4,6 @@ import com.twardyece.dmtf.text.CaseConversion;
 import com.twardyece.dmtf.text.PascalCaseName;
 import com.twardyece.dmtf.text.SnakeCaseName;
 import io.swagger.v3.oas.models.media.Schema;
-import org.checkerframework.checker.units.qual.C;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -45,14 +44,14 @@ public class ModelContext {
         // Get imports from properties
         ArrayList<String> imports = new ArrayList<>();
         for (Property property : this.properties) {
-            if (!property.propertyType.isPrimitive() && property.propertyType.getPath().isCrateLocal()) {
-                List<SnakeCaseName> components = property.propertyType.getPath().getComponents();
+            if (!property.rustType.isPrimitive() && property.rustType.getPath().isCrateLocal()) {
+                List<SnakeCaseName> components = property.rustType.getPath().getComponents();
                 if (components.size() > 1) {
                     List<SnakeCaseName> front = components.subList(0, 2);
                     List<SnakeCaseName> back = components.subList(1, components.size());
                     CratePath importPath = CratePath.relative(front);
                     imports.add(importPath.toString());
-                    property.setRelativePath(CratePath.relative(back));
+                    property.getRustType().setImportPath(CratePath.relative(back));
                 }
             }
         }
@@ -102,26 +101,24 @@ public class ModelContext {
     static class Property {
         Property(SnakeCaseName name, RustType type, String serdeType) {
             this.propertyName = name;
-            this.propertyType = type;
+            this.rustType = type;
             this.serdeType = serdeType;
-            this.relativePath = type.getPath();
         }
 
-        public void setRelativePath(CratePath relativePath) { this.relativePath = relativePath; }
+        public RustType getRustType() { return this.rustType; }
 
         // Methods for accessing properties in Mustache context
         public String name() { return this.propertyName.toString(); }
         public String type() {
-            if (null == this.relativePath) {
-                return this.propertyType.toString();
+            if (null == this.rustType.getPath()) {
+                return this.rustType.toString();
             } else {
-                return this.relativePath.joinType(this.propertyType);
+                return this.rustType.getPath().joinType(this.rustType);
             }
         }
 
         SnakeCaseName propertyName;
-        RustType propertyType;
-        CratePath relativePath;
+        RustType rustType;
 
         // Mustache property
         String serdeType;
