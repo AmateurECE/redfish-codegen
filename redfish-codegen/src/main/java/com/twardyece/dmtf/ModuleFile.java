@@ -8,23 +8,32 @@ import java.io.IOException;
 import java.io.PrintWriter;
 import java.io.Writer;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.stream.Collectors;
 
 public class ModuleFile {
     private CratePath path;
-    private ArrayList<SnakeCaseName> submodules;
+    private HashMap<SnakeCaseName, ModuleContext.Submodule> submodules;
     private Mustache template;
 
     public ModuleFile(CratePath path, Mustache template) {
         this.path = path;
-        this.submodules = new ArrayList<>();
+        this.submodules = new HashMap<>();
         this.template = template;
     }
 
-    public void addSubmodule(SnakeCaseName name) {
-        if (!this.submodules.contains(name)) {
-            this.submodules.add(name);
-        }
+    // Namespace elements from "named" submodules are not re-exported in the parent submodule, so their names must
+    // prefix names of any namespace elements they export.
+    public void addNamedSubmodule(SnakeCaseName name) {
+        this.submodules.put(name, new ModuleContext.Submodule(name, false));
+    }
+
+    // All exported namespace elements from anonymous submodules are re-exported from the parent namespace, like so:
+    //   mod name;
+    //   pub use name::*;
+    // This makes them essentially "invisible" when referring to structs by path.
+    public void addAnonymousSubmodule(SnakeCaseName name) {
+        this.submodules.put(name, new ModuleContext.Submodule(name, true));
     }
 
     public void generate() throws IOException {
@@ -36,7 +45,7 @@ public class ModuleFile {
         moduleFile.createNewFile();
 
         // Construct context
-        ModuleContext context = new ModuleContext(this.submodules.stream().sorted().distinct().collect(Collectors.toList()));
+        ModuleContext context = new ModuleContext(this.submodules.values());
 
         // Render the template
         Writer writer = new PrintWriter(moduleFile);

@@ -73,4 +73,9 @@ public class SnakeCaseName implements ICaseConvertible, Comparable<SnakeCaseName
             return false;
         }
     }
+
+    @Override
+    public int hashCode() {
+        return this.toString().hashCode();
+    }
 }

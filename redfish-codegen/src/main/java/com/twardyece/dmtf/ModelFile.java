@@ -30,7 +30,7 @@ public class ModelFile {
                     modules.put(path.toString(), factory.makeModuleFile(path));
                 }
 
-                modules.get(path.toString()).addSubmodule(component);
+                modules.get(path.toString()).addNamedSubmodule(component);
             }
 
             path = path.append(component);
@@ -41,7 +41,7 @@ public class ModelFile {
             modules.put(path.toString(), factory.makeModuleFile(path));
         }
 
-        modules.get(path.toString()).addSubmodule(this.context.getModule());
+        modules.get(path.toString()).addAnonymousSubmodule(this.context.getModule());
     }
 
     public void generate() throws IOException {

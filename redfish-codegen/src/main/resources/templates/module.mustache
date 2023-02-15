@@ -16,5 +16,12 @@
 // limitations under the License.
 
 {{#submodules}}
+{{#isUsed}}
+mod {{name}};
+pub use {{name}}::*;
+
+{{/isUsed}}
+{{^isUsed}}
 pub mod {{name}};
+{{/isUsed}}
 {{/submodules}}
