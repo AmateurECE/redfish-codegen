@@ -44,16 +44,7 @@ public class ModelContext {
         // Get imports from properties
         ArrayList<String> imports = new ArrayList<>();
         for (Property property : this.properties) {
-            if (!property.rustType.isPrimitive() && property.rustType.getPath().isCrateLocal()) {
-                List<SnakeCaseName> components = property.rustType.getPath().getComponents();
-                if (components.size() > 1) {
-                    List<SnakeCaseName> front = components.subList(0, 2);
-                    List<SnakeCaseName> back = components.subList(1, components.size());
-                    CratePath importPath = CratePath.relative(front);
-                    imports.add(importPath.toString());
-                    property.getRustType().setImportPath(CratePath.relative(back));
-                }
-            }
+            addImports(imports, property.getRustType());
         }
 
         this.imports = imports.stream().sorted().distinct().map((path) -> new Import(path)).collect(Collectors.toList());
@@ -68,6 +59,24 @@ public class ModelContext {
             serdeType = property.getKey();
         }
         return new Property(sanitizedName, resolver.resolveType(property.getValue()), serdeType);
+    }
+
+    private static void addImports(List<String> imports, RustType rustType) {
+        // First, handle any inner types
+        if (null != rustType.getInnerType()) {
+            addImports(imports, rustType.getInnerType());
+        }
+
+        if (!rustType.isPrimitive() && rustType.getPath().isCrateLocal()) {
+            List<SnakeCaseName> components = rustType.getPath().getComponents();
+            if (components.size() > 1) {
+                List<SnakeCaseName> front = components.subList(0, 2);
+                List<SnakeCaseName> back = components.subList(1, components.size());
+                CratePath importPath = CratePath.relative(front);
+                imports.add(importPath.toString());
+                rustType.setImportPath(CratePath.relative(back));
+            }
+        }
     }
 
     private static SnakeCaseName sanitizePropertyName(String name) {
@@ -110,10 +119,10 @@ public class ModelContext {
         // Methods for accessing properties in Mustache context
         public String name() { return this.propertyName.toString(); }
         public String type() {
-            if (null == this.rustType.getPath()) {
+            if (null == this.rustType.getImportPath()) {
                 return this.rustType.toString();
             } else {
-                return this.rustType.getPath().joinType(this.rustType);
+                return this.rustType.getImportPath().joinType(this.rustType);
             }
         }
 

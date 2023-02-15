@@ -35,7 +35,11 @@ public class RustType {
     @Override
     public String toString() {
         if (null != this.innerType) {
-            return this.name.toString() + "<" + this.innerType.getPath().joinType(this.innerType) + ">";
+            if (null != this.innerType.importPath) {
+                return this.name.toString() + "<" + this.innerType.importPath.joinType(this.innerType) + ">";
+            } else {
+                return this.name.toString() + "<" + this.innerType.toString() + ">";
+            }
         } else {
             return this.name.toString();
         }
@@ -47,6 +51,7 @@ public class RustType {
     public boolean isPrimitive() { return null == this.path; }
 
     public void setImportPath(CratePath path) { this.importPath = path; }
+    public CratePath getImportPath() { return this.importPath; }
 
     public RustType getInnerType() { return this.innerType; }
 }
