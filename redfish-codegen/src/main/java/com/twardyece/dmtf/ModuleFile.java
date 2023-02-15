@@ -25,7 +25,9 @@ public class ModuleFile {
     // Namespace elements from "named" submodules are not re-exported in the parent submodule, so their names must
     // prefix names of any namespace elements they export.
     public void addNamedSubmodule(SnakeCaseName name) {
-        this.submodules.put(name, new ModuleContext.Submodule(name, false));
+        // TODO: Instead of calling escapeReservedKeyword here, create a SanitarySnakeCaseIdentifier class that
+        // ensures the identifier can be used in Rust code.
+        this.submodules.put(name, new ModuleContext.Submodule(RustConfig.escapeReservedKeyword(name), false));
     }
 
     // All exported namespace elements from anonymous submodules are re-exported from the parent namespace, like so:
@@ -33,7 +35,7 @@ public class ModuleFile {
     //   pub use name::*;
     // This makes them essentially "invisible" when referring to structs by path.
     public void addAnonymousSubmodule(SnakeCaseName name) {
-        this.submodules.put(name, new ModuleContext.Submodule(name, true));
+        this.submodules.put(name, new ModuleContext.Submodule(RustConfig.escapeReservedKeyword(name), true));
     }
 
     public void generate() throws IOException {

@@ -10,7 +10,7 @@ import java.util.stream.Collectors;
 public class SnakeCaseName implements ICaseConvertible, Comparable<SnakeCaseName> {
     private ArrayList<IWord> words;
 
-    private static final Pattern snakeCase = Pattern.compile("([a-z0-9]+)");
+    private static final Pattern snakeCase = Pattern.compile("([#a-z0-9]+)");
     private static final Pattern uppercase = Pattern.compile("[A-Z]");
 
     public SnakeCaseName(ICaseConvertible originalCase) {

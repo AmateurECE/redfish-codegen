@@ -86,7 +86,7 @@ public class ModelContext {
                 .split(" "))
                 .map((identifier) -> CaseConversion.toSnakeCase(identifier))
                 .collect(Collectors.toList());
-        return new SnakeCaseName(safeName);
+        return RustConfig.escapeReservedKeyword(new SnakeCaseName(safeName));
     }
 
     private static String removeReservedCharactersInFirstPosition(String name) {
