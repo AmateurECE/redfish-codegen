@@ -1,4 +1,4 @@
-package com.twardyece.dmtf.mapper;
+package com.twardyece.dmtf.model.mapper;
 
 import com.twardyece.dmtf.CratePath;
 import com.twardyece.dmtf.RustConfig;

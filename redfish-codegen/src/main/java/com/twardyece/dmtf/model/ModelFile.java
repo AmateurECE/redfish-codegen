@@ -1,14 +1,16 @@
-package com.twardyece.dmtf;
+package com.twardyece.dmtf.model;
 
 import com.github.mustachejava.Mustache;
+import com.twardyece.dmtf.CratePath;
+import com.twardyece.dmtf.FileFactory;
+import com.twardyece.dmtf.ModuleFile;
+import com.twardyece.dmtf.model.ModelContext;
 import com.twardyece.dmtf.text.SnakeCaseName;
 
 import java.io.File;
 import java.io.IOException;
 import java.io.PrintWriter;
 import java.io.Writer;
-import java.util.ArrayList;
-import java.util.List;
 import java.util.Map;
 
 public class ModelFile {

@@ -1,6 +1,7 @@
-package com.twardyece.dmtf;
+package com.twardyece.dmtf.model;
 
-import com.twardyece.dmtf.mapper.IModelFileMapper;
+import com.twardyece.dmtf.RustType;
+import com.twardyece.dmtf.model.mapper.IModelFileMapper;
 import com.twardyece.dmtf.text.PascalCaseName;
 import com.twardyece.dmtf.text.SnakeCaseName;
 import io.swagger.v3.oas.models.media.Schema;

@@ -2,8 +2,10 @@ package com.twardyece.dmtf;
 
 import com.github.mustachejava.Mustache;
 import com.github.mustachejava.MustacheFactory;
+import com.twardyece.dmtf.model.ModelContext;
+import com.twardyece.dmtf.model.ModelFile;
+import com.twardyece.dmtf.model.ModelResolver;
 import com.twardyece.dmtf.text.PascalCaseName;
-import com.twardyece.dmtf.text.SnakeCaseName;
 import io.swagger.v3.oas.models.media.Schema;
 
 public class FileFactory {
