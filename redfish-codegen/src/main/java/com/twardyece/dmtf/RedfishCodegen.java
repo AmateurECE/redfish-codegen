@@ -1,22 +1,31 @@
 package com.twardyece.dmtf;
 
 import com.github.mustachejava.DefaultMustacheFactory;
+import com.twardyece.dmtf.api.ApiResolver;
+import com.twardyece.dmtf.api.mapper.IApiFileMapper;
+import com.twardyece.dmtf.api.mapper.ParametrizedApiMapper;
+import com.twardyece.dmtf.api.mapper.RootApiMapper;
 import com.twardyece.dmtf.model.ModelFile;
+import com.twardyece.dmtf.model.ModelResolver;
 import com.twardyece.dmtf.model.mapper.IModelFileMapper;
 import com.twardyece.dmtf.model.mapper.SimpleModelMapper;
 import com.twardyece.dmtf.model.mapper.UnversionedModelMapper;
 import com.twardyece.dmtf.model.mapper.VersionedModelMapper;
-import com.twardyece.dmtf.model.ModelResolver;
 import com.twardyece.dmtf.openapi.DocumentParser;
 import com.twardyece.dmtf.text.SnakeCaseName;
 import io.swagger.v3.oas.models.OpenAPI;
+import io.swagger.v3.oas.models.PathItem;
 import io.swagger.v3.oas.models.media.Schema;
 import org.apache.commons.cli.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.io.File;
+import java.io.FileNotFoundException;
+import java.io.FileOutputStream;
 import java.io.IOException;
-import java.util.*;
+import java.util.HashMap;
+import java.util.Map;
 import java.util.regex.Pattern;
 
 /**
@@ -77,8 +86,19 @@ public class RedfishCodegen {
         }
     }
 
-    public void generateApis() {
-        // TODO
+    public void generateApis() throws IOException {
+        FileOutputStream outputFile = new FileOutputStream("paths.txt");
+        outputFile.write(String.join("\n", this.document.getPaths().keySet()).getBytes());
+        outputFile.close();
+
+        HashMap<String, IApiFileMapper.ApiMatchResult> paths = new HashMap<>();
+        IApiFileMapper[] mappers = new IApiFileMapper[2];
+        mappers[0] = new RootApiMapper();
+        mappers[1] = new ParametrizedApiMapper();
+        ApiResolver resolver = new ApiResolver(mappers);
+        for (Map.Entry<String, PathItem> entry : this.document.getPaths().entrySet()) {
+            paths.put(entry.getKey(), resolver.resolve(entry.getKey()));
+        }
     }
 
     public static void main(String[] args) {
@@ -102,6 +122,7 @@ public class RedfishCodegen {
 
             RedfishCodegen codegen = new RedfishCodegen(apiDirectory, crateDirectory);
             codegen.generateModels();
+            codegen.generateApis();
         } catch (ParseException e) {
             System.out.println(e.getMessage());
             formatter.printHelp("RedfishCodegen", options);
