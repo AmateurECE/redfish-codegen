@@ -10,16 +10,24 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 public class ParametrizedApiMapper implements IApiFileMapper {
-    private static Pattern pattern = Pattern.compile("(?<=/)([$_A-Za-z0-9]+)(?=/?$)|([A-Za-z0-9]*)(?=/\\{[A-Za-z0-9]*\\})");
+    private static String prefix = "/redfish/v1/";
+    private static Pattern pattern = Pattern.compile("(?<=\\.)([A-Za-z0-9]+)|(?<=\\{)([A-Za-z0-9]+)(?=\\})|([A-Za-z0-9]+)$");
 
     public ApiMatchResult matches(String path) {
-        Matcher matcher = pattern.matcher(path);
+        String[] components = path.substring(prefix.length()).split("/");
         List<SnakeCaseName> module = new ArrayList<>();
-        while (matcher.find()) {
-            if (null != matcher.group(2)) {
-                module.add(CaseConversion.toSnakeCase(matcher.group(2)));
-            } else if (null != matcher.group(1)) {
-                module.add(CaseConversion.toSnakeCase(matcher.group(1)));
+        for (String component : components) {
+            Matcher matcher = pattern.matcher(component);
+            if (matcher.find()) {
+                if (null != matcher.group(1)) { // An action
+                    module.add(CaseConversion.toSnakeCase(matcher.group(1)));
+                } else if (null != matcher.group(2)) {
+                    // Intentionally ignore case two, which matches on path parameters
+                } else if (null != matcher.group(3)) { // A PascalCase identifier
+                    module.add(CaseConversion.toSnakeCase(matcher.group(3)));
+                }
+            } else {
+                return null;
             }
         }
 

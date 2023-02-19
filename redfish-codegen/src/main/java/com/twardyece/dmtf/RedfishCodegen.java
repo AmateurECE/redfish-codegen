@@ -2,6 +2,7 @@ package com.twardyece.dmtf;
 
 import com.github.mustachejava.DefaultMustacheFactory;
 import com.twardyece.dmtf.api.ApiResolver;
+import com.twardyece.dmtf.api.PathMapper;
 import com.twardyece.dmtf.api.mapper.IApiFileMapper;
 import com.twardyece.dmtf.api.mapper.ParametrizedApiMapper;
 import com.twardyece.dmtf.api.mapper.RootApiMapper;
@@ -87,17 +88,9 @@ public class RedfishCodegen {
     }
 
     public void generateApis() throws IOException {
-        FileOutputStream outputFile = new FileOutputStream("paths.txt");
-        outputFile.write(String.join("\n", this.document.getPaths().keySet()).getBytes());
-        outputFile.close();
-
-        HashMap<String, IApiFileMapper.ApiMatchResult> paths = new HashMap<>();
-        IApiFileMapper[] mappers = new IApiFileMapper[2];
-        mappers[0] = new RootApiMapper();
-        mappers[1] = new ParametrizedApiMapper();
-        ApiResolver resolver = new ApiResolver(mappers);
+        PathMapper mapper = new PathMapper();
         for (Map.Entry<String, PathItem> entry : this.document.getPaths().entrySet()) {
-            paths.put(entry.getKey(), resolver.resolve(entry.getKey()));
+            mapper.addEndpoint(entry.getKey());
         }
     }
 
