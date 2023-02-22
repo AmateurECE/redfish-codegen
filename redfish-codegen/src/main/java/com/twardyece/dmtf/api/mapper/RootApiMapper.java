@@ -1,6 +1,7 @@
 package com.twardyece.dmtf.api.mapper;
 
 import com.twardyece.dmtf.CratePath;
+import com.twardyece.dmtf.text.PascalCaseName;
 import com.twardyece.dmtf.text.SnakeCaseName;
 
 import java.util.ArrayList;

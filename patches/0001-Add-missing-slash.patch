@@ -1,0 +1,93 @@
+A missing slash in some API endpoints which provide NetworkDeviceFunction-related functionality prevents accurate parsing.
+--- a/api/openapi/openapi.yaml
++++ b/api/openapi/openapi.yaml
+@@ -24629,7 +24629,7 @@
+               schema:
+                 $ref: '#/components/schemas/RedfishError'
+           description: Error condition
+-  ? /redfish/v1/CompositionService/ResourceBlocks/{ResourceBlockId}/NetworkInterfaces/{NetworkInterfaceId}/NetworkDeviceFunctions{NetworkDeviceFunctionId}/AllowDeny
++  ? /redfish/v1/CompositionService/ResourceBlocks/{ResourceBlockId}/NetworkInterfaces/{NetworkInterfaceId}/NetworkDeviceFunctions/{NetworkDeviceFunctionId}/AllowDeny
+   : get:
+       parameters:
+       - description: The value of the Id property of the ResourceBlock resource
+@@ -24711,7 +24711,7 @@
+               schema:
+                 $ref: '#/components/schemas/RedfishError'
+           description: Error condition
+-  ? /redfish/v1/CompositionService/ResourceBlocks/{ResourceBlockId}/NetworkInterfaces/{NetworkInterfaceId}/NetworkDeviceFunctions{NetworkDeviceFunctionId}/AllowDeny/{AllowDenyId}
++  ? /redfish/v1/CompositionService/ResourceBlocks/{ResourceBlockId}/NetworkInterfaces/{NetworkInterfaceId}/NetworkDeviceFunctions/{NetworkDeviceFunctionId}/AllowDeny/{AllowDenyId}
+   : delete:
+       parameters:
+       - description: The value of the Id property of the ResourceBlock resource
+@@ -39892,7 +39892,7 @@
+               schema:
+                 $ref: '#/components/schemas/RedfishError'
+           description: Error condition
+-  ? /redfish/v1/CompositionService/ResourceBlocks/{ResourceBlockId}/Systems/{ComputerSystemId}/NetworkInterfaces/{NetworkInterfaceId}/NetworkDeviceFunctions{NetworkDeviceFunctionId}/AllowDeny
++  ? /redfish/v1/CompositionService/ResourceBlocks/{ResourceBlockId}/Systems/{ComputerSystemId}/NetworkInterfaces/{NetworkInterfaceId}/NetworkDeviceFunctions/{NetworkDeviceFunctionId}/AllowDeny
+   : get:
+       parameters:
+       - description: The value of the Id property of the ResourceBlock resource
+@@ -39986,7 +39986,7 @@
+               schema:
+                 $ref: '#/components/schemas/RedfishError'
+           description: Error condition
+-  ? /redfish/v1/CompositionService/ResourceBlocks/{ResourceBlockId}/Systems/{ComputerSystemId}/NetworkInterfaces/{NetworkInterfaceId}/NetworkDeviceFunctions{NetworkDeviceFunctionId}/AllowDeny/{AllowDenyId}
++  ? /redfish/v1/CompositionService/ResourceBlocks/{ResourceBlockId}/Systems/{ComputerSystemId}/NetworkInterfaces/{NetworkInterfaceId}/NetworkDeviceFunctions/{NetworkDeviceFunctionId}/AllowDeny/{AllowDenyId}
+   : delete:
+       parameters:
+       - description: The value of the Id property of the ResourceBlock resource
+@@ -82144,7 +82144,7 @@
+               schema:
+                 $ref: '#/components/schemas/RedfishError'
+           description: Error condition
+-  ? /redfish/v1/ResourceBlocks/{ResourceBlockId}/NetworkInterfaces/{NetworkInterfaceId}/NetworkDeviceFunctions{NetworkDeviceFunctionId}/AllowDeny
++  ? /redfish/v1/ResourceBlocks/{ResourceBlockId}/NetworkInterfaces/{NetworkInterfaceId}/NetworkDeviceFunctions/{NetworkDeviceFunctionId}/AllowDeny
+   : get:
+       parameters:
+       - description: The value of the Id property of the ResourceBlock resource
+@@ -82226,7 +82226,7 @@
+               schema:
+                 $ref: '#/components/schemas/RedfishError'
+           description: Error condition
+-  ? /redfish/v1/ResourceBlocks/{ResourceBlockId}/NetworkInterfaces/{NetworkInterfaceId}/NetworkDeviceFunctions{NetworkDeviceFunctionId}/AllowDeny/{AllowDenyId}
++  ? /redfish/v1/ResourceBlocks/{ResourceBlockId}/NetworkInterfaces/{NetworkInterfaceId}/NetworkDeviceFunctions/{NetworkDeviceFunctionId}/AllowDeny/{AllowDenyId}
+   : delete:
+       parameters:
+       - description: The value of the Id property of the ResourceBlock resource
+@@ -97407,7 +97407,7 @@
+               schema:
+                 $ref: '#/components/schemas/RedfishError'
+           description: Error condition
+-  ? /redfish/v1/ResourceBlocks/{ResourceBlockId}/Systems/{ComputerSystemId}/NetworkInterfaces/{NetworkInterfaceId}/NetworkDeviceFunctions{NetworkDeviceFunctionId}/AllowDeny
++  ? /redfish/v1/ResourceBlocks/{ResourceBlockId}/Systems/{ComputerSystemId}/NetworkInterfaces/{NetworkInterfaceId}/NetworkDeviceFunctions/{NetworkDeviceFunctionId}/AllowDeny
+   : get:
+       parameters:
+       - description: The value of the Id property of the ResourceBlock resource
+@@ -97501,7 +97501,7 @@
+               schema:
+                 $ref: '#/components/schemas/RedfishError'
+           description: Error condition
+-  ? /redfish/v1/ResourceBlocks/{ResourceBlockId}/Systems/{ComputerSystemId}/NetworkInterfaces/{NetworkInterfaceId}/NetworkDeviceFunctions{NetworkDeviceFunctionId}/AllowDeny/{AllowDenyId}
++  ? /redfish/v1/ResourceBlocks/{ResourceBlockId}/Systems/{ComputerSystemId}/NetworkInterfaces/{NetworkInterfaceId}/NetworkDeviceFunctions/{NetworkDeviceFunctionId}/AllowDeny/{AllowDenyId}
+   : delete:
+       parameters:
+       - description: The value of the Id property of the ResourceBlock resource
+@@ -132311,7 +132311,7 @@
+               schema:
+                 $ref: '#/components/schemas/RedfishError'
+           description: Error condition
+-  ? /redfish/v1/Systems/{ComputerSystemId}/NetworkInterfaces/{NetworkInterfaceId}/NetworkDeviceFunctions{NetworkDeviceFunctionId}/AllowDeny
++  ? /redfish/v1/Systems/{ComputerSystemId}/NetworkInterfaces/{NetworkInterfaceId}/NetworkDeviceFunctions/{NetworkDeviceFunctionId}/AllowDeny
+   : get:
+       parameters:
+       - description: The value of the Id property of the ComputerSystem resource
+@@ -132393,7 +132393,7 @@
+               schema:
+                 $ref: '#/components/schemas/RedfishError'
+           description: Error condition
+-  ? /redfish/v1/Systems/{ComputerSystemId}/NetworkInterfaces/{NetworkInterfaceId}/NetworkDeviceFunctions{NetworkDeviceFunctionId}/AllowDeny/{AllowDenyId}
++  ? /redfish/v1/Systems/{ComputerSystemId}/NetworkInterfaces/{NetworkInterfaceId}/NetworkDeviceFunctions/{NetworkDeviceFunctionId}/AllowDeny/{AllowDenyId}
+   : delete:
+       parameters:
+       - description: The value of the Id property of the ComputerSystem resource

@@ -2,7 +2,8 @@ package com.twardyece.dmtf;
 
 import com.github.mustachejava.DefaultMustacheFactory;
 import com.twardyece.dmtf.api.ApiResolver;
-import com.twardyece.dmtf.api.PathMapper;
+import com.twardyece.dmtf.api.ApiTrait;
+import com.twardyece.dmtf.api.PathMap;
 import com.twardyece.dmtf.api.mapper.IApiFileMapper;
 import com.twardyece.dmtf.api.mapper.ParametrizedApiMapper;
 import com.twardyece.dmtf.api.mapper.RootApiMapper;
@@ -21,11 +22,9 @@ import org.apache.commons.cli.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.io.File;
-import java.io.FileNotFoundException;
-import java.io.FileOutputStream;
 import java.io.IOException;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.regex.Pattern;
 
@@ -88,10 +87,18 @@ public class RedfishCodegen {
     }
 
     public void generateApis() throws IOException {
-        PathMapper mapper = new PathMapper();
+        PathMap map = new PathMap();
         for (Map.Entry<String, PathItem> entry : this.document.getPaths().entrySet()) {
-            mapper.addEndpoint(entry.getKey());
+            map.addEndpoint(entry.getKey(), entry.getValue());
         }
+
+        map.normalize();
+
+        IApiFileMapper[] mappers = new IApiFileMapper[2];
+        mappers[0] = new RootApiMapper();
+        mappers[1] = new ParametrizedApiMapper();
+        ApiResolver resolver = new ApiResolver(mappers);
+        List<ApiTrait> traits = map.getTraits(resolver);
     }
 
     public static void main(String[] args) {
