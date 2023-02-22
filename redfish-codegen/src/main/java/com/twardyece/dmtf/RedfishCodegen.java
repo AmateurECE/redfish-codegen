@@ -87,12 +87,7 @@ public class RedfishCodegen {
     }
 
     public void generateApis() throws IOException {
-        PathMap map = new PathMap();
-        for (Map.Entry<String, PathItem> entry : this.document.getPaths().entrySet()) {
-            map.addEndpoint(entry.getKey(), entry.getValue());
-        }
-
-        map.normalize();
+        PathMap map = new PathMap(this.document.getPaths());
 
         IApiFileMapper[] mappers = new IApiFileMapper[2];
         mappers[0] = new RootApiMapper();

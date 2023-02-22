@@ -10,54 +10,63 @@ import org.jgrapht.graph.DefaultDirectedGraph;
 import org.jgrapht.graph.DefaultEdge;
 import org.jgrapht.traverse.DepthFirstIterator;
 
-import java.nio.file.Path;
-import java.util.ArrayList;
-import java.util.Iterator;
-import java.util.List;
+import java.util.*;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
 public class PathMap {
     private Graph<ApiEndpoint, DefaultEdge> graph;
-    private static VertexNamespaceMultiplexer mux = new VertexNamespaceMultiplexer("Actions",
-            Pattern.compile("(?<=Actions/)([A-Za-z0-9]+).(?<name>[A-Za-z0-9]+)"), "name");
-    private static ApiEndpoint mountpoint = ApiEndpoint.component("mnt");
+    private Map<String, ApiEndpoint> endpoints;
+    ApiEndpoint root;
+    private static final PathNameTranslator pathName = new PathNameTranslator();
 
-    public PathMap() {
+    public PathMap(HashMap<String, PathItem> paths) {
         this.graph = new DefaultDirectedGraph<>(DefaultEdge.class);
-        this.graph.addVertex(PathMap.mountpoint);
+        this.endpoints = new HashMap<>();
+
+        List<String> sorted = paths.keySet().stream().sorted().collect(Collectors.toList());
+        for (String path : sorted) {
+            addEndpoint(path, paths.get(path));
+        }
+
+        this.normalize();
     }
 
-    public void addEndpoint(String path, PathItem pathItem) {
+    private void addEndpoint(String path, PathItem pathItem) {
+        // TODO: Change the structure of the graph up
+        // vertices are API endpoints (not a mix of path components and API endpoints), and edges flow to API endpoints
+        // at sub-paths of other API endpoints.
         int endIndex = path.length();
         if ('/' == path.charAt(path.length() - 1)) {
             endIndex = path.length() - 1;
         }
 
-        String[] components = path.substring(0, endIndex).split("/");
-        if (2 > components.length) {
-            return;
-        }
+        path = path.substring(0, endIndex);
 
-        ApiEndpoint previous = ApiEndpoint.component(components[0]);
-        this.graph.addVertex(previous);
-        for (int i = 1; i < components.length; ++i) {
-            String name = this.mux.mux(components[i], path);
-            ApiEndpoint current = ApiEndpoint.component(name);
-            this.graph.addVertex(current);
+        String name = pathName.translate(path, pathItem);
+        ApiEndpoint current = new ApiEndpoint(name, path, pathItem);
+        this.graph.addVertex(current);
+        this.endpoints.put(path, current);
+
+        if (2 < this.endpoints.size()) {
+            String maxSubstring = "";
+            for (String endpoint : this.endpoints.keySet()) {
+                if (path.contains(endpoint) && endpoint.length() > maxSubstring.length()) {
+                    maxSubstring = endpoint;
+                }
+            }
+
+            ApiEndpoint previous = this.endpoints.get(maxSubstring);
             this.graph.addEdge(previous, current);
-            previous = current;
+        } else {
+            this.root = current;
         }
-
-        ApiEndpoint endpoint = ApiEndpoint.endpoint(path, pathItem);
-        this.graph.addVertex(endpoint);
-        this.graph.addEdge(previous, endpoint);
     }
 
-    public void normalize() {
+    private void normalize() {
         List<ApiEndpoint> mountedEndpoints = new ArrayList<>();
         UnmountPathTransformation transformation = new UnmountPathTransformation();
-        Iterator<ApiEndpoint> iterator = new DepthFirstIterator<>(this.graph, ApiEndpoint.root());
+        Iterator<ApiEndpoint> iterator = new DepthFirstIterator<>(this.graph, this.root);
         while (iterator.hasNext()) {
             ApiEndpoint endpoint = iterator.next();
             if (transformation.check(this.graph, endpoint)) {
@@ -66,30 +75,18 @@ public class PathMap {
         }
 
         for (ApiEndpoint endpoint : mountedEndpoints) {
-            transformation.perform(this.graph, endpoint, PathMap.mountpoint);
+            transformation.perform(this.graph, endpoint, this.root);
         }
     }
 
     public List<ApiTrait> getTraits(ApiResolver resolver) {
         List<ApiTrait> traits = new ArrayList<>();
-        ApiEndpoint[] roots = new ApiEndpoint[2];
-        roots[0] = ApiEndpoint.root();
-        roots[1] = PathMap.mountpoint;
-        for (ApiEndpoint root : roots) {
-            Iterator<ApiEndpoint> iterator = new DepthFirstIterator<>(this.graph, root);
-            while (iterator.hasNext()) {
-                ApiEndpoint endpoint = iterator.next();
-                if (!endpoint.isEndpoint()) {
-                    continue;
-                }
-
-                ApiEndpoint predecessor = Graphs.predecessorListOf(this.graph, endpoint).get(0);
-                List<String> paths = PathMap.getPaths(this.graph, root, predecessor);
-                for (String path : paths) {
-                    IApiFileMapper.ApiMatchResult result = resolver.resolve(path);
-                    traits.add(new ApiTrait(result.path, result.name, endpoint.getPathItem()));
-                }
-            }
+        Iterator<ApiEndpoint> iterator = new DepthFirstIterator<>(this.graph, this.root);
+        while (iterator.hasNext()) {
+            ApiEndpoint endpoint = iterator.next();
+            String path = PathMap.getPaths(this.graph, this.root, endpoint).get(0);
+            IApiFileMapper.ApiMatchResult result = resolver.resolve(path);
+            traits.add(new ApiTrait(result.path, result.name, endpoint.getPathItem()));
         }
 
         return traits;
@@ -99,7 +96,7 @@ public class PathMap {
         AllDirectedPaths<ApiEndpoint, DefaultEdge> pathFinder = new AllDirectedPaths<>(graph);
         List<GraphPath<ApiEndpoint, DefaultEdge>> paths = pathFinder.getAllPaths(start, finish, true, null);
         return paths.stream()
-                .map((path) -> String.join("/", path.getVertexList().stream().map((vertex) -> PathMap.mux.demux(vertex.getName())).collect(Collectors.toList())))
+                .map((path) -> String.join("/", path.getVertexList().stream().map((vertex) -> vertex.getName()).collect(Collectors.toList())))
                 .collect(Collectors.toList());
     }
 }

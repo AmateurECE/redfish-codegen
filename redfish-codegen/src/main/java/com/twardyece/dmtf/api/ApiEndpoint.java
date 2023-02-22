@@ -7,24 +7,20 @@ import java.util.Collection;
 import java.util.List;
 
 class ApiEndpoint implements Comparable<ApiEndpoint> {
-    public static ApiEndpoint component(String name) {
-        ApiEndpoint endpoint = new ApiEndpoint();
-        endpoint.name = name;
-        return endpoint;
-    }
-    public static ApiEndpoint root() { return ApiEndpoint.component(""); }
-    public static ApiEndpoint endpoint(String name, PathItem pathItem) {
-        ApiEndpoint endpoint = ApiEndpoint.component(name);
-        endpoint.pathItem = pathItem;
-        return endpoint;
+    public ApiEndpoint(String name, String path, PathItem pathItem) {
+        this.name = name;
+        this.path = path;
+        this.pathItem = pathItem;
     }
 
     private String name;
+    private String path;
     private PathItem pathItem;
     private List<String> validMountpoints;
 
     public boolean isEndpoint() { return null != this.pathItem; }
     public String getName() { return this.name; }
+    public String getPath() { return this.path; }
     public PathItem getPathItem() { return this.pathItem; }
     public void setValidMountpoints(List<String> mountpoints) { this.validMountpoints = mountpoints; }
 
