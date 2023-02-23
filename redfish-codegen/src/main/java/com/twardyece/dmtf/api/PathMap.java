@@ -3,6 +3,7 @@ package com.twardyece.dmtf.api;
 import io.swagger.v3.oas.models.PathItem;
 import org.jgrapht.Graph;
 import org.jgrapht.GraphPath;
+import org.jgrapht.Graphs;
 import org.jgrapht.alg.shortestpath.AllDirectedPaths;
 import org.jgrapht.graph.DefaultDirectedGraph;
 import org.jgrapht.graph.DefaultEdge;
@@ -78,8 +79,8 @@ public class PathMap {
         }
     }
 
-    public List<ApiTrait> getTraits(EndpointResolver resolver) {
-        List<ApiTrait> traits = new ArrayList<>();
+    public List<TraitContext> getTraits(EndpointResolver resolver) {
+        Map<String, TraitContext> traits = new HashMap<>();
 
         // Create a mapping from endpoint to path, which allows us to determine the valid mountpoints for a trait
         Map<String, List<String>> mountpoints = new HashMap<>();
@@ -111,10 +112,15 @@ public class PathMap {
 
             // TODO: Currently, mountpoints will get all of the mountpoints listed from the openapi specification.
             //      maybe we only want to report mountpoints that correspond to pre-normalized graph edges?
-            traits.add(new ApiTrait(result.path, result.name, endpoint.getPathItem(),
-                    mountpoints.get(endpoint.toString())));
+            TraitContext trait = new TraitContext(result.path, result.name, endpoint.getPathItem(),
+                    mountpoints.get(endpoint.toString()));
+            traits.put(endpoint.toString(), trait);
+
+            // Add this trait as a submodule to the preceding traits
+            Graphs.predecessorListOf(this.graph, endpoint)
+                    .forEach((e) -> traits.get(e.toString()).addSubmodule(trait.path));
         }
 
-        return traits;
+        return traits.values().stream().toList();
     }
 }

@@ -1,7 +1,7 @@
 package com.twardyece.dmtf;
 
 import com.github.mustachejava.DefaultMustacheFactory;
-import com.twardyece.dmtf.api.ApiTrait;
+import com.twardyece.dmtf.api.TraitContext;
 import com.twardyece.dmtf.api.EndpointResolver;
 import com.twardyece.dmtf.api.NameMapper;
 import com.twardyece.dmtf.api.PathMap;
@@ -92,7 +92,7 @@ public class RedfishCodegen {
         mappers[2] = new NameMapper(Pattern.compile("(?<=\\.)(?<name>[A-Za-z0-9]+)$"), "name");
         mappers[3] = new NameMapper(Pattern.compile("^\\$(?<name>metadata)$"), "name");
         EndpointResolver resolver = new EndpointResolver(mappers);
-        List<ApiTrait> traits = map.getTraits(resolver);
+        List<TraitContext> traits = map.getTraits(resolver);
     }
 
     public static void main(String[] args) {
