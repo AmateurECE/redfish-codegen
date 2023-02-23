@@ -10,19 +10,17 @@ import java.util.List;
 public class TraitContext {
     public TraitContext(CratePath path, PascalCaseName name, PathItem pathItem, List<String> mountpoints) {
         this.path = path;
-        this.name = name;
+        this.traitName = name;
         this.pathItem = pathItem;
         this.mountpoints = mountpoints;
         this.submodulePaths = new ArrayList<>();
     }
 
-    CratePath path;
-    PascalCaseName name;
-    PathItem pathItem;
-    List<String> mountpoints;
-    List<CratePath> submodulePaths;
+    public CratePath path;
+    public PascalCaseName traitName;
+    public PathItem pathItem;
+    public List<String> mountpoints;
+    public List<CratePath> submodulePaths;
 
-    public void addSubmodule(CratePath path) {
-        this.submodulePaths.add(path);
-    }
+    public String name() { return this.traitName.toString(); }
 }

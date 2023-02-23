@@ -1,10 +1,9 @@
 package com.twardyece.dmtf;
 
 import com.github.mustachejava.DefaultMustacheFactory;
-import com.twardyece.dmtf.api.TraitContext;
-import com.twardyece.dmtf.api.EndpointResolver;
-import com.twardyece.dmtf.api.NameMapper;
-import com.twardyece.dmtf.api.PathMap;
+import com.github.mustachejava.Mustache;
+import com.github.mustachejava.MustacheFactory;
+import com.twardyece.dmtf.api.*;
 import com.twardyece.dmtf.model.ModelFile;
 import com.twardyece.dmtf.model.ModelResolver;
 import com.twardyece.dmtf.model.mapper.IModelFileMapper;
@@ -20,6 +19,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -92,7 +92,13 @@ public class RedfishCodegen {
         mappers[2] = new NameMapper(Pattern.compile("(?<=\\.)(?<name>[A-Za-z0-9]+)$"), "name");
         mappers[3] = new NameMapper(Pattern.compile("^\\$(?<name>metadata)$"), "name");
         EndpointResolver resolver = new EndpointResolver(mappers);
-        List<TraitContext> traits = map.getTraits(resolver);
+
+        MustacheFactory factory = new DefaultMustacheFactory();
+        Mustache template = factory.compile("templates/api.mustache");
+        for (TraitContext trait : map.getTraits(resolver)) {
+            TraitFile file = new TraitFile(trait.path, trait, template);
+            file.generate();
+        }
     }
 
     public static void main(String[] args) {

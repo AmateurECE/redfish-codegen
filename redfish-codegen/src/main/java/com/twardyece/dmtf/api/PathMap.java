@@ -106,8 +106,6 @@ public class PathMap {
                 throw new RuntimeException("Normalization failed. Endpoint " + endpoint + " has multiple paths from root.");
             }
 
-            List<String> modulePath = apiPaths.get(0);
-            modulePath.remove(0);
             EndpointResolver.ApiMatchResult result = resolver.resolve(apiPaths.get(0));
 
             // TODO: Currently, mountpoints will get all of the mountpoints listed from the openapi specification.
@@ -118,7 +116,7 @@ public class PathMap {
 
             // Add this trait as a submodule to the preceding traits
             Graphs.predecessorListOf(this.graph, endpoint)
-                    .forEach((e) -> traits.get(e.toString()).addSubmodule(trait.path));
+                    .forEach((e) -> traits.get(e.toString()).submodulePaths.add(trait.path));
         }
 
         return traits.values().stream().toList();
