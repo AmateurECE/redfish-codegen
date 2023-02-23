@@ -1,20 +1,48 @@
 package com.twardyece.dmtf.api;
 
-import com.twardyece.dmtf.api.mapper.IApiFileMapper;
+import com.twardyece.dmtf.CratePath;
+import com.twardyece.dmtf.RustConfig;
+import com.twardyece.dmtf.text.PascalCaseName;
+import com.twardyece.dmtf.text.SnakeCaseName;
+
+import java.util.ArrayList;
+import java.util.List;
 
 public class EndpointResolver {
-    private IApiFileMapper[] mappers;
+    private NameMapper[] mappers;
 
-    public EndpointResolver(IApiFileMapper[] mappers) { this.mappers = mappers; }
+    public EndpointResolver(NameMapper[] mappers) { this.mappers = mappers; }
 
-    public IApiFileMapper.ApiMatchResult resolve(String name) {
-        for (IApiFileMapper mapper : this.mappers) {
-            IApiFileMapper.ApiMatchResult module = mapper.matches(name);
-            if (null != module) {
-                return module;
+    public ApiMatchResult resolve(List<String> path) {
+        List<SnakeCaseName> name = new ArrayList<>();
+        for (String component : path) {
+            boolean matched = false;
+            for (NameMapper mapper : this.mappers) {
+                SnakeCaseName result = mapper.matchComponent(component);
+                if (null != result) {
+                    matched = true;
+                    name.add(result);
+                    break;
+                }
+            }
+
+            if (!matched) {
+                throw new RuntimeException("No match for path component " + component);
             }
         }
 
-        return null;
+        return new ApiMatchResult(name);
     }
+
+    class ApiMatchResult {
+        public ApiMatchResult(List<SnakeCaseName> path) {
+            path.add(0, RustConfig.API_BASE_MODULE);
+            this.path = CratePath.crateLocal(path);
+            this.name = new PascalCaseName(path.get(path.size() - 1));
+        }
+
+        public CratePath path;
+        public PascalCaseName name;
+    }
+
 }

@@ -1,12 +1,10 @@
 package com.twardyece.dmtf;
 
 import com.github.mustachejava.DefaultMustacheFactory;
-import com.twardyece.dmtf.api.EndpointResolver;
 import com.twardyece.dmtf.api.ApiTrait;
+import com.twardyece.dmtf.api.EndpointResolver;
+import com.twardyece.dmtf.api.NameMapper;
 import com.twardyece.dmtf.api.PathMap;
-import com.twardyece.dmtf.api.mapper.IApiFileMapper;
-import com.twardyece.dmtf.api.mapper.ParametrizedApiMapper;
-import com.twardyece.dmtf.api.mapper.RootApiMapper;
 import com.twardyece.dmtf.model.ModelFile;
 import com.twardyece.dmtf.model.ModelResolver;
 import com.twardyece.dmtf.model.mapper.IModelFileMapper;
@@ -88,9 +86,11 @@ public class RedfishCodegen {
     public void generateApis() throws IOException {
         PathMap map = new PathMap(this.document.getPaths());
 
-        IApiFileMapper[] mappers = new IApiFileMapper[2];
-        mappers[0] = new RootApiMapper();
-        mappers[1] = new ParametrizedApiMapper();
+        NameMapper[] mappers = new NameMapper[4];
+        mappers[0] = new NameMapper(Pattern.compile("^(?<name>[A-Za-z0-9]+)$"), "name");
+        mappers[1] = new NameMapper(Pattern.compile("^\\{(?<name>[A-Za-z0-9]+)\\}$"), "name");
+        mappers[2] = new NameMapper(Pattern.compile("(?<=\\.)(?<name>[A-Za-z0-9]+)$"), "name");
+        mappers[3] = new NameMapper(Pattern.compile("^\\$(?<name>metadata)$"), "name");
         EndpointResolver resolver = new EndpointResolver(mappers);
         List<ApiTrait> traits = map.getTraits(resolver);
     }

@@ -1,5 +1,6 @@
 package com.twardyece.dmtf.api;
 
+import com.twardyece.dmtf.text.PascalCaseName;
 import io.swagger.v3.oas.models.PathItem;
 import org.checkerframework.checker.units.qual.A;
 
@@ -7,22 +8,19 @@ import java.util.Collection;
 import java.util.List;
 
 class ApiEndpoint implements Comparable<ApiEndpoint> {
-    public ApiEndpoint(String name, String path, PathItem pathItem) {
+    public ApiEndpoint(String name, String summary, PathItem pathItem) {
         this.name = name;
-        this.path = path;
+        this.summary = summary;
         this.pathItem = pathItem;
     }
 
     private String name;
-    private String path;
+    private String summary;
     private PathItem pathItem;
-    private List<String> validMountpoints;
 
-    public boolean isEndpoint() { return null != this.pathItem; }
     public String getName() { return this.name; }
-    public String getPath() { return this.path; }
+    public String getSummary() { return this.summary; }
     public PathItem getPathItem() { return this.pathItem; }
-    public void setValidMountpoints(List<String> mountpoints) { this.validMountpoints = mountpoints; }
 
     @Override
     public String toString() {

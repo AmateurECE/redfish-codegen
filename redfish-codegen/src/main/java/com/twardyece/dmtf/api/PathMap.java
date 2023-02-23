@@ -1,6 +1,5 @@
 package com.twardyece.dmtf.api;
 
-import com.twardyece.dmtf.api.mapper.IApiFileMapper;
 import io.swagger.v3.oas.models.PathItem;
 import org.jgrapht.Graph;
 import org.jgrapht.GraphPath;
@@ -31,9 +30,6 @@ public class PathMap {
     }
 
     private void addEndpoint(String path, PathItem pathItem) {
-        // TODO: Change the structure of the graph up
-        // vertices are API endpoints (not a mix of path components and API endpoints), and edges flow to API endpoints
-        // at sub-paths of other API endpoints.
         int endIndex = path.length();
         if ('/' == path.charAt(path.length() - 1)) {
             endIndex = path.length() - 1;
@@ -42,7 +38,9 @@ public class PathMap {
         path = path.substring(0, endIndex);
 
         String name = pathName.translate(path, pathItem);
-        ApiEndpoint current = new ApiEndpoint(name, path, pathItem);
+        // Use the last component of the path as the "summary".
+        String[] components = path.split("/");
+        ApiEndpoint current = new ApiEndpoint(name, components[components.length - 1], pathItem);
         this.graph.addVertex(current);
 
         if (!this.endpoints.isEmpty()) {
@@ -66,7 +64,7 @@ public class PathMap {
 
     private void normalize() {
         List<ApiEndpoint> mountedEndpoints = new ArrayList<>();
-        UnmountPathTransformation transformation = new UnmountPathTransformation();
+        UnmountVertexTransformation transformation = new UnmountVertexTransformation();
         Iterator<ApiEndpoint> iterator = new DepthFirstIterator<>(this.graph, this.root);
         while (iterator.hasNext()) {
             ApiEndpoint endpoint = iterator.next();
@@ -82,27 +80,41 @@ public class PathMap {
 
     public List<ApiTrait> getTraits(EndpointResolver resolver) {
         List<ApiTrait> traits = new ArrayList<>();
+
+        // Create a mapping from endpoint to path, which allows us to determine the valid mountpoints for a trait
+        Map<String, List<String>> mountpoints = new HashMap<>();
+        this.endpoints.values().forEach((v) -> mountpoints.put(v.toString(), new ArrayList<>()));
+        for (Map.Entry<String, ApiEndpoint> entry : this.endpoints.entrySet()) {
+            mountpoints.get(entry.getValue().toString()).add(entry.getKey());
+        }
+
+        AllDirectedPaths<ApiEndpoint, DefaultEdge> pathFinder = new AllDirectedPaths<>(this.graph);
+
         Iterator<ApiEndpoint> iterator = new DepthFirstIterator<>(this.graph, this.root);
-        List<String> allPaths = new ArrayList<>();
         while (iterator.hasNext()) {
             ApiEndpoint endpoint = iterator.next();
-            List<String> paths = PathMap.getPaths(this.graph, this.root, endpoint);
-            if (paths.size() > 1) {
-                System.out.println(endpoint);
+
+            List<GraphPath<ApiEndpoint, DefaultEdge>> paths = pathFinder.getAllPaths(this.root, endpoint, true, null);
+            List<List<String>> apiPaths = paths.stream()
+                    .map((p) -> p.getVertexList()
+                            .stream()
+                            .map((vertex) -> vertex.getSummary())
+                            .collect(Collectors.toList()))
+                    .collect(Collectors.toList());
+            if (apiPaths.size() > 1) {
+                throw new RuntimeException("Normalization failed. Endpoint " + endpoint + " has multiple paths from root.");
             }
-            allPaths.addAll(paths);
-//            IApiFileMapper.ApiMatchResult result = resolver.resolve(paths.get(0));
-//            traits.add(new ApiTrait(result.path, result.name, endpoint.getPathItem()));
+
+            List<String> modulePath = apiPaths.get(0);
+            modulePath.remove(0);
+            EndpointResolver.ApiMatchResult result = resolver.resolve(apiPaths.get(0));
+
+            // TODO: Currently, mountpoints will get all of the mountpoints listed from the openapi specification.
+            //      maybe we only want to report mountpoints that correspond to pre-normalized graph edges?
+            traits.add(new ApiTrait(result.path, result.name, endpoint.getPathItem(),
+                    mountpoints.get(endpoint.toString())));
         }
 
         return traits;
-    }
-
-    public static List<String> getPaths(Graph<ApiEndpoint, DefaultEdge> graph, ApiEndpoint start, ApiEndpoint finish) {
-        AllDirectedPaths<ApiEndpoint, DefaultEdge> pathFinder = new AllDirectedPaths<>(graph);
-        List<GraphPath<ApiEndpoint, DefaultEdge>> paths = pathFinder.getAllPaths(start, finish, true, null);
-        return paths.stream()
-                .map((path) -> String.join("/", path.getVertexList().stream().map((vertex) -> vertex.getName()).collect(Collectors.toList())))
-                .collect(Collectors.toList());
     }
 }
