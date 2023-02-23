@@ -4,14 +4,12 @@ import com.twardyece.dmtf.api.mapper.IApiFileMapper;
 import io.swagger.v3.oas.models.PathItem;
 import org.jgrapht.Graph;
 import org.jgrapht.GraphPath;
-import org.jgrapht.Graphs;
 import org.jgrapht.alg.shortestpath.AllDirectedPaths;
 import org.jgrapht.graph.DefaultDirectedGraph;
 import org.jgrapht.graph.DefaultEdge;
 import org.jgrapht.traverse.DepthFirstIterator;
 
 import java.util.*;
-import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
 public class PathMap {
@@ -46,21 +44,24 @@ public class PathMap {
         String name = pathName.translate(path, pathItem);
         ApiEndpoint current = new ApiEndpoint(name, path, pathItem);
         this.graph.addVertex(current);
-        this.endpoints.put(path, current);
 
-        if (2 < this.endpoints.size()) {
+        if (!this.endpoints.isEmpty()) {
             String maxSubstring = "";
             for (String endpoint : this.endpoints.keySet()) {
-                if (path.contains(endpoint) && endpoint.length() > maxSubstring.length()) {
+                if (path.contains(endpoint) && endpoint.length() > maxSubstring.length() && !path.equals(endpoint)) {
                     maxSubstring = endpoint;
                 }
             }
 
             ApiEndpoint previous = this.endpoints.get(maxSubstring);
-            this.graph.addEdge(previous, current);
+            if (previous != null && !previous.equals(current)) {
+                this.graph.addEdge(previous, current);
+            }
         } else {
             this.root = current;
         }
+
+        this.endpoints.put(path, current);
     }
 
     private void normalize() {
@@ -79,14 +80,19 @@ public class PathMap {
         }
     }
 
-    public List<ApiTrait> getTraits(ApiResolver resolver) {
+    public List<ApiTrait> getTraits(EndpointResolver resolver) {
         List<ApiTrait> traits = new ArrayList<>();
         Iterator<ApiEndpoint> iterator = new DepthFirstIterator<>(this.graph, this.root);
+        List<String> allPaths = new ArrayList<>();
         while (iterator.hasNext()) {
             ApiEndpoint endpoint = iterator.next();
-            String path = PathMap.getPaths(this.graph, this.root, endpoint).get(0);
-            IApiFileMapper.ApiMatchResult result = resolver.resolve(path);
-            traits.add(new ApiTrait(result.path, result.name, endpoint.getPathItem()));
+            List<String> paths = PathMap.getPaths(this.graph, this.root, endpoint);
+            if (paths.size() > 1) {
+                System.out.println(endpoint);
+            }
+            allPaths.addAll(paths);
+//            IApiFileMapper.ApiMatchResult result = resolver.resolve(paths.get(0));
+//            traits.add(new ApiTrait(result.path, result.name, endpoint.getPathItem()));
         }
 
         return traits;

@@ -1,12 +1,11 @@
 package com.twardyece.dmtf.api;
 
 import com.twardyece.dmtf.api.mapper.IApiFileMapper;
-import com.twardyece.dmtf.model.mapper.IModelFileMapper;
 
-public class ApiResolver {
+public class EndpointResolver {
     private IApiFileMapper[] mappers;
 
-    public ApiResolver(IApiFileMapper[] mappers) { this.mappers = mappers; }
+    public EndpointResolver(IApiFileMapper[] mappers) { this.mappers = mappers; }
 
     public IApiFileMapper.ApiMatchResult resolve(String name) {
         for (IApiFileMapper mapper : this.mappers) {

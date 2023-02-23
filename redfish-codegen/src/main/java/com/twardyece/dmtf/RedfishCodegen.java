@@ -1,7 +1,7 @@
 package com.twardyece.dmtf;
 
 import com.github.mustachejava.DefaultMustacheFactory;
-import com.twardyece.dmtf.api.ApiResolver;
+import com.twardyece.dmtf.api.EndpointResolver;
 import com.twardyece.dmtf.api.ApiTrait;
 import com.twardyece.dmtf.api.PathMap;
 import com.twardyece.dmtf.api.mapper.IApiFileMapper;
@@ -16,7 +16,6 @@ import com.twardyece.dmtf.model.mapper.VersionedModelMapper;
 import com.twardyece.dmtf.openapi.DocumentParser;
 import com.twardyece.dmtf.text.SnakeCaseName;
 import io.swagger.v3.oas.models.OpenAPI;
-import io.swagger.v3.oas.models.PathItem;
 import io.swagger.v3.oas.models.media.Schema;
 import org.apache.commons.cli.*;
 import org.slf4j.Logger;
@@ -92,7 +91,7 @@ public class RedfishCodegen {
         IApiFileMapper[] mappers = new IApiFileMapper[2];
         mappers[0] = new RootApiMapper();
         mappers[1] = new ParametrizedApiMapper();
-        ApiResolver resolver = new ApiResolver(mappers);
+        EndpointResolver resolver = new EndpointResolver(mappers);
         List<ApiTrait> traits = map.getTraits(resolver);
     }
 

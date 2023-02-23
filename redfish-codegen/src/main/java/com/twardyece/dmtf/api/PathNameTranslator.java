@@ -36,12 +36,19 @@ public class PathNameTranslator {
             }
         }
         if (operations.containsKey(PathItem.HttpMethod.POST)) {
-            String body = operations.get(PathItem.HttpMethod.POST).getRequestBody().get$ref();
-            name += "post#" + body + ";";
+            Content content = operations.get(PathItem.HttpMethod.POST).getRequestBody().getContent();
+            List<String> contentTypes = content.keySet().stream().toList();
+            Schema schema = content.get(contentTypes.get(0)).getSchema();
+            if (null != schema) {
+                Matcher matcher = schemaRefPattern.matcher(schema.get$ref());
+                matcher.find();
+                name += "post#" + matcher.group("name") + ";";
+            }
         }
 
         if ("".equals(name)) {
-            return path;
+            String[] components = path.split("/");
+            return components[components.length - 1] + ";";
         } else {
             return name;
         }
