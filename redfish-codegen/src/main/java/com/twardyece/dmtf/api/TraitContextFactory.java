@@ -1,5 +1,7 @@
 package com.twardyece.dmtf.api;
 
+import com.twardyece.dmtf.CratePath;
+import com.twardyece.dmtf.RustType;
 import com.twardyece.dmtf.model.ModelResolver;
 import com.twardyece.dmtf.text.CaseConversion;
 import com.twardyece.dmtf.text.PascalCaseName;
@@ -12,10 +14,7 @@ import io.swagger.v3.oas.models.parameters.Parameter;
 import io.swagger.v3.oas.models.parameters.RequestBody;
 import io.swagger.v3.oas.models.responses.ApiResponses;
 
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Map;
-import java.util.regex.Matcher;
+import java.util.*;
 import java.util.stream.Collectors;
 
 public class TraitContextFactory {
@@ -41,7 +40,12 @@ public class TraitContextFactory {
                 .map(this::makeOperation)
                 .collect(Collectors.toList());
 
-        return new TraitContext(result.path, result.name, mountpoints, operations);
+        List<CratePath> imports = this.getImports(operations);
+        if (imports.isEmpty()) {
+            imports = null;
+        }
+
+        return new TraitContext(result.path, result.name, imports, mountpoints, operations);
     }
 
     private TraitContext.Operation makeOperation(Map.Entry<PathItem.HttpMethod, Operation> entry) {
@@ -86,5 +90,47 @@ public class TraitContextFactory {
     private TraitContext.Parameter makeParameter(Parameter parameter) {
         return new TraitContext.Parameter(CaseConversion.toSnakeCase(parameter.getName()),
                 this.modelResolver.resolveType(parameter.getSchema()));
+    }
+
+    private List<CratePath> getImports(List<TraitContext.Operation> operations) {
+        Set<CratePath> imports = new HashSet<>();
+        for (TraitContext.Operation operation : operations) {
+            if (null != operation.parameters) {
+                for (TraitContext.Parameter parameter : operation.parameters) {
+                    CratePath importPath = this.configureImportPath(parameter.rustType);
+                    if (null != importPath) {
+                        imports.add(importPath);
+                    }
+                }
+            }
+
+            if (null != operation.returnType) {
+                CratePath importPath = this.configureImportPath(operation.returnType.rustType);
+                if (null != importPath) {
+                    imports.add(importPath);
+                }
+            }
+        }
+
+        return imports.stream().toList();
+    }
+
+    private CratePath configureImportPath(RustType rustType) {
+        CratePath path = rustType.getPath();
+        if (null == path) {
+            return null;
+        }
+
+        List<SnakeCaseName> components = path.getComponents();
+        if (2 < components.size()) {
+            List<SnakeCaseName> relativeImport = new ArrayList<>();
+            relativeImport.add(components.get(0));
+            relativeImport.add(components.get(1));
+            components.remove(0);
+            rustType.setImportPath(CratePath.relative(components));
+            return CratePath.relative(relativeImport);
+        } else {
+            return null;
+        }
     }
 }
