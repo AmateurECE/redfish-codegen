@@ -1,5 +1,6 @@
 package com.twardyece.dmtf.api;
 
+import com.twardyece.dmtf.text.PascalCaseName;
 import io.swagger.v3.oas.models.PathItem;
 import org.jgrapht.Graph;
 import org.jgrapht.GraphPath;
@@ -79,7 +80,7 @@ public class PathMap {
         }
     }
 
-    public List<TraitContext> getTraits(EndpointResolver resolver) {
+    public List<TraitContext> getTraits(EndpointResolver resolver, Map<PascalCaseName, PascalCaseName> traitNameOverrides) {
         Map<String, TraitContext> traits = new HashMap<>();
 
         // Create a mapping from endpoint to path, which allows us to determine the valid mountpoints for a trait
@@ -107,6 +108,9 @@ public class PathMap {
             }
 
             EndpointResolver.ApiMatchResult result = resolver.resolve(apiPaths.get(0));
+            if (traitNameOverrides.containsKey(result.name)) {
+                result.name = traitNameOverrides.get(result.name);
+            }
 
             // TODO: Currently, mountpoints will get all of the mountpoints listed from the openapi specification.
             //      maybe we only want to report mountpoints that correspond to pre-normalized graph edges?

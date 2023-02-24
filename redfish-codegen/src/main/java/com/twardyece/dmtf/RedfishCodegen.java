@@ -11,6 +11,7 @@ import com.twardyece.dmtf.model.mapper.SimpleModelMapper;
 import com.twardyece.dmtf.model.mapper.UnversionedModelMapper;
 import com.twardyece.dmtf.model.mapper.VersionedModelMapper;
 import com.twardyece.dmtf.openapi.DocumentParser;
+import com.twardyece.dmtf.text.PascalCaseName;
 import com.twardyece.dmtf.text.SnakeCaseName;
 import io.swagger.v3.oas.models.OpenAPI;
 import io.swagger.v3.oas.models.media.Schema;
@@ -101,7 +102,11 @@ public class RedfishCodegen {
 
         MustacheFactory factory = new DefaultMustacheFactory();
         Mustache template = factory.compile("templates/api.mustache");
-        for (TraitContext trait : map.getTraits(resolver)) {
+
+        Map<PascalCaseName, PascalCaseName> traitNameOverrides = new HashMap<>();
+        traitNameOverrides.put(new PascalCaseName("V1"), new PascalCaseName("ServiceRoot"));
+
+        for (TraitContext trait : map.getTraits(resolver, traitNameOverrides)) {
             if (trait.path.getComponents().size() == pathDepth + 1) {
                 apiModule.addNamedSubmodule(trait.path.getLastComponent());
             }
