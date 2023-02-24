@@ -10,7 +10,7 @@ import java.util.Collection;
 import java.util.List;
 import java.util.stream.Collectors;
 
-public class CratePath {
+public class CratePath implements Comparable<CratePath> {
     private ArrayList<SnakeCaseName> path;
 
     public static CratePath crateLocal(Collection<SnakeCaseName> path) {
@@ -37,7 +37,9 @@ public class CratePath {
         return cratePath;
     }
 
-    public List<SnakeCaseName> getComponents() { return this.path; }
+    public List<SnakeCaseName> getComponents() {
+        return this.path;
+    }
 
     public SnakeCaseName getLastComponent() {
         return this.path.get(this.path.size() - 1);
@@ -47,7 +49,9 @@ public class CratePath {
         return null != this.path.get(0) && this.path.get(0).equals(RustConfig.CRATE_ROOT_MODULE);
     }
 
-    public boolean isEmpty() { return 0 == this.path.size(); }
+    public boolean isEmpty() {
+        return 0 == this.path.size();
+    }
 
     @Override
     public String toString() {
@@ -77,5 +81,24 @@ public class CratePath {
         String path = String.join("/", this.path.stream().map((name) -> name.toString()).collect(Collectors.toList()))
                 + RustConfig.FILE_EXTENSION;
         return Paths.get(path);
+    }
+
+    @Override
+    public int compareTo(CratePath o) {
+        return this.toString().compareTo(o.toString());
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (o instanceof CratePath) {
+            return this.toString().equals(o.toString());
+        } else {
+            return false;
+        }
+    }
+
+    @Override
+    public int hashCode() {
+        return this.toString().hashCode();
     }
 }
