@@ -11,6 +11,7 @@ public class Abbreviation implements IWord {
         SPECIAL_ABBREVIATIONS = new HashMap<>();
         SPECIAL_ABBREVIATIONS.put("PCIe", new Abbreviation("PCIe"));
         SPECIAL_ABBREVIATIONS.put("VLan", new Abbreviation("VLan"));
+        SPECIAL_ABBREVIATIONS.put("VLANs", new Abbreviation("VLANs"));
     }
 
     public Abbreviation(String upperCaseValue) {
