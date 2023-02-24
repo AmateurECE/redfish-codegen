@@ -8,11 +8,3 @@ edition = "2021"
 
 [dependencies]
 serde = { version = "1.0.152", features = ["derive"] }
-
-[[examples]]
-name = "server"
-path = "examples/server.rs"
-
-[dev-dependencies]
-axum = "0.6.7"
-tokio = { version = "1.25.0", features = ["full"] }

@@ -11,6 +11,9 @@ import java.io.File;
 import java.io.IOException;
 import java.io.PrintWriter;
 import java.io.Writer;
+import java.util.ArrayList;
+import java.util.Iterator;
+import java.util.List;
 import java.util.Map;
 
 public class ModelFile {
@@ -25,8 +28,17 @@ public class ModelFile {
     }
 
     public void registerModel(Map<String, ModuleFile> modules, FileFactory factory) {
-        CratePath path = CratePath.empty();
-        for (SnakeCaseName component : this.module.getComponents()) {
+        if (null == this.module.getComponents() || 2 > this.module.getComponents().size()) {
+            return;
+        }
+
+        Iterator<SnakeCaseName> iterator = this.module.getComponents().listIterator(2);
+        List<SnakeCaseName> startingPath = new ArrayList<>();
+        startingPath.add(this.module.getComponents().get(1));
+
+        CratePath path = CratePath.crateLocal(startingPath);
+        while (iterator.hasNext()) {
+            SnakeCaseName component = iterator.next();
             if (!path.isEmpty()) {
                 if (!modules.containsKey(path.toString())) {
                     modules.put(path.toString(), factory.makeModuleFile(path));

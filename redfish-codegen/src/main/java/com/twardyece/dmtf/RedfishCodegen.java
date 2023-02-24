@@ -43,7 +43,6 @@ public class RedfishCodegen {
         this.apiDirectory = apiDirectory;
         this.crateDirectory = crateDirectory;
 
-        // TODO: Add some string substitutions to prevent gauging strings like "PCIe", "VLan", and "Id" during case conversion.
         IModelFileMapper[] mappers = new IModelFileMapper[4];
         mappers[0] = new VersionedModelMapper();
         mappers[1] = new SimpleModelMapper(Pattern.compile("Redfish(?<model>[a-zA-Z0-9]*)"), new SnakeCaseName("redfish"));
@@ -120,6 +119,13 @@ public class RedfishCodegen {
         apiModule.generate();
     }
 
+    public void generateLib() throws IOException {
+        ModuleFile file = this.fileFactory.makeModuleFile(CratePath.crateRoot());
+        file.addNamedSubmodule(RustConfig.API_BASE_MODULE);
+        file.addNamedSubmodule(RustConfig.MODELS_BASE_MODULE);
+        file.generate();
+    }
+
     public static void main(String[] args) {
         Option apiDirectoryOption = new Option("apiDirectory", true, "Directory containing openapi resource files");
         apiDirectoryOption.setRequired(true);
@@ -142,6 +148,7 @@ public class RedfishCodegen {
             RedfishCodegen codegen = new RedfishCodegen(apiDirectory, crateDirectory);
             codegen.generateModels();
             codegen.generateApis();
+            codegen.generateLib();
         } catch (ParseException e) {
             System.out.println(e.getMessage());
             formatter.printHelp("RedfishCodegen", options);
