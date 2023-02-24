@@ -116,7 +116,7 @@ public class PathMap {
 
             // Add this trait as a submodule to the preceding traits
             Graphs.predecessorListOf(this.graph, endpoint)
-                    .forEach((e) -> traits.get(e.toString()).submodulePaths.add(trait.path));
+                    .forEach((e) -> traits.get(e.toString()).submodulePaths.add(trait.path.getLastComponent()));
         }
 
         return traits.values().stream().toList();

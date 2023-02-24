@@ -2,6 +2,7 @@ package com.twardyece.dmtf.api;
 
 import com.twardyece.dmtf.CratePath;
 import com.twardyece.dmtf.text.PascalCaseName;
+import com.twardyece.dmtf.text.SnakeCaseName;
 import io.swagger.v3.oas.models.PathItem;
 
 import java.util.ArrayList;
@@ -21,11 +22,14 @@ public class TraitContext {
     public PascalCaseName traitName;
     public PathItem pathItem;
     public List<String> mountpoints;
-    public List<CratePath> submodulePaths;
+    public List<SnakeCaseName> submodulePaths;
 
     public String name() { return this.traitName.toString(); }
     public List<Submodule> submodules() {
-        return this.submodulePaths.stream().map((p) -> new Submodule(p.toString())).collect(Collectors.toList());
+        return this.submodulePaths
+                .stream()
+                .map((p) -> new Submodule(p.toString()))
+                .collect(Collectors.toList());
     }
 
     public class Submodule {

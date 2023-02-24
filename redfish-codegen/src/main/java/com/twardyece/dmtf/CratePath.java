@@ -5,6 +5,7 @@ import com.twardyece.dmtf.text.SnakeCaseName;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collection;
 import java.util.List;
 import java.util.stream.Collectors;
@@ -37,6 +38,10 @@ public class CratePath {
     }
 
     public List<SnakeCaseName> getComponents() { return this.path; }
+
+    public SnakeCaseName getLastComponent() {
+        return this.path.get(this.path.size() - 1);
+    }
 
     public boolean isCrateLocal() {
         return null != this.path.get(0) && this.path.get(0).equals(RustConfig.CRATE_ROOT_MODULE);
