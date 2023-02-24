@@ -80,7 +80,7 @@ public class PathMap {
         }
     }
 
-    public List<TraitContext> getTraits(EndpointResolver resolver, Map<PascalCaseName, PascalCaseName> traitNameOverrides) {
+    public List<TraitContext> getTraits(TraitContextFactory factory) {
         Map<String, TraitContext> traits = new HashMap<>();
 
         // Create a mapping from endpoint to path, which allows us to determine the valid mountpoints for a trait
@@ -107,14 +107,9 @@ public class PathMap {
                 throw new RuntimeException("Normalization failed. Endpoint " + endpoint + " has multiple paths from root.");
             }
 
-            EndpointResolver.ApiMatchResult result = resolver.resolve(apiPaths.get(0));
-            if (traitNameOverrides.containsKey(result.name)) {
-                result.name = traitNameOverrides.get(result.name);
-            }
-
             // TODO: Currently, mountpoints will get all of the mountpoints listed from the openapi specification.
             //      maybe we only want to report mountpoints that correspond to pre-normalized graph edges?
-            TraitContext trait = new TraitContext(result.path, result.name, endpoint.getPathItem(),
+            TraitContext trait = factory.makeTraitContext(apiPaths.get(0), endpoint.getPathItem(),
                     mountpoints.get(endpoint.toString()));
             traits.put(endpoint.toString(), trait);
 

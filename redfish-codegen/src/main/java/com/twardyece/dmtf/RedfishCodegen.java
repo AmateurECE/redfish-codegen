@@ -34,7 +34,7 @@ public class RedfishCodegen {
     private String apiDirectory;
     // TODO: Seems like this is no longer being used. Consider whether to fix that, or remove it.
     private String crateDirectory;
-    private ModelResolver resolver;
+    private ModelResolver modelResolver;
     private OpenAPI document;
     private FileFactory fileFactory;
     static final Logger LOGGER = LoggerFactory.getLogger(RedfishCodegen.class);
@@ -50,8 +50,8 @@ public class RedfishCodegen {
         mappers[2] = new SimpleModelMapper(Pattern.compile("odata-v4_(?<model>[a-zA-Z0-9]*)"), new SnakeCaseName("odata_v4"));
         mappers[3] = new UnversionedModelMapper();
 
-        this.resolver = new ModelResolver(mappers);
-        this.fileFactory = new FileFactory(new DefaultMustacheFactory(), this.resolver);
+        this.modelResolver = new ModelResolver(mappers);
+        this.fileFactory = new FileFactory(new DefaultMustacheFactory(), this.modelResolver);
 
         DocumentParser parser = new DocumentParser(this.apiDirectory + "/openapi.yaml");
 
@@ -68,7 +68,7 @@ public class RedfishCodegen {
     public void generateModels() throws IOException {
         HashMap<String, ModuleFile> modules = new HashMap<>();
         for (Map.Entry<String, Schema> schema : this.document.getComponents().getSchemas().entrySet()) {
-            IModelFileMapper.ModelMatchResult result = this.resolver.resolve(schema.getKey());
+            IModelFileMapper.ModelMatchResult result = this.modelResolver.resolve(schema.getKey());
             if (null == result) {
                 LOGGER.warn("no match for model " + schema.getValue().getName());
                 continue;
@@ -92,7 +92,7 @@ public class RedfishCodegen {
         mappers[1] = new NameMapper(Pattern.compile("^\\{(?<name>[A-Za-z0-9]+)\\}$"), "name");
         mappers[2] = new NameMapper(Pattern.compile("(?<=\\.)(?<name>[A-Za-z0-9]+)$"), "name");
         mappers[3] = new NameMapper(Pattern.compile("^\\$(?<name>metadata)$"), "name");
-        EndpointResolver resolver = new EndpointResolver(mappers);
+        EndpointResolver endpointResolver = new EndpointResolver(mappers);
 
         List<SnakeCaseName> apiModulePathComponents = new ArrayList<>();
         apiModulePathComponents.add(RustConfig.API_BASE_MODULE);
@@ -106,7 +106,10 @@ public class RedfishCodegen {
         Map<PascalCaseName, PascalCaseName> traitNameOverrides = new HashMap<>();
         traitNameOverrides.put(new PascalCaseName("V1"), new PascalCaseName("ServiceRoot"));
 
-        for (TraitContext trait : map.getTraits(resolver, traitNameOverrides)) {
+        TraitContextFactory traitContextFactory = new TraitContextFactory(this.modelResolver, endpointResolver,
+                traitNameOverrides);
+
+        for (TraitContext trait : map.getTraits(traitContextFactory)) {
             if (trait.path.getComponents().size() == pathDepth + 1) {
                 apiModule.addNamedSubmodule(trait.path.getLastComponent());
             }
