@@ -93,12 +93,23 @@ public class RedfishCodegen {
         mappers[3] = new NameMapper(Pattern.compile("^\\$(?<name>metadata)$"), "name");
         EndpointResolver resolver = new EndpointResolver(mappers);
 
+        List<SnakeCaseName> apiModulePathComponents = new ArrayList<>();
+        apiModulePathComponents.add(RustConfig.API_BASE_MODULE);
+        CratePath apiModulePath = CratePath.crateLocal(apiModulePathComponents);
+        ModuleFile apiModule = this.fileFactory.makeModuleFile(apiModulePath);
+        int pathDepth = apiModulePath.getComponents().size();
+
         MustacheFactory factory = new DefaultMustacheFactory();
         Mustache template = factory.compile("templates/api.mustache");
         for (TraitContext trait : map.getTraits(resolver)) {
+            if (trait.path.getComponents().size() == pathDepth + 1) {
+                apiModule.addNamedSubmodule(trait.path.getLastComponent());
+            }
             TraitFile file = new TraitFile(trait.path, trait, template);
             file.generate();
         }
+
+        apiModule.generate();
     }
 
     public static void main(String[] args) {
