@@ -67,14 +67,7 @@ public class TraitContext {
 
         public RustType rustType;
 
-        public String type() {
-            // TODO: This is repeated enough that it should become a method of RustType by now
-            if (null == this.rustType.getImportPath()) {
-                return this.rustType.toString();
-            } else {
-                return this.rustType.getImportPath().joinType(this.rustType);
-            }
-        }
+        public String type() { return this.rustType.toString(); }
     }
 
     public static class Parameter {
@@ -86,14 +79,12 @@ public class TraitContext {
         public SnakeCaseName parameterName;
         public RustType rustType;
 
-        public String name() { return this.parameterName.toString(); }
+        public String name() {
+            return this.parameterName.toString();
+        }
 
         public String type() {
-            if (null == this.rustType.getImportPath()) {
-                return this.rustType.toString();
-            } else {
-                return this.rustType.getImportPath().joinType(this.rustType);
-            }
+            return this.rustType.toString();
         }
     }
 }

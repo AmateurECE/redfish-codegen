@@ -1,11 +1,11 @@
 package com.twardyece.dmtf;
 
+import com.twardyece.dmtf.text.ICaseConvertible;
 import com.twardyece.dmtf.text.SnakeCaseName;
 
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Collection;
 import java.util.List;
 import java.util.stream.Collectors;
@@ -54,8 +54,8 @@ public class CratePath {
         return String.join("::", this.path.stream().map((name) -> name.toString()).collect(Collectors.toList()));
     }
 
-    public String joinType(RustType type) {
-        return this + "::" + type.toString();
+    public String joinComponent(ICaseConvertible component) {
+        return this + "::" + component.toString();
     }
 
     public CratePath append(SnakeCaseName component) {

@@ -121,13 +121,7 @@ public class ModelContext {
 
         // Methods for accessing properties in Mustache context
         public String name() { return this.propertyName.toString(); }
-        public String type() {
-            if (null == this.rustType.getImportPath()) {
-                return this.rustType.toString();
-            } else {
-                return this.rustType.getImportPath().joinType(this.rustType);
-            }
-        }
+        public String type() { return this.rustType.toString(); }
 
         SnakeCaseName propertyName;
         RustType rustType;

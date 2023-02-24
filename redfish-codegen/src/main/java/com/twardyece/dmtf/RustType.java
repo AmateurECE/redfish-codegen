@@ -4,9 +4,6 @@ import com.twardyece.dmtf.text.ICaseConvertible;
 import com.twardyece.dmtf.text.PascalCaseName;
 import com.twardyece.dmtf.text.SnakeCaseName;
 
-import java.util.Arrays;
-import java.util.stream.Collectors;
-
 public class RustType {
     // The absolute path of the type (i.e., where its definition lives)
     private CratePath path;
@@ -34,15 +31,17 @@ public class RustType {
 
     @Override
     public String toString() {
-        if (null != this.innerType) {
-            if (null != this.innerType.importPath) {
-                return this.name.toString() + "<" + this.innerType.importPath.joinType(this.innerType) + ">";
-            } else {
-                return this.name.toString() + "<" + this.innerType.toString() + ">";
-            }
+        String value;
+        if (null != this.importPath) {
+            value = this.importPath.joinComponent(this.name);
         } else {
-            return this.name.toString();
+            value = this.name.toString();
         }
+        if (null != this.innerType) {
+                value += "<" + this.innerType + ">";
+        }
+
+        return value;
     }
 
     public CratePath getPath() { return this.path; }
@@ -54,4 +53,6 @@ public class RustType {
     public CratePath getImportPath() { return this.importPath; }
 
     public RustType getInnerType() { return this.innerType; }
+
+    public ICaseConvertible getName() { return this.name; }
 }
