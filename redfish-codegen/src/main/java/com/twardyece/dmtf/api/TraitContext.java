@@ -6,6 +6,7 @@ import io.swagger.v3.oas.models.PathItem;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.stream.Collectors;
 
 public class TraitContext {
     public TraitContext(CratePath path, PascalCaseName name, PathItem pathItem, List<String> mountpoints) {
@@ -23,4 +24,15 @@ public class TraitContext {
     public List<CratePath> submodulePaths;
 
     public String name() { return this.traitName.toString(); }
+    public List<Submodule> submodules() {
+        return this.submodulePaths.stream().map((p) -> new Submodule(p.toString())).collect(Collectors.toList());
+    }
+
+    public class Submodule {
+        public Submodule(String name) {
+            this.name = name;
+        }
+
+        public String name;
+    }
 }
