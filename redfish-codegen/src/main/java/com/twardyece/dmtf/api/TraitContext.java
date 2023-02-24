@@ -1,44 +1,35 @@
 package com.twardyece.dmtf.api;
 
 import com.twardyece.dmtf.CratePath;
+import com.twardyece.dmtf.RustType;
 import com.twardyece.dmtf.text.PascalCaseName;
 import com.twardyece.dmtf.text.SnakeCaseName;
-import io.swagger.v3.oas.models.Operation;
 import io.swagger.v3.oas.models.PathItem;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Map;
 import java.util.stream.Collectors;
 
 public class TraitContext {
-    public TraitContext(CratePath path, PascalCaseName name, PathItem pathItem, List<String> mountpoints) {
+    public TraitContext(CratePath path, PascalCaseName name, List<String> mountpoints, List<Operation> operations) {
         this.path = path;
         this.traitName = name;
-        this.pathItem = pathItem;
         this.mountpoints = mountpoints;
         this.submodulePaths = new ArrayList<>();
+        this.operations = operations;
     }
 
-    public CratePath path;
-    public PascalCaseName traitName;
-    public PathItem pathItem;
-    public List<String> mountpoints;
-    public List<SnakeCaseName> submodulePaths;
+    public final CratePath path;
+    public final PascalCaseName traitName;
+    public final List<String> mountpoints;
+    public final List<SnakeCaseName> submodulePaths;
+    public final List<Operation> operations;
 
     public String name() { return this.traitName.toString(); }
     public List<Submodule> submodules() {
         return this.submodulePaths
                 .stream()
                 .map((p) -> new Submodule(p.toString()))
-                .collect(Collectors.toList());
-    }
-
-    public List<Operation> operations() {
-        Map<PathItem.HttpMethod, io.swagger.v3.oas.models.Operation> operations = this.pathItem.readOperationsMap();
-        return operations.entrySet()
-                .stream()
-                .map((e) -> new TraitContext.Operation(e.getKey(), e.getValue()))
                 .collect(Collectors.toList());
     }
 
@@ -50,8 +41,8 @@ public class TraitContext {
         public String name;
     }
 
-    public class Operation {
-        public Operation(PathItem.HttpMethod method, io.swagger.v3.oas.models.Operation operation) {
+    public static class Operation {
+        public Operation(PathItem.HttpMethod method, List<Parameter> parameters, ReturnType returnType) {
             switch (method) {
                 case POST -> this.name = "post";
                 case GET -> this.name = "get";
@@ -62,8 +53,8 @@ public class TraitContext {
                 case OPTIONS -> this.name = "options";
                 case TRACE -> this.name = "trace";
             }
-            this.returnType = null;
-            this.parameters = null;
+            this.parameters = parameters;
+            this.returnType = returnType;
         }
 
         public String name;
@@ -71,13 +62,38 @@ public class TraitContext {
         public ReturnType returnType;
     }
 
-    public class ReturnType {
-        public ReturnType(String name) { this.name = name; }
+    public static class ReturnType {
+        public ReturnType(RustType rustType) { this.rustType = rustType; }
 
-        public String name;
+        public RustType rustType;
+
+        public String type() {
+            // TODO: This is repeated enough that it should become a method of RustType by now
+            if (null == this.rustType.getImportPath()) {
+                return this.rustType.toString();
+            } else {
+                return this.rustType.getImportPath().joinType(this.rustType);
+            }
+        }
     }
 
-    public class Parameter {
-        public Parameter() {}
+    public static class Parameter {
+        public Parameter(SnakeCaseName parameterName, RustType rustType) {
+            this.parameterName = parameterName;
+            this.rustType = rustType;
+        }
+
+        public SnakeCaseName parameterName;
+        public RustType rustType;
+
+        public String name() { return this.parameterName.toString(); }
+
+        public String type() {
+            if (null == this.rustType.getImportPath()) {
+                return this.rustType.toString();
+            } else {
+                return this.rustType.getImportPath().joinType(this.rustType);
+            }
+        }
     }
 }
