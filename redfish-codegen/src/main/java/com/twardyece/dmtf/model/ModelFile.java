@@ -55,7 +55,7 @@ public class ModelFile {
             modules.put(path.toString(), factory.makeModuleFile(path));
         }
 
-        modules.get(path.toString()).addAnonymousSubmodule(this.context.getModule());
+        modules.get(path.toString()).addAnonymousSubmodule(this.context.modelModule);
     }
 
     public void generate() throws IOException {

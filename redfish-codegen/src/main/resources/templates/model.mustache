@@ -22,7 +22,7 @@ use {{{path}}};
 #[derive(Clone, Debug, serde::Deserialize, serde::Serialize)]
 pub struct {{name}} {
 {{#properties}}
-    {{#serdeType}}#[serde(rename = "{{{serdeType}}}")]{{/serdeType}}
+    {{#serdeName}}#[serde(rename = "{{{serdeName}}}")]{{/serdeName}}
     pub {{name}}: {{{type}}},
 {{/properties}}
 }

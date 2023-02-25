@@ -4,6 +4,7 @@ import com.github.mustachejava.DefaultMustacheFactory;
 import com.github.mustachejava.Mustache;
 import com.github.mustachejava.MustacheFactory;
 import com.twardyece.dmtf.api.*;
+import com.twardyece.dmtf.model.ModelContextFactory;
 import com.twardyece.dmtf.model.ModelFile;
 import com.twardyece.dmtf.model.ModelResolver;
 import com.twardyece.dmtf.model.mapper.IModelFileMapper;
@@ -50,7 +51,8 @@ public class RedfishCodegen {
         mappers[3] = new UnversionedModelMapper();
 
         this.modelResolver = new ModelResolver(mappers);
-        this.fileFactory = new FileFactory(new DefaultMustacheFactory(), this.modelResolver);
+        ModelContextFactory contextFactory = new ModelContextFactory(this.modelResolver);
+        this.fileFactory = new FileFactory(new DefaultMustacheFactory(), contextFactory);
 
         DocumentParser parser = new DocumentParser(this.apiDirectory + "/openapi.yaml");
 
