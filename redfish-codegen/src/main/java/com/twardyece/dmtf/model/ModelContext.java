@@ -10,35 +10,19 @@ import java.util.List;
 public class ModelContext {
     PascalCaseName modelName;
     SnakeCaseName modelModule;
-    List<Property> properties;
+    StructContext struct;
     List<Import> imports;
 
-    public ModelContext(PascalCaseName modelName, SnakeCaseName modelModule, List<Property> properties, List<Import> imports) {
-        this.modelName = modelName;
-        this.modelModule = modelModule;
-        this.properties = properties;
-        this.imports = imports;
+    public static ModelContext struct(PascalCaseName modelName, SnakeCaseName modelModule, StructContext struct, List<Import> imports) {
+        ModelContext modelContext = new ModelContext();
+        modelContext.modelName = modelName;
+        modelContext.modelModule = modelModule;
+        modelContext.struct = struct;
+        modelContext.imports = imports;
+        return modelContext;
     }
 
     public String name() { return this.modelName.toString(); }
-
-    static class Property {
-        Property(SnakeCaseName name, RustType type, String serdeName) {
-            this.propertyName = name;
-            this.rustType = type;
-            this.serdeName = serdeName;
-        }
-
-        // Methods for accessing properties in Mustache context
-        public String name() { return this.propertyName.toString(); }
-        public String type() { return this.rustType.toString(); }
-
-        SnakeCaseName propertyName;
-        RustType rustType;
-
-        // Mustache property
-        String serdeName;
-    }
 
     static class Import {
         Import(CratePath cratePath) {

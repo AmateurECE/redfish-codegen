@@ -6,7 +6,6 @@ import com.twardyece.dmtf.RustType;
 import com.twardyece.dmtf.text.CaseConversion;
 import com.twardyece.dmtf.text.PascalCaseName;
 import com.twardyece.dmtf.text.SnakeCaseName;
-import io.swagger.models.Model;
 import io.swagger.v3.oas.models.media.Schema;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -33,32 +32,33 @@ public class ModelContextFactory {
         }
 
         Map<String, Schema> schemaProperties = schema.getProperties();
-        List<ModelContext.Property> properties = null;
+        List<StructContext.Property> properties = null;
         List<ModelContext.Import> imports = null;
         if (null != schemaProperties) {
-            properties = (List<ModelContext.Property>) schema.getProperties().entrySet().stream()
-                    .map((s) -> toProperty((Map.Entry<String, Schema>) s, this.modelResolver))
+            properties = (List<StructContext.Property>) schema.getProperties().entrySet().stream()
+                    .map((s) -> this.toProperty((Map.Entry<String, Schema>) s))
                     .collect(Collectors.toList());
 
             // Get imports from properties
             Set<CratePath> importSet = new HashSet<>();
-            for (ModelContext.Property property : properties) {
+            for (StructContext.Property property : properties) {
                 addImports(importSet, property.rustType);
             }
 
             imports = importSet.stream().map(ModelContext.Import::new).toList();
         }
 
-        return new ModelContext(name, modelModule, properties, imports);
+        StructContext struct = new StructContext(properties);
+        return ModelContext.struct(name, modelModule, struct, imports);
     }
 
-    private static ModelContext.Property toProperty(Map.Entry<String, Schema> property, ModelResolver resolver) {
+    private StructContext.Property toProperty(Map.Entry<String, Schema> property) {
         SnakeCaseName sanitizedName = sanitizePropertyName(property.getKey());
         String serdeType = null;
         if (!sanitizedName.toString().equals(property.getKey())) {
             serdeType = property.getKey();
         }
-        return new ModelContext.Property(sanitizedName, resolver.resolveType(property.getValue()), serdeType);
+        return new StructContext.Property(sanitizedName, this.modelResolver.resolveType(property.getValue()), serdeType);
     }
 
     // TODO: Could probably move this import logic into a shared location to be used by both this and TraitContextFactory

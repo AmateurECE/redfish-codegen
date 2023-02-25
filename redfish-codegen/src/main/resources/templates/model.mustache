@@ -20,9 +20,11 @@ use {{{path}}};
 {{/imports}}
 
 #[derive(Clone, Debug, serde::Deserialize, serde::Serialize)]
+{{#struct}}
 pub struct {{name}} {
 {{#properties}}
     {{#serdeName}}#[serde(rename = "{{{serdeName}}}")]{{/serdeName}}
     pub {{name}}: {{{type}}},
 {{/properties}}
 }
+{{/struct}}
