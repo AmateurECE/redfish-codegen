@@ -19,10 +19,16 @@
 use {{{path}}};
 {{/imports}}
 
+{{#docComment}}
+/// {{docComment}}
+{{/docComment}}
 #[derive(Clone, Debug, serde::Deserialize, serde::Serialize)]
 {{#structContext}}
 pub struct {{name}} {
 {{#properties}}
+{{#docComment}}
+    /// {{docComment}}
+{{/docComment}}
 {{#serdeName}}
     #[serde(rename = "{{{serdeName}}}")]
 {{/serdeName}}
@@ -33,6 +39,9 @@ pub struct {{name}} {
 {{#enumContext}}
 pub enum {{name}} {
 {{#variants}}
+{{#docComment}}
+    /// {{docComment}}
+{{/docComment}}
 {{#serdeName}}
     #[serde(rename = "{{{serdeName}}}")]
 {{/serdeName}}

@@ -38,19 +38,46 @@ public class ModelContextFactory {
     }
 
     private ModelContext makeEnum(PascalCaseName name, SnakeCaseName modelModule, Schema schema) {
+        Map<String, String> docComments = new HashMap<>();
+        Map<String, Map<String, String>> extensions = schema.getExtensions();
+        if (extensions.containsKey("x-enumDescriptions")) {
+            for (Map.Entry<String, String> value : extensions.get("x-enumDescriptions").entrySet()) {
+                docComments.put(value.getKey(), value.getValue());
+            }
+        }
+
+        if (extensions.containsKey("x-enumLongDescriptions")) {
+            for (Map.Entry<String, String> value : extensions.get("x-enumLongDescriptions").entrySet()) {
+                docComments.put(value.getKey(), value.getValue());
+            }
+        }
+
+        if (extensions.containsKey("x-enumVersionAdded")) {
+            for (Map.Entry<String, String> value : extensions.get("x-enumVersionAdded").entrySet()) {
+                String added = "Added in version " + value.getValue() + ".";
+                String existing = docComments.getOrDefault(value.getKey(), null);
+                if (null != existing) {
+                    docComments.put(value.getKey(), existing + " " + added);
+                } else {
+                    docComments.put(value.getKey(), added);
+                }
+            }
+        }
+
         List<EnumContext.Variant> variants = (List<EnumContext.Variant>) schema.getEnum().stream()
-                .map((s) -> makeVariant((String) s))
+                .map((s) -> makeVariant((String) s, docComments.getOrDefault(s, null)))
                 .collect(Collectors.toList());
-        return ModelContext.forEnum(name, modelModule, new EnumContext(variants), null);
+        return ModelContext.forEnum(name, modelModule, new EnumContext(variants), null, schema.getDescription());
     }
 
-    private static EnumContext.Variant makeVariant(String value) {
+    private static EnumContext.Variant makeVariant(String value, String docComment) {
         RustIdentifier name = new RustIdentifier(RustConfig.sanitizeIdentifier(value));
-        if (name.toString().equals(value)) {
-            return new EnumContext.Variant(name, null);
-        } else {
-            return new EnumContext.Variant(name, value);
+        String serdeName = null;
+        if (!name.toString().equals(value)) {
+            serdeName = value;
         }
+
+        return new EnumContext.Variant(name, serdeName, docComment);
     }
 
     private ModelContext makeStruct(PascalCaseName name, SnakeCaseName modelModule, Schema schema) {
@@ -72,24 +99,25 @@ public class ModelContextFactory {
         }
 
         StructContext struct = new StructContext(properties);
-        return ModelContext.forStruct(name, modelModule, struct, imports);
+        String docComment = schema.getDescription();
+        return ModelContext.forStruct(name, modelModule, struct, imports, docComment);
     }
 
     private StructContext.Property toProperty(Map.Entry<String, Schema> property, Schema model) {
         SnakeCaseName sanitizedName = RustConfig.sanitizePropertyName(property.getKey());
-        String serdeType = null;
+        String serdeName = null;
         if (!sanitizedName.toString().equals(property.getKey())) {
-            serdeType = property.getKey();
+            serdeName = property.getKey();
         }
 
         RustType dataType = this.modelResolver.resolveType(property.getValue());
         List<String> requiredProperties = model.getRequired();
         if (null != requiredProperties && !requiredProperties.contains(property.getKey())) {
-            RustType optional = new RustType(null, new PascalCaseName("Option"), dataType);
-            return new StructContext.Property(sanitizedName, optional, serdeType);
-        } else {
-            return new StructContext.Property(sanitizedName, dataType, serdeType);
+            dataType = new RustType(null, new PascalCaseName("Option"), dataType);
         }
+
+        String docComment = property.getValue().getDescription();
+        return new StructContext.Property(sanitizedName, dataType, serdeName, docComment);
     }
 
     // TODO: Could probably move this import logic into a shared location to be used by both this and TraitContextFactory

@@ -12,25 +12,28 @@ public class ModelContext {
     StructContext structContext;
     EnumContext enumContext;
     List<Import> imports;
+    String docComment;
 
-    private static ModelContext generic(PascalCaseName modelName, SnakeCaseName modelModule, List<Import> imports) {
+    private static ModelContext generic(PascalCaseName modelName, SnakeCaseName modelModule, List<Import> imports,
+                                        String docComment) {
         ModelContext modelContext = new ModelContext();
         modelContext.modelName = modelName;
         modelContext.modelModule = modelModule;
         modelContext.imports = imports;
+        modelContext.docComment = docComment;
         return modelContext;
     }
 
     public static ModelContext forStruct(PascalCaseName modelName, SnakeCaseName modelModule, StructContext structContext,
-                                         List<Import> imports) {
-        ModelContext modelContext = ModelContext.generic(modelName, modelModule, imports);
+                                         List<Import> imports, String docComment) {
+        ModelContext modelContext = ModelContext.generic(modelName, modelModule, imports, docComment);
         modelContext.structContext = structContext;
         return modelContext;
     }
 
     public static ModelContext forEnum(PascalCaseName modelName, SnakeCaseName modelModule, EnumContext enumContext,
-                                       List<Import> imports) {
-        ModelContext modelContext = ModelContext.generic(modelName, modelModule, imports);
+                                       List<Import> imports, String docComment) {
+        ModelContext modelContext = ModelContext.generic(modelName, modelModule, imports, docComment);
         modelContext.enumContext = enumContext;
         return modelContext;
 

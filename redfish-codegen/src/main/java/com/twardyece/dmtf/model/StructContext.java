@@ -12,10 +12,11 @@ public class StructContext {
     }
 
     static class Property {
-        Property(SnakeCaseName name, RustType type, String serdeName) {
+        Property(SnakeCaseName name, RustType type, String serdeName, String docComment) {
             this.propertyName = name;
             this.rustType = type;
             this.serdeName = serdeName;
+            this.docComment = docComment;
         }
 
         // Methods for accessing properties in Mustache context
@@ -24,8 +25,7 @@ public class StructContext {
 
         SnakeCaseName propertyName;
         RustType rustType;
-
-        // Mustache property
         String serdeName;
+        String docComment;
     }
 }

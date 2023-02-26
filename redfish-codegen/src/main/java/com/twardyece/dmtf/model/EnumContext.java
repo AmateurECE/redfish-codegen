@@ -15,10 +15,12 @@ public class EnumContext {
     public static class Variant {
         RustIdentifier variantName;
         String serdeName;
+        String docComment;
 
-        public Variant(RustIdentifier variantName, String serdeName) {
+        public Variant(RustIdentifier variantName, String serdeName, String docComment) {
             this.variantName = variantName;
             this.serdeName = serdeName;
+            this.docComment = docComment;
         }
 
         public String name() { return this.variantName.toString(); }
