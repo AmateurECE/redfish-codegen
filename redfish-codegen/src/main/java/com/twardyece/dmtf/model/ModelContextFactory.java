@@ -2,6 +2,7 @@ package com.twardyece.dmtf.model;
 
 import com.twardyece.dmtf.CratePath;
 import com.twardyece.dmtf.RustConfig;
+import com.twardyece.dmtf.RustIdentifier;
 import com.twardyece.dmtf.RustType;
 import com.twardyece.dmtf.text.CaseConversion;
 import com.twardyece.dmtf.text.PascalCaseName;
@@ -17,8 +18,6 @@ import java.util.stream.Collectors;
 
 public class ModelContextFactory {
     static final Logger LOGGER = LoggerFactory.getLogger(ModelFile.class);
-    static final Pattern reservedCharactersInFirstPosition = Pattern.compile("^@");
-    static final Pattern invalidCharacters = Pattern.compile("[@.]");
 
     private ModelResolver modelResolver;
     public ModelContextFactory(ModelResolver modelResolver) {
@@ -31,9 +30,33 @@ public class ModelContextFactory {
             LOGGER.warn("modelModule is empty for model " + schema.getName());
         }
 
-        Map<String, Schema> schemaProperties = schema.getProperties();
+        if (null != schema.getEnum()) {
+            return makeEnum(name, modelModule, schema);
+        } else {
+            return makeStruct(name, modelModule, schema);
+        }
+    }
+
+    private ModelContext makeEnum(PascalCaseName name, SnakeCaseName modelModule, Schema schema) {
+        List<EnumContext.Variant> variants = (List<EnumContext.Variant>) schema.getEnum().stream()
+                .map((s) -> makeVariant((String) s))
+                .collect(Collectors.toList());
+        return ModelContext.forEnum(name, modelModule, new EnumContext(variants), null);
+    }
+
+    private static EnumContext.Variant makeVariant(String value) {
+        RustIdentifier name = new RustIdentifier(RustConfig.sanitizeIdentifier(value));
+        if (name.toString().equals(value)) {
+            return new EnumContext.Variant(name, null);
+        } else {
+            return new EnumContext.Variant(name, value);
+        }
+    }
+
+    private ModelContext makeStruct(PascalCaseName name, SnakeCaseName modelModule, Schema schema) {
         List<StructContext.Property> properties = null;
         List<ModelContext.Import> imports = null;
+        Map<String, Schema> schemaProperties = schema.getProperties();
         if (null != schemaProperties) {
             properties = (List<StructContext.Property>) schema.getProperties().entrySet().stream()
                     .map((s) -> this.toProperty((Map.Entry<String, Schema>) s))
@@ -49,11 +72,11 @@ public class ModelContextFactory {
         }
 
         StructContext struct = new StructContext(properties);
-        return ModelContext.struct(name, modelModule, struct, imports);
+        return ModelContext.forStruct(name, modelModule, struct, imports);
     }
 
     private StructContext.Property toProperty(Map.Entry<String, Schema> property) {
-        SnakeCaseName sanitizedName = sanitizePropertyName(property.getKey());
+        SnakeCaseName sanitizedName = RustConfig.sanitizePropertyName(property.getKey());
         String serdeType = null;
         if (!sanitizedName.toString().equals(property.getKey())) {
             serdeType = property.getKey();
@@ -77,34 +100,6 @@ public class ModelContextFactory {
                 imports.add(importPath);
                 rustType.setImportPath(CratePath.relative(back));
             }
-        }
-    }
-
-    private static SnakeCaseName sanitizePropertyName(String name) {
-        List<SnakeCaseName> safeName = Arrays.stream(
-                        replaceInvalidCharacters(
-                                removeReservedCharactersInFirstPosition(name))
-                                .split(" "))
-                .map((identifier) -> CaseConversion.toSnakeCase(identifier))
-                .collect(Collectors.toList());
-        return RustConfig.escapeReservedKeyword(new SnakeCaseName(safeName));
-    }
-
-    private static String removeReservedCharactersInFirstPosition(String name) {
-        Matcher matcher = reservedCharactersInFirstPosition.matcher(name);
-        if (matcher.find()) {
-            return matcher.replaceFirst("");
-        } else {
-            return name;
-        }
-    }
-
-    private static String replaceInvalidCharacters(String name) {
-        Matcher matcher = invalidCharacters.matcher(name);
-        if (matcher.find()) {
-            return matcher.replaceAll(" ");
-        } else {
-            return name;
         }
     }
 }

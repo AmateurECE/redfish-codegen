@@ -90,6 +90,11 @@ public class PascalCaseName implements ICaseConvertible, Comparable<PascalCaseNa
         this.words.addAll(originalCase.words());
     }
 
+    public PascalCaseName(Collection<? extends ICaseConvertible> identifiers) {
+        this.words = new ArrayList<>();
+        identifiers.stream().forEach((identifier) -> this.words.addAll(identifier.words()));
+    }
+
     @Override
     public Collection<? extends IWord> words() {
         return this.words;

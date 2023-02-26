@@ -20,11 +20,23 @@ use {{{path}}};
 {{/imports}}
 
 #[derive(Clone, Debug, serde::Deserialize, serde::Serialize)]
-{{#struct}}
+{{#structContext}}
 pub struct {{name}} {
 {{#properties}}
-    {{#serdeName}}#[serde(rename = "{{{serdeName}}}")]{{/serdeName}}
+{{#serdeName}}
+    #[serde(rename = "{{{serdeName}}}")]
+{{/serdeName}}
     pub {{name}}: {{{type}}},
 {{/properties}}
 }
-{{/struct}}
+{{/structContext}}
+{{#enumContext}}
+pub enum {{name}} {
+{{#variants}}
+{{#serdeName}}
+    #[serde(rename = "{{{serdeName}}}")]
+{{/serdeName}}
+    {{name}},
+{{/variants}}
+}
+{{/enumContext}}
