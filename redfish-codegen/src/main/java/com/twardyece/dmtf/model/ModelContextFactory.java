@@ -59,7 +59,7 @@ public class ModelContextFactory {
         Map<String, Schema> schemaProperties = schema.getProperties();
         if (null != schemaProperties) {
             properties = (List<StructContext.Property>) schema.getProperties().entrySet().stream()
-                    .map((s) -> this.toProperty((Map.Entry<String, Schema>) s))
+                    .map((s) -> this.toProperty((Map.Entry<String, Schema>) s, schema))
                     .collect(Collectors.toList());
 
             // Get imports from properties
@@ -75,13 +75,21 @@ public class ModelContextFactory {
         return ModelContext.forStruct(name, modelModule, struct, imports);
     }
 
-    private StructContext.Property toProperty(Map.Entry<String, Schema> property) {
+    private StructContext.Property toProperty(Map.Entry<String, Schema> property, Schema model) {
         SnakeCaseName sanitizedName = RustConfig.sanitizePropertyName(property.getKey());
         String serdeType = null;
         if (!sanitizedName.toString().equals(property.getKey())) {
             serdeType = property.getKey();
         }
-        return new StructContext.Property(sanitizedName, this.modelResolver.resolveType(property.getValue()), serdeType);
+
+        RustType dataType = this.modelResolver.resolveType(property.getValue());
+        List<String> requiredProperties = model.getRequired();
+        if (null != requiredProperties && !requiredProperties.contains(property.getKey())) {
+            RustType optional = new RustType(null, new PascalCaseName("Option"), dataType);
+            return new StructContext.Property(sanitizedName, optional, serdeType);
+        } else {
+            return new StructContext.Property(sanitizedName, dataType, serdeType);
+        }
     }
 
     // TODO: Could probably move this import logic into a shared location to be used by both this and TraitContextFactory
