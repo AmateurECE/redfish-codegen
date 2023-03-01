@@ -22,9 +22,9 @@ public class FileFactory {
         this.contextFactory = contextFactory;
     }
 
-    public ModelFile makeModelFile(CratePath module, PascalCaseName name, Schema schema) {
-        ModelContext context = this.contextFactory.makeModelContext(name, schema);
-        return new ModelFile(module, context, this.modelTemplate);
+    public ModelFile makeModelFile(RustType rustType, Schema schema) {
+        ModelContext context = this.contextFactory.makeModelContext(rustType, schema);
+        return new ModelFile(context, this.modelTemplate);
     }
 
     public ModuleFile makeModuleFile(CratePath path) {

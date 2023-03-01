@@ -68,7 +68,7 @@ public class TraitContextFactory {
                 List<String> contentTypes = content.keySet().stream().toList();
                 // TODO: Must add supporting type here if contentTypes.size() > 1
                 parameters.add(new TraitContext.Parameter(new SnakeCaseName("body"),
-                        this.modelResolver.resolveType(content.get(contentTypes.get(0)).getSchema())));
+                        this.modelResolver.resolveSchema(content.get(contentTypes.get(0)).getSchema())));
             }
         }
 
@@ -80,7 +80,7 @@ public class TraitContextFactory {
         TraitContext.ReturnType returnType = null;
         if (null != schema) {
             // TODO: Must add supporting type here if contentTypes.size() > 1
-            returnType = new TraitContext.ReturnType(this.modelResolver.resolveType(schema));
+            returnType = new TraitContext.ReturnType(this.modelResolver.resolveSchema(schema));
         }
 
 
@@ -89,7 +89,7 @@ public class TraitContextFactory {
 
     private TraitContext.Parameter makeParameter(Parameter parameter) {
         return new TraitContext.Parameter(CaseConversion.toSnakeCase(parameter.getName()),
-                this.modelResolver.resolveType(parameter.getSchema()));
+                this.modelResolver.resolveSchema(parameter.getSchema()));
     }
 
     private List<CratePath> getImports(List<TraitContext.Operation> operations) {

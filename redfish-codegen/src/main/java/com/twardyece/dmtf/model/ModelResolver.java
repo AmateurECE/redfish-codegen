@@ -32,11 +32,11 @@ public class ModelResolver {
         this.mappers = mappers;
     }
 
-    public IModelFileMapper.ModelMatchResult resolve(String name) {
+    public RustType resolvePath(String name) {
         for (IModelFileMapper mapper : this.mappers) {
             IModelFileMapper.ModelMatchResult module = mapper.matches(name);
             if (null != module) {
-                return module;
+                return new RustType(module.path, module.model);
             }
         }
 
@@ -44,7 +44,7 @@ public class ModelResolver {
     }
 
     // Resolve an OpenAPI path, such as '#/components/schemas/RedfishError' to a RustType.
-    public RustType resolveType(Schema schema) {
+    public RustType resolveSchema(Schema schema) {
         String type = schema.getType();
         if (null == type) {
             // It's an object with a $ref
@@ -57,11 +57,10 @@ public class ModelResolver {
 
             // Get the schema name
             String name = matcher.replaceFirst("");
-            IModelFileMapper.ModelMatchResult result = this.resolve(name);
-            return new RustType(result.path, result.model);
+            return this.resolvePath(name);
         } else if ("array".equals(schema.getType())) {
             // It's an array type
-            return new RustType(null, VEC_NAME, this.resolveType(schema.getItems()));
+            return new RustType(null, VEC_NAME, this.resolveSchema(schema.getItems()));
         } else {
             if (!RUST_TYPE_MAP.containsKey(type)) {
                 LOGGER.warn("No mapping for type " + type);

@@ -21,8 +21,8 @@ public class ModelFile {
     private Mustache template;
     private ModelContext context;
 
-    public ModelFile(CratePath module, ModelContext context, Mustache template) {
-        this.module = module;
+    public ModelFile(ModelContext context, Mustache template) {
+        this.module = context.rustType.getPath().append(new SnakeCaseName(context.rustType.getName()));
         this.template = template;
         this.context = context;
     }
@@ -49,17 +49,10 @@ public class ModelFile {
 
             path = path.append(component);
         }
-
-        // Can't forget to add this model as a module!
-        if (!modules.containsKey(path.toString())) {
-            modules.put(path.toString(), factory.makeModuleFile(path));
-        }
-
-        modules.get(path.toString()).addAnonymousSubmodule(this.context.modelModule);
     }
 
     public void generate() throws IOException {
-        File modelFile = this.module.append(context.modelModule).toPath().toFile();
+        File modelFile = this.module.toPath().toFile();
         File parent = modelFile.getParentFile();
         if (!parent.exists()) {
             parent.mkdirs();

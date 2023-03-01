@@ -4,40 +4,28 @@ import com.twardyece.dmtf.CratePath;
 import com.twardyece.dmtf.RustConfig;
 import com.twardyece.dmtf.RustIdentifier;
 import com.twardyece.dmtf.RustType;
-import com.twardyece.dmtf.text.CaseConversion;
 import com.twardyece.dmtf.text.PascalCaseName;
 import com.twardyece.dmtf.text.SnakeCaseName;
 import io.swagger.v3.oas.models.media.Schema;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import java.util.*;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
 public class ModelContextFactory {
-    static final Logger LOGGER = LoggerFactory.getLogger(ModelFile.class);
-
     private ModelResolver modelResolver;
     public ModelContextFactory(ModelResolver modelResolver) {
         this.modelResolver = modelResolver;
     }
 
-    public ModelContext makeModelContext(PascalCaseName name, Schema schema) {
-        SnakeCaseName modelModule = new SnakeCaseName(name);
-        if ("".equals(modelModule.toString())) {
-            LOGGER.warn("modelModule is empty for model " + schema.getName());
-        }
-
+    public ModelContext makeModelContext(RustType rustType, Schema schema) {
         if (null != schema.getEnum()) {
-            return makeEnum(name, modelModule, schema);
+            return makeEnum(rustType, schema);
         } else {
-            return makeStruct(name, modelModule, schema);
+            return makeStruct(rustType, schema);
         }
     }
 
-    private ModelContext makeEnum(PascalCaseName name, SnakeCaseName modelModule, Schema schema) {
+    private ModelContext makeEnum(RustType rustType, Schema schema) {
         Map<String, String> docComments = new HashMap<>();
         Map<String, Map<String, String>> extensions = schema.getExtensions();
         if (extensions.containsKey("x-enumDescriptions")) {
@@ -67,7 +55,7 @@ public class ModelContextFactory {
         List<EnumContext.Variant> variants = (List<EnumContext.Variant>) schema.getEnum().stream()
                 .map((s) -> makeVariant((String) s, docComments.getOrDefault(s, null)))
                 .collect(Collectors.toList());
-        return ModelContext.forEnum(name, modelModule, new EnumContext(variants), null, schema.getDescription());
+        return ModelContext.forEnum(rustType, new EnumContext(variants), null, schema.getDescription());
     }
 
     private static EnumContext.Variant makeVariant(String value, String docComment) {
@@ -80,7 +68,7 @@ public class ModelContextFactory {
         return new EnumContext.Variant(name, serdeName, docComment);
     }
 
-    private ModelContext makeStruct(PascalCaseName name, SnakeCaseName modelModule, Schema schema) {
+    private ModelContext makeStruct(RustType rustType, Schema schema) {
         List<StructContext.Property> properties = null;
         List<ModelContext.Import> imports = null;
         Map<String, Schema> schemaProperties = schema.getProperties();
@@ -100,7 +88,7 @@ public class ModelContextFactory {
 
         StructContext struct = new StructContext(properties);
         String docComment = schema.getDescription();
-        return ModelContext.forStruct(name, modelModule, struct, imports, docComment);
+        return ModelContext.forStruct(rustType, struct, imports, docComment);
     }
 
     private StructContext.Property toProperty(Map.Entry<String, Schema> property, Schema model) {
@@ -110,7 +98,7 @@ public class ModelContextFactory {
             serdeName = property.getKey();
         }
 
-        RustType dataType = this.modelResolver.resolveType(property.getValue());
+        RustType dataType = this.modelResolver.resolveSchema(property.getValue());
         List<String> requiredProperties = model.getRequired();
         if (null != requiredProperties && !requiredProperties.contains(property.getKey())) {
             dataType = new RustType(null, new PascalCaseName("Option"), dataType);

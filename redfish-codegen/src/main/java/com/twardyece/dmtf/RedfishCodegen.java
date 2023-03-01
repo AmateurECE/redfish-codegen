@@ -69,13 +69,13 @@ public class RedfishCodegen {
     public void generateModels() throws IOException {
         HashMap<String, ModuleFile> modules = new HashMap<>();
         for (Map.Entry<String, Schema> schema : this.document.getComponents().getSchemas().entrySet()) {
-            IModelFileMapper.ModelMatchResult result = this.modelResolver.resolve(schema.getKey());
+            RustType result = this.modelResolver.resolvePath(schema.getKey());
             if (null == result) {
                 LOGGER.warn("no match for model " + schema.getValue().getName());
                 continue;
             }
 
-            ModelFile modelFile = this.fileFactory.makeModelFile(result.path, result.model, schema.getValue());
+            ModelFile modelFile = this.fileFactory.makeModelFile(result, schema.getValue());
             modelFile.registerModel(modules, this.fileFactory);
             modelFile.generate();
         }

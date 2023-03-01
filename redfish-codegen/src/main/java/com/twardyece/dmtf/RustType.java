@@ -8,6 +8,7 @@ public class RustType {
     // The absolute path of the type (i.e., where its definition lives)
     private CratePath path;
     // The path of the type, taking into consideration any namespaces which are importing with "use" statements
+    // TODO: Removing importPath will make this class much simpler.
     private CratePath importPath;
     private ICaseConvertible name;
     private RustType innerType;
@@ -50,7 +51,6 @@ public class RustType {
     public boolean isPrimitive() { return null == this.path; }
 
     public void setImportPath(CratePath path) { this.importPath = path; }
-    public CratePath getImportPath() { return this.importPath; }
 
     public RustType getInnerType() { return this.innerType; }
 
