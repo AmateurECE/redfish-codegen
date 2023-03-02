@@ -11,8 +11,8 @@ public class StructContext {
         this.properties = properties;
     }
 
-    static class Property {
-        Property(SnakeCaseName name, RustType type, String serdeName, String docComment) {
+    public static class Property {
+        public Property(SnakeCaseName name, RustType type, String serdeName, String docComment) {
             this.propertyName = name;
             this.rustType = type;
             this.serdeName = serdeName;
@@ -24,7 +24,7 @@ public class StructContext {
         public String type() { return this.rustType.toString(); }
 
         SnakeCaseName propertyName;
-        RustType rustType;
+        public RustType rustType;
         String serdeName;
         String docComment;
     }

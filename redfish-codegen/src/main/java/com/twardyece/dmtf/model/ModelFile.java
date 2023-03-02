@@ -4,7 +4,6 @@ import com.github.mustachejava.Mustache;
 import com.twardyece.dmtf.CratePath;
 import com.twardyece.dmtf.FileFactory;
 import com.twardyece.dmtf.ModuleFile;
-import com.twardyece.dmtf.model.ModelContext;
 import com.twardyece.dmtf.text.SnakeCaseName;
 
 import java.io.File;

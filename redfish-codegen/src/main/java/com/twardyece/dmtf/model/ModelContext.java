@@ -36,8 +36,8 @@ public class ModelContext {
 
     public String name() { return this.rustType.getName().toString(); }
 
-    static class Import {
-        Import(CratePath cratePath) {
+    public static class Import {
+        public Import(CratePath cratePath) {
             this.cratePath = cratePath;
         }
 

@@ -3,28 +3,31 @@ package com.twardyece.dmtf;
 import com.github.mustachejava.Mustache;
 import com.github.mustachejava.MustacheFactory;
 import com.twardyece.dmtf.model.ModelContext;
-import com.twardyece.dmtf.model.ModelContextFactory;
 import com.twardyece.dmtf.model.ModelFile;
-import com.twardyece.dmtf.model.ModelResolver;
-import com.twardyece.dmtf.text.PascalCaseName;
+import com.twardyece.dmtf.model.contextfactory.IModelContextFactory;
 import io.swagger.v3.oas.models.media.Schema;
 
 public class FileFactory {
     private MustacheFactory factory;
     private Mustache modelTemplate;
     private Mustache moduleTemplate;
-    private ModelContextFactory contextFactory;
+    private IModelContextFactory[] contextFactories;
 
-    public FileFactory(MustacheFactory factory, ModelContextFactory contextFactory) {
+    public FileFactory(MustacheFactory factory, IModelContextFactory[] contextFactories) {
         this.factory = factory;
         this.modelTemplate = factory.compile("templates/model.mustache");
         this.moduleTemplate = factory.compile("templates/module.mustache");
-        this.contextFactory = contextFactory;
+        this.contextFactories = contextFactories;
     }
 
     public ModelFile makeModelFile(RustType rustType, Schema schema) {
-        ModelContext context = this.contextFactory.makeModelContext(rustType, schema);
-        return new ModelFile(context, this.modelTemplate);
+        for (IModelContextFactory factory : this.contextFactories) {
+            ModelContext context = factory.makeModelContext(rustType, schema);
+            if (null != context) {
+                return new ModelFile(context, this.modelTemplate);
+            }
+        }
+        throw new RuntimeException("No ModelContextFactory matching");
     }
 
     public ModuleFile makeModuleFile(CratePath path) {
