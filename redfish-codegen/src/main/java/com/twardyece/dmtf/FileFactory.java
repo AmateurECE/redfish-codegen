@@ -2,16 +2,20 @@ package com.twardyece.dmtf;
 
 import com.github.mustachejava.Mustache;
 import com.github.mustachejava.MustacheFactory;
-import com.twardyece.dmtf.model.ModelContext;
+import com.twardyece.dmtf.model.ModelResolver;
+import com.twardyece.dmtf.model.context.ModelContext;
 import com.twardyece.dmtf.model.ModelFile;
-import com.twardyece.dmtf.model.contextfactory.IModelContextFactory;
+import com.twardyece.dmtf.model.context.factory.IModelContextFactory;
 import io.swagger.v3.oas.models.media.Schema;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 public class FileFactory {
     private MustacheFactory factory;
     private Mustache modelTemplate;
     private Mustache moduleTemplate;
     private IModelContextFactory[] contextFactories;
+    private static final Logger LOGGER = LoggerFactory.getLogger(FileFactory.class);
 
     public FileFactory(MustacheFactory factory, IModelContextFactory[] contextFactories) {
         this.factory = factory;
@@ -27,7 +31,8 @@ public class FileFactory {
                 return new ModelFile(context, this.modelTemplate);
             }
         }
-        throw new RuntimeException("No ModelContextFactory matching");
+        LOGGER.error("No ModelContextFactory matching Rust type " + rustType);
+        return null;
     }
 
     public ModuleFile makeModuleFile(CratePath path) {

@@ -1,4 +1,4 @@
-package com.twardyece.dmtf.model;
+package com.twardyece.dmtf.model.context;
 
 import com.twardyece.dmtf.RustIdentifier;
 import com.twardyece.dmtf.text.PascalCaseName;

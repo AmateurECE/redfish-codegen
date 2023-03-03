@@ -4,6 +4,7 @@ import com.github.mustachejava.Mustache;
 import com.twardyece.dmtf.CratePath;
 import com.twardyece.dmtf.FileFactory;
 import com.twardyece.dmtf.ModuleFile;
+import com.twardyece.dmtf.model.context.ModelContext;
 import com.twardyece.dmtf.text.SnakeCaseName;
 
 import java.io.File;
@@ -31,19 +32,22 @@ public class ModelFile {
             return;
         }
 
-        Iterator<SnakeCaseName> iterator = this.module.getComponents().listIterator(2);
         List<SnakeCaseName> startingPath = new ArrayList<>();
         startingPath.add(this.module.getComponents().get(1));
-
         CratePath path = CratePath.crateLocal(startingPath);
-        while (iterator.hasNext()) {
-            SnakeCaseName component = iterator.next();
+
+        for (int i = 2; i < this.module.getComponents().size(); ++i) {
+            SnakeCaseName component = this.module.getComponents().get(i);
             if (!path.isEmpty()) {
                 if (!modules.containsKey(path.toString())) {
                     modules.put(path.toString(), factory.makeModuleFile(path));
                 }
 
-                modules.get(path.toString()).addNamedSubmodule(component);
+                if (this.module.getComponents().size() - 1 == i) {
+                    modules.get(path.toString()).addAnonymousSubmodule(component);
+                } else {
+                    modules.get(path.toString()).addNamedSubmodule(component);
+                }
             }
 
             path = path.append(component);

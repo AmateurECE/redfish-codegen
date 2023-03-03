@@ -1,13 +1,11 @@
-package com.twardyece.dmtf.model.contextfactory;
+package com.twardyece.dmtf.model.context.factory;
 
 import com.twardyece.dmtf.CratePath;
 import com.twardyece.dmtf.RustConfig;
-import com.twardyece.dmtf.RustIdentifier;
 import com.twardyece.dmtf.RustType;
-import com.twardyece.dmtf.model.EnumContext;
-import com.twardyece.dmtf.model.ModelContext;
+import com.twardyece.dmtf.model.context.ModelContext;
 import com.twardyece.dmtf.model.ModelResolver;
-import com.twardyece.dmtf.model.StructContext;
+import com.twardyece.dmtf.model.context.StructContext;
 import com.twardyece.dmtf.text.PascalCaseName;
 import com.twardyece.dmtf.text.SnakeCaseName;
 import io.swagger.v3.oas.models.media.Schema;
@@ -23,22 +21,22 @@ public class StructContextFactory implements IModelContextFactory {
 
     @Override
     public ModelContext makeModelContext(RustType rustType, Schema schema) {
-        List<StructContext.Property> properties = null;
-        List<ModelContext.Import> imports = null;
         Map<String, Schema> schemaProperties = schema.getProperties();
-        if (null != schemaProperties) {
-            properties = (List<StructContext.Property>) schema.getProperties().entrySet().stream()
-                    .map((s) -> this.toProperty((Map.Entry<String, Schema>) s, schema))
-                    .collect(Collectors.toList());
-
-            // Get imports from properties
-            Set<CratePath> importSet = new HashSet<>();
-            for (StructContext.Property property : properties) {
-                addImports(importSet, property.rustType);
-            }
-
-            imports = importSet.stream().map(ModelContext.Import::new).toList();
+        if (null == schemaProperties) {
+            return null;
         }
+
+        List<StructContext.Property> properties = (List<StructContext.Property>) schema.getProperties().entrySet().stream()
+                .map((s) -> this.toProperty((Map.Entry<String, Schema>) s, schema))
+                .collect(Collectors.toList());
+
+        // Get imports from properties
+        Set<CratePath> importSet = new HashSet<>();
+        for (StructContext.Property property : properties) {
+            addImports(importSet, property.rustType);
+        }
+
+        List<ModelContext.Import> imports = importSet.stream().map(ModelContext.Import::new).toList();
 
         StructContext struct = new StructContext(properties);
         String docComment = schema.getDescription();

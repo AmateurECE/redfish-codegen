@@ -1,7 +1,7 @@
-package com.twardyece.dmtf.model.contextfactory;
+package com.twardyece.dmtf.model.context.factory;
 
 import com.twardyece.dmtf.RustType;
-import com.twardyece.dmtf.model.ModelContext;
+import com.twardyece.dmtf.model.context.ModelContext;
 import io.swagger.v3.oas.models.media.Schema;
 
 public interface IModelContextFactory {

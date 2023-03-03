@@ -49,3 +49,6 @@ pub enum {{name}} {
 {{/variants}}
 }
 {{/enumContext}}
+{{#tupleContext}}
+pub struct {{name}}(pub {{type}});
+{{/tupleContext}}
