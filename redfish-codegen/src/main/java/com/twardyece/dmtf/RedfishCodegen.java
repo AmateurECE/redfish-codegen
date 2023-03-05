@@ -51,11 +51,12 @@ public class RedfishCodegen {
         mappers[3] = new UnversionedModelMapper();
 
         this.modelResolver = new ModelResolver(mappers);
-        IModelContextFactory[] factories = new IModelContextFactory[4];
+        IModelContextFactory[] factories = new IModelContextFactory[5];
         factories[0] = new EnumContextFactory();
-        factories[1] = new StructContextFactory(this.modelResolver);
-        factories[2] = new TupleContextFactory(this.modelResolver);
-        factories[3] = new UnionContextFactory(this.modelResolver);
+        factories[1] = new FreeFormObjectContextFactory();
+        factories[2] = new StructContextFactory(this.modelResolver);
+        factories[3] = new TupleContextFactory(this.modelResolver);
+        factories[4] = new UnionContextFactory(this.modelResolver);
         this.fileFactory = new FileFactory(new DefaultMustacheFactory(), factories);
 
         DocumentParser parser = new DocumentParser(this.apiDirectory + "/openapi.yaml");
