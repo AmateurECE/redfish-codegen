@@ -48,7 +48,7 @@ pub enum {{name}} {
 {{#serdeName}}
     #[serde(rename = "{{{serdeName}}}")]
 {{/serdeName}}
-    {{name}},
+    {{name}}{{#type}}({{type}}){{/type}},
 {{/variants}}
 }
 {{/enumContext}}

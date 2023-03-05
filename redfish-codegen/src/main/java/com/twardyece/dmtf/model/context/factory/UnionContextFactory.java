@@ -53,7 +53,8 @@ public class UnionContextFactory implements IModelContextFactory {
                 value = new RustIdentifier(new PascalCaseName(identifierName));
             }
 
-            variants.add(new EnumContext.Variant(value, null, null));
+            variants.add(new EnumContext.Variant(value, new EnumContext.Variant.Type(this.modelResolver.resolveSchema(variant)),
+                    null, null));
         }
 
         return variants;

@@ -60,6 +60,6 @@ public class EnumContextFactory implements IModelContextFactory {
             serdeName = value;
         }
 
-        return new EnumContext.Variant(name, serdeName, docComment);
+        return new EnumContext.Variant(name, null, serdeName, docComment);
     }
 }
