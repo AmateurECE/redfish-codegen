@@ -8,7 +8,7 @@ import java.util.stream.Collectors;
 public class ModuleContext {
     public CratePath path;
     private Set<Submodule> submoduleSet;
-    Set<Import> imports;
+    public Set<Import> imports;
 
     public ModuleContext(CratePath path, List<RustType> dependentTypes) {
         this.path = path;

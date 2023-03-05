@@ -3,46 +3,39 @@ package com.twardyece.dmtf.api;
 import com.twardyece.dmtf.CratePath;
 import com.twardyece.dmtf.ModuleContext;
 import com.twardyece.dmtf.RustType;
+import com.twardyece.dmtf.model.context.EnumContext;
+import com.twardyece.dmtf.model.context.ModelContext;
 import com.twardyece.dmtf.text.PascalCaseName;
 import com.twardyece.dmtf.text.SnakeCaseName;
-import io.swagger.v3.oas.models.PathItem;
 
-import java.util.ArrayList;
 import java.util.LinkedList;
 import java.util.List;
-import java.util.stream.Collectors;
 
 public class TraitContext {
-    public TraitContext(CratePath path, PascalCaseName name, List<String> mountpoints, List<Operation> operations) {
+    public TraitContext(CratePath path, PascalCaseName name, List<ModelContext> supportingTypes, List<String> mountpoints,
+                        List<Operation> operations) {
         List<RustType> dependentTypes = new LinkedList<>();
         for (Operation operation : operations) {
             dependentTypes.addAll(operation.getDependentTypes());
         }
         this.moduleContext = new ModuleContext(path, dependentTypes);
         this.traitName = name;
+        this.supportingTypes = supportingTypes;
         this.mountpoints = mountpoints;
         this.operations = operations;
     }
 
     public final ModuleContext moduleContext;
     public final PascalCaseName traitName;
+    public final List<ModelContext> supportingTypes;
     public final List<String> mountpoints;
     public final List<Operation> operations;
 
     public String name() { return this.traitName.toString(); }
 
     public static class Operation {
-        public Operation(PathItem.HttpMethod method, List<Parameter> parameters, ReturnType returnType) {
-            switch (method) {
-                case POST -> this.name = "post";
-                case GET -> this.name = "get";
-                case PUT -> this.name = "put";
-                case PATCH -> this.name = "patch";
-                case DELETE -> this.name = "delete";
-                case HEAD -> this.name = "head";
-                case OPTIONS -> this.name = "options";
-                case TRACE -> this.name = "trace";
-            }
+        public Operation(String name, List<Parameter> parameters, ReturnType returnType) {
+            this.name = name;
             this.parameters = parameters;
             this.returnType = returnType;
         }

@@ -31,6 +31,19 @@ pub mod {{name}};
 {{/isUsed}}
 {{/submodules}}
 {{/moduleContext}}
+{{#supportingTypes}}
+
+{{#enumContext}}
+pub enum {{name}} {
+{{#variants}}
+{{#docComment}}
+    /// {{docComment}}
+{{/docComment}}
+    {{name}}{{#type}}({{type}}){{/type}},
+{{/variants}}
+}
+{{/enumContext}}
+{{/supportingTypes}}
 
 pub trait {{name}} {
 {{#operations}}
