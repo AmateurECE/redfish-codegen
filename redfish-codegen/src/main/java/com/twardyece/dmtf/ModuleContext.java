@@ -2,9 +2,7 @@ package com.twardyece.dmtf;
 
 import com.twardyece.dmtf.text.SnakeCaseName;
 
-import java.util.HashSet;
-import java.util.List;
-import java.util.Set;
+import java.util.*;
 import java.util.stream.Collectors;
 
 public class ModuleContext {
@@ -32,6 +30,34 @@ public class ModuleContext {
     // This makes them essentially "invisible" when referring to structs by path.
     public void addAnonymousSubmodule(SnakeCaseName name) {
         this.submoduleSet.add(new ModuleContext.Submodule(RustConfig.escapeReservedKeyword(name), true));
+    }
+
+    public void registerModel(Map<String, ModuleContext> modules) {
+        List<SnakeCaseName> components = this.path.getComponents();
+        if (null == components || 2 > components.size()) {
+            return;
+        }
+
+        List<SnakeCaseName> startingPath = new ArrayList<>();
+        startingPath.add(components.get(1));
+        CratePath path = CratePath.crateLocal(startingPath);
+
+        for (int i = 2; i < components.size(); ++i) {
+            SnakeCaseName component = components.get(i);
+            if (!path.isEmpty()) {
+                if (!modules.containsKey(path.toString())) {
+                    modules.put(path.toString(), new ModuleContext(path));
+                }
+
+                if (components.size() - 1 == i) {
+                    modules.get(path.toString()).addAnonymousSubmodule(component);
+                } else {
+                    modules.get(path.toString()).addNamedSubmodule(component);
+                }
+            }
+
+            path = path.append(component);
+        }
     }
 
     static class Submodule implements Comparable<Submodule> {

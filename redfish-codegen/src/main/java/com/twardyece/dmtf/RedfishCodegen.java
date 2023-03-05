@@ -4,9 +4,9 @@ import com.github.mustachejava.DefaultMustacheFactory;
 import com.github.mustachejava.Mustache;
 import com.github.mustachejava.MustacheFactory;
 import com.twardyece.dmtf.api.*;
-import com.twardyece.dmtf.model.context.factory.*;
-import com.twardyece.dmtf.model.ModelFile;
 import com.twardyece.dmtf.model.ModelResolver;
+import com.twardyece.dmtf.model.context.ModelContext;
+import com.twardyece.dmtf.model.context.factory.*;
 import com.twardyece.dmtf.model.mapper.IModelFileMapper;
 import com.twardyece.dmtf.model.mapper.SimpleModelMapper;
 import com.twardyece.dmtf.model.mapper.UnversionedModelMapper;
@@ -79,9 +79,9 @@ public class RedfishCodegen {
                 continue;
             }
 
-            ModelFile modelFile = this.fileFactory.makeModelFile(result, schema.getValue());
+            ModuleFile<ModelContext> modelFile = this.fileFactory.makeModelFile(result, schema.getValue());
             if (null != modelFile) {
-                modelFile.registerModel(modules);
+                modelFile.getContext().moduleContext.registerModel(modules);
                 modelFile.generate();
             }
         }
@@ -121,7 +121,7 @@ public class RedfishCodegen {
             if (trait.path.getComponents().size() == pathDepth + 1) {
                 apiModule.addNamedSubmodule(trait.path.getLastComponent());
             }
-            TraitFile file = new TraitFile(trait.path, trait, template);
+            ModuleFile<TraitContext> file = new ModuleFile<>(trait.path, trait, template);
             file.generate();
         }
 

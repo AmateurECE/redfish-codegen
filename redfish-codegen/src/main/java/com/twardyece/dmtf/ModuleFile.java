@@ -1,25 +1,27 @@
 package com.twardyece.dmtf;
 
 import com.github.mustachejava.Mustache;
-import com.twardyece.dmtf.text.SnakeCaseName;
 
 import java.io.File;
 import java.io.IOException;
 import java.io.PrintWriter;
 import java.io.Writer;
-import java.util.HashMap;
 
-public class ModuleFile {
-    private ModuleContext context;
+public class ModuleFile<T> {
+    CratePath path;
+    private T context;
     private Mustache template;
 
-    public ModuleFile(ModuleContext context, Mustache template) {
+    public ModuleFile(CratePath path, T context, Mustache template) {
+        this.path = path;
         this.context = context;
         this.template = template;
     }
 
+    public T getContext() { return this.context; }
+
     public void generate() throws IOException {
-        File moduleFile = this.context.path.toPath().toFile();
+        File moduleFile = this.path.toPath().toFile();
         File parent = moduleFile.getParentFile();
         if (!parent.exists()) {
             parent.mkdirs();

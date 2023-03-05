@@ -1,11 +1,14 @@
 package com.twardyece.dmtf.model.context;
 
 import com.twardyece.dmtf.CratePath;
+import com.twardyece.dmtf.ModuleContext;
 import com.twardyece.dmtf.RustType;
+import com.twardyece.dmtf.text.SnakeCaseName;
 
 import java.util.List;
 
 public class ModelContext {
+    public ModuleContext moduleContext;
     public RustType rustType;
     public StructContext structContext;
     public EnumContext enumContext;
@@ -15,6 +18,9 @@ public class ModelContext {
 
     private static ModelContext generic(RustType rustType, List<Import> imports, String docComment) {
         ModelContext modelContext = new ModelContext();
+        CratePath path = rustType.getPath().append(new SnakeCaseName(rustType.getName()));
+        modelContext.moduleContext = new ModuleContext(path);
+
         modelContext.rustType = rustType;
         modelContext.imports = imports;
         modelContext.docComment = docComment;
