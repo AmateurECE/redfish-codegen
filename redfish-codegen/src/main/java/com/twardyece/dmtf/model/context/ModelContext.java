@@ -13,50 +13,35 @@ public class ModelContext {
     public StructContext structContext;
     public EnumContext enumContext;
     public TupleContext tupleContext;
-    public List<Import> imports;
     public String docComment;
 
-    private static ModelContext generic(RustType rustType, List<Import> imports, String docComment) {
+    private static ModelContext generic(RustType rustType, List<RustType> dependentTypes, String docComment) {
         ModelContext modelContext = new ModelContext();
         CratePath path = rustType.getPath().append(new SnakeCaseName(rustType.getName()));
-        modelContext.moduleContext = new ModuleContext(path);
+        modelContext.moduleContext = new ModuleContext(path, dependentTypes);
 
         modelContext.rustType = rustType;
-        modelContext.imports = imports;
         modelContext.docComment = docComment;
         return modelContext;
     }
 
-    public static ModelContext forStruct(RustType rustType, StructContext structContext, List<Import> imports,
-                                         String docComment) {
-        ModelContext modelContext = ModelContext.generic(rustType, imports, docComment);
+    public static ModelContext forStruct(RustType rustType, StructContext structContext, String docComment) {
+        ModelContext modelContext = ModelContext.generic(rustType, structContext.getDependentTypes(), docComment);
         modelContext.structContext = structContext;
         return modelContext;
     }
 
-    public static ModelContext forEnum(RustType rustType, EnumContext enumContext, List<Import> imports,
-                                       String docComment) {
-        ModelContext modelContext = ModelContext.generic(rustType, imports, docComment);
+    public static ModelContext forEnum(RustType rustType, EnumContext enumContext, String docComment) {
+        ModelContext modelContext = ModelContext.generic(rustType, enumContext.getDependentTypes(), docComment);
         modelContext.enumContext = enumContext;
         return modelContext;
     }
 
-    public static ModelContext forTuple(RustType rustType, TupleContext tupleContext, List<Import> imports,
-                                        String docComment) {
-        ModelContext modelContext = ModelContext.generic(rustType, imports, docComment);
+    public static ModelContext forTuple(RustType rustType, TupleContext tupleContext, String docComment) {
+        ModelContext modelContext = ModelContext.generic(rustType, tupleContext.getDependentTypes(), docComment);
         modelContext.tupleContext = tupleContext;
         return modelContext;
     }
 
     public String name() { return this.rustType.getName().toString(); }
-
-    public static class Import {
-        public Import(CratePath cratePath) {
-            this.cratePath = cratePath;
-        }
-
-        CratePath cratePath;
-
-        public String path() { return this.cratePath.toString(); }
-    }
 }

@@ -50,7 +50,7 @@ public class EnumContextFactory implements IModelContextFactory {
         List<EnumContext.Variant> variants = (List<EnumContext.Variant>) schema.getEnum().stream()
                 .map((s) -> makeVariant((String) s, docComments.getOrDefault(s, null)))
                 .collect(Collectors.toList());
-        return ModelContext.forEnum(rustType, new EnumContext(variants, true), null, schema.getDescription());
+        return ModelContext.forEnum(rustType, new EnumContext(variants, true), schema.getDescription());
     }
 
     private static EnumContext.Variant makeVariant(String value, String docComment) {

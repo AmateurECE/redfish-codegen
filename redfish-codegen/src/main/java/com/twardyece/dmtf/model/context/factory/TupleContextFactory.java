@@ -19,6 +19,6 @@ public class TupleContextFactory implements IModelContextFactory {
         }
 
         TupleContext tupleContext = new TupleContext(this.modelResolver.resolveSchema(schema));
-        return ModelContext.forTuple(type, tupleContext, null, schema.getDescription());
+        return ModelContext.forTuple(type, tupleContext, schema.getDescription());
     }
 }

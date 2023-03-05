@@ -4,6 +4,7 @@ import com.twardyece.dmtf.RustIdentifier;
 import com.twardyece.dmtf.RustType;
 import com.twardyece.dmtf.text.PascalCaseName;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -15,6 +16,15 @@ public class EnumContext {
         this.variants = variants;
         this.tagged = tagged;
     }
+
+
+    public List<RustType> getDependentTypes() {
+        return this.variants.stream()
+                .filter((v) -> null != v.type)
+                .map((v) -> v.type.rustType)
+                .collect(Collectors.toList());
+    }
+
 
     public static class Variant {
         RustIdentifier variantName;

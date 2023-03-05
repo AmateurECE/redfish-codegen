@@ -8,10 +8,35 @@ import java.util.stream.Collectors;
 public class ModuleContext {
     CratePath path;
     Set<Submodule> submoduleSet;
+    Set<Import> imports;
 
-    public ModuleContext(CratePath path) {
+    public ModuleContext(CratePath path, List<RustType> dependentTypes) {
         this.path = path;
         this.submoduleSet = new HashSet<>();
+
+        if (null != dependentTypes) {
+            this.imports = new HashSet<>();
+            for (RustType type : dependentTypes) {
+                addImports(this.imports, type);
+            }
+        }
+    }
+
+    private static void addImports(Set<Import> imports, RustType rustType) {
+        if (null != rustType.getInnerType()) {
+            addImports(imports, rustType.getInnerType());
+        }
+
+        if (!rustType.isPrimitive() && rustType.getPath().isCrateLocal()) {
+            List<SnakeCaseName> components = rustType.getPath().getComponents();
+            if (components.size() > 1) {
+                List<SnakeCaseName> front = components.subList(0, 2);
+                List<SnakeCaseName> back = components.subList(1, components.size());
+                CratePath importPath = CratePath.relative(front);
+                imports.add(new Import(importPath));
+                rustType.setImportPath(CratePath.relative(back));
+            }
+        }
     }
 
     public List<Submodule> submodules() { return this.submoduleSet.stream().sorted().collect(Collectors.toList()); }
@@ -46,7 +71,7 @@ public class ModuleContext {
             SnakeCaseName component = components.get(i);
             if (!path.isEmpty()) {
                 if (!modules.containsKey(path.toString())) {
-                    modules.put(path.toString(), new ModuleContext(path));
+                    modules.put(path.toString(), new ModuleContext(path, null));
                 }
 
                 if (components.size() - 1 == i) {
@@ -58,6 +83,36 @@ public class ModuleContext {
 
             path = path.append(component);
         }
+    }
+
+    public static class Import implements Comparable<Import> {
+        public Import(CratePath cratePath) {
+            this.cratePath = cratePath;
+        }
+
+        CratePath cratePath;
+
+        public String path() { return this.cratePath.toString(); }
+
+        @Override
+        public int compareTo(Import i) {
+            return this.cratePath.compareTo(i.cratePath);
+        }
+
+        @Override
+        public int hashCode() { return this.cratePath.hashCode(); }
+
+        @Override
+        public boolean equals(Object o) {
+            if (o instanceof Import) {
+                return this.cratePath.equals(((Import) o).cratePath);
+            } else {
+                return false;
+            }
+        }
+
+        @Override
+        public String toString() { return this.cratePath.toString(); }
     }
 
     static class Submodule implements Comparable<Submodule> {

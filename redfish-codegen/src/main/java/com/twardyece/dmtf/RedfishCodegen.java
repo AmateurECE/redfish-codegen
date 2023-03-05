@@ -105,7 +105,7 @@ public class RedfishCodegen {
         List<SnakeCaseName> apiModulePathComponents = new ArrayList<>();
         apiModulePathComponents.add(RustConfig.API_BASE_MODULE);
         CratePath apiModulePath = CratePath.crateLocal(apiModulePathComponents);
-        ModuleContext apiModule = new ModuleContext(apiModulePath);
+        ModuleContext apiModule = new ModuleContext(apiModulePath, null);
         int pathDepth = apiModulePath.getComponents().size();
 
         MustacheFactory factory = new DefaultMustacheFactory();
@@ -130,7 +130,7 @@ public class RedfishCodegen {
     }
 
     public void generateLib() throws IOException {
-        ModuleContext context = new ModuleContext(CratePath.crateRoot());
+        ModuleContext context = new ModuleContext(CratePath.crateRoot(), null);
         context.addNamedSubmodule(RustConfig.API_BASE_MODULE);
         context.addNamedSubmodule(RustConfig.MODELS_BASE_MODULE);
 

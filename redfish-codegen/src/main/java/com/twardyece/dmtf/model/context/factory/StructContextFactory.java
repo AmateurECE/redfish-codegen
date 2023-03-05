@@ -30,17 +30,9 @@ public class StructContextFactory implements IModelContextFactory {
                 .map((s) -> this.toProperty((Map.Entry<String, Schema>) s, schema))
                 .collect(Collectors.toList());
 
-        // Get imports from properties
-        Set<CratePath> importSet = new HashSet<>();
-        for (StructContext.Property property : properties) {
-            addImports(importSet, property.rustType);
-        }
-
-        List<ModelContext.Import> imports = importSet.stream().map(ModelContext.Import::new).toList();
-
         StructContext struct = new StructContext(properties);
         String docComment = schema.getDescription();
-        return ModelContext.forStruct(rustType, struct, imports, docComment);
+        return ModelContext.forStruct(rustType, struct, docComment);
     }
 
     private StructContext.Property toProperty(Map.Entry<String, Schema> property, Schema model) {
@@ -58,24 +50,5 @@ public class StructContextFactory implements IModelContextFactory {
 
         String docComment = property.getValue().getDescription();
         return new StructContext.Property(sanitizedName, dataType, serdeName, docComment);
-    }
-
-    // TODO: Could probably move this import logic into a shared location to be used by both this and TraitContextFactory
-    private static void addImports(Set<CratePath> imports, RustType rustType) {
-        // First, handle any inner types
-        if (null != rustType.getInnerType()) {
-            addImports(imports, rustType.getInnerType());
-        }
-
-        if (!rustType.isPrimitive() && rustType.getPath().isCrateLocal()) {
-            List<SnakeCaseName> components = rustType.getPath().getComponents();
-            if (components.size() > 1) {
-                List<SnakeCaseName> front = components.subList(0, 2);
-                List<SnakeCaseName> back = components.subList(1, components.size());
-                CratePath importPath = CratePath.relative(front);
-                imports.add(importPath);
-                rustType.setImportPath(CratePath.relative(back));
-            }
-        }
     }
 }
