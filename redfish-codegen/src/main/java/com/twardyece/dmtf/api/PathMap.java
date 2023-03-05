@@ -1,5 +1,6 @@
 package com.twardyece.dmtf.api;
 
+import com.twardyece.dmtf.ModuleContext;
 import com.twardyece.dmtf.text.PascalCaseName;
 import io.swagger.v3.oas.models.PathItem;
 import org.jgrapht.Graph;
@@ -115,7 +116,7 @@ public class PathMap {
 
             // Add this trait as a submodule to the preceding traits
             Graphs.predecessorListOf(this.graph, endpoint)
-                    .forEach((e) -> traits.get(e.toString()).submodulePaths.add(trait.path.getLastComponent()));
+                    .forEach((e) -> traits.get(e.toString()).moduleContext.addNamedSubmodule(trait.moduleContext.path.getLastComponent()));
         }
 
         return traits.values().stream().toList();

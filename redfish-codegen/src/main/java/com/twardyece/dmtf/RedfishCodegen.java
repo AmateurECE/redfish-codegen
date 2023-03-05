@@ -118,10 +118,10 @@ public class RedfishCodegen {
                 traitNameOverrides);
 
         for (TraitContext trait : map.getTraits(traitContextFactory)) {
-            if (trait.path.getComponents().size() == pathDepth + 1) {
-                apiModule.addNamedSubmodule(trait.path.getLastComponent());
+            if (trait.moduleContext.path.getComponents().size() == pathDepth + 1) {
+                apiModule.addNamedSubmodule(trait.moduleContext.path.getLastComponent());
             }
-            ModuleFile<TraitContext> file = new ModuleFile<>(trait.path, trait, template);
+            ModuleFile<TraitContext> file = new ModuleFile<>(trait.moduleContext.path, trait, template);
             file.generate();
         }
 

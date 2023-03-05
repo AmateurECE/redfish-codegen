@@ -14,14 +14,23 @@
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License.
+{{#moduleContext}}
 
 {{#imports}}
 use {{{path}}};
 {{/imports}}
 
 {{#submodules}}
+{{#isUsed}}
+mod {{name}};
+pub use {{name}}::*;
+
+{{/isUsed}}
+{{^isUsed}}
 pub mod {{name}};
+{{/isUsed}}
 {{/submodules}}
+{{/moduleContext}}
 
 pub trait {{name}} {
 {{#operations}}
