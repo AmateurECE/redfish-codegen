@@ -17,6 +17,9 @@ public class Abbreviation implements IWord {
         SPECIAL_ABBREVIATIONS.put("mUSB", new Word("mUSB"));
         SPECIAL_ABBREVIATIONS.put("uUSB", new Word("uUSB"));
         SPECIAL_ABBREVIATIONS.put("cSFP", new Word("cSFP"));
+        SPECIAL_ABBREVIATIONS.put("IPv4", new Abbreviation("IPv4"));
+        SPECIAL_ABBREVIATIONS.put("IPv6", new Abbreviation("IPv6"));
+        SPECIAL_ABBREVIATIONS.put("kWh", new Abbreviation("kWh"));
     }
 
     public Abbreviation(String upperCaseValue) {

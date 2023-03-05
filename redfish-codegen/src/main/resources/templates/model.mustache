@@ -37,6 +37,9 @@ pub struct {{name}} {
 }
 {{/structContext}}
 {{#enumContext}}
+{{^tagged}}
+#[serde(untagged)]
+{{/tagged}}
 pub enum {{name}} {
 {{#variants}}
 {{#docComment}}

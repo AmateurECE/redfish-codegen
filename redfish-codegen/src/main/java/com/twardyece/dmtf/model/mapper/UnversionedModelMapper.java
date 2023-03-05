@@ -11,11 +11,9 @@ import java.util.regex.Pattern;
 
 public class UnversionedModelMapper implements IModelFileMapper {
     // The redfish document consistently names models of the form Module_vXX_XX_XX_Model
-    private Pattern pattern;
+    private static Pattern pattern = Pattern.compile("(?<module>[a-zA-z0-9]*)_(?<model>[a-zA-Z0-9]+)");
 
-    public UnversionedModelMapper() {
-        this.pattern = Pattern.compile("(?<module>[a-zA-z0-9]*)_(?<model>[a-zA-Z0-9]+)");
-    }
+    public UnversionedModelMapper() {}
 
     @Override
     public ModelMatchResult matches(String name) {

@@ -19,6 +19,14 @@ public class RustIdentifier implements Comparable<RustIdentifier> {
         }
     }
 
+    public RustIdentifier(SnakeCaseName name) {
+        this.value = name.toUpperCase();
+        Matcher matcher = numbersOnly.matcher(this.value);
+        if (matcher.find()) {
+            this.value = "_" + this.value;
+        }
+    }
+
     @Override
     public String toString() { return this.value; }
 

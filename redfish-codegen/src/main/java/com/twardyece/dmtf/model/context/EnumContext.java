@@ -7,9 +7,11 @@ import java.util.List;
 
 public class EnumContext {
     List<Variant> variants;
+    boolean tagged;
 
-    public EnumContext(List<Variant> variants) {
+    public EnumContext(List<Variant> variants, boolean tagged) {
         this.variants = variants;
+        this.tagged = tagged;
     }
 
     public static class Variant {

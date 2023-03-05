@@ -32,6 +32,17 @@ public class ModelResolver {
         this.mappers = mappers;
     }
 
+    public String getSchemaIdentifier(Schema schema) {
+        String url = schema.get$ref();
+        Matcher matcher = schemaPath.matcher(url);
+        if (!matcher.find()) {
+            throw new RuntimeException("Schema $ref path " + url + " appears to be malformed");
+        }
+
+        // Get the schema name
+        return matcher.replaceFirst("");
+    }
+
     public RustType resolvePath(String name) {
         for (IModelFileMapper mapper : this.mappers) {
             IModelFileMapper.ModelMatchResult module = mapper.matches(name);
@@ -47,17 +58,7 @@ public class ModelResolver {
     public RustType resolveSchema(Schema schema) {
         String type = schema.getType();
         if (null == type) {
-            // It's an object with a $ref
-            String url = schema.get$ref();
-            Matcher matcher = schemaPath.matcher(url);
-            if (!matcher.find()) {
-                LOGGER.error("Schema $ref path " + url + " appears to be malformed");
-                return null;
-            }
-
-            // Get the schema name
-            String name = matcher.replaceFirst("");
-            return this.resolvePath(name);
+            return this.resolvePath(this.getSchemaIdentifier(schema));
         } else if ("array".equals(schema.getType())) {
             // It's an array type
             return new RustType(null, VEC_NAME, this.resolveSchema(schema.getItems()));

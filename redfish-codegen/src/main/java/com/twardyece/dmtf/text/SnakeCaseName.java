@@ -2,7 +2,6 @@ package com.twardyece.dmtf.text;
 
 import java.util.ArrayList;
 import java.util.Collection;
-import java.util.List;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
@@ -44,6 +43,11 @@ public class SnakeCaseName implements ICaseConvertible, Comparable<SnakeCaseName
             throw new CaseConversionError("snake_case", name);
         }
     }
+
+    public String toUpperCase() {
+        return this.words.stream().map(IWord::toUpperCase).collect(Collectors.joining("_"));
+    }
+
 
     @Override
     public Collection<? extends IWord> words() {
