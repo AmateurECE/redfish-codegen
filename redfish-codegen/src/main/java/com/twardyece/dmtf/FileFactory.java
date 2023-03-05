@@ -10,6 +10,8 @@ import io.swagger.v3.oas.models.media.Schema;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.util.ArrayList;
+
 public class FileFactory {
     private MustacheFactory factory;
     private Mustache modelTemplate;
@@ -35,8 +37,8 @@ public class FileFactory {
         return null;
     }
 
-    public ModuleFile makeModuleFile(CratePath path) {
-        return new ModuleFile(path, this.moduleTemplate);
+    public ModuleFile makeModuleFile(ModuleContext context) {
+        return new ModuleFile(context, this.moduleTemplate);
     }
 
     // TODO: Add a makeTraitFile method here?

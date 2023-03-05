@@ -3,6 +3,7 @@ package com.twardyece.dmtf.model;
 import com.github.mustachejava.Mustache;
 import com.twardyece.dmtf.CratePath;
 import com.twardyece.dmtf.FileFactory;
+import com.twardyece.dmtf.ModuleContext;
 import com.twardyece.dmtf.ModuleFile;
 import com.twardyece.dmtf.model.context.ModelContext;
 import com.twardyece.dmtf.text.SnakeCaseName;
@@ -27,7 +28,7 @@ public class ModelFile {
         this.context = context;
     }
 
-    public void registerModel(Map<String, ModuleFile> modules, FileFactory factory) {
+    public void registerModel(Map<String, ModuleContext> modules) {
         if (null == this.module.getComponents() || 2 > this.module.getComponents().size()) {
             return;
         }
@@ -40,7 +41,7 @@ public class ModelFile {
             SnakeCaseName component = this.module.getComponents().get(i);
             if (!path.isEmpty()) {
                 if (!modules.containsKey(path.toString())) {
-                    modules.put(path.toString(), factory.makeModuleFile(path));
+                    modules.put(path.toString(), new ModuleContext(path));
                 }
 
                 if (this.module.getComponents().size() - 1 == i) {

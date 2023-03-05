@@ -71,7 +71,7 @@ public class RedfishCodegen {
     }
 
     public void generateModels() throws IOException {
-        HashMap<String, ModuleFile> modules = new HashMap<>();
+        HashMap<String, ModuleContext> modules = new HashMap<>();
         for (Map.Entry<String, Schema> schema : this.document.getComponents().getSchemas().entrySet()) {
             RustType result = this.modelResolver.resolvePath(schema.getKey());
             if (null == result) {
@@ -81,13 +81,14 @@ public class RedfishCodegen {
 
             ModelFile modelFile = this.fileFactory.makeModelFile(result, schema.getValue());
             if (null != modelFile) {
-                modelFile.registerModel(modules, this.fileFactory);
+                modelFile.registerModel(modules);
                 modelFile.generate();
             }
         }
 
-        for (ModuleFile module : modules.values()) {
-            module.generate();
+        for (ModuleContext module : modules.values()) {
+            ModuleFile file = this.fileFactory.makeModuleFile(module);
+            file.generate();
         }
     }
 
@@ -104,7 +105,7 @@ public class RedfishCodegen {
         List<SnakeCaseName> apiModulePathComponents = new ArrayList<>();
         apiModulePathComponents.add(RustConfig.API_BASE_MODULE);
         CratePath apiModulePath = CratePath.crateLocal(apiModulePathComponents);
-        ModuleFile apiModule = this.fileFactory.makeModuleFile(apiModulePath);
+        ModuleContext apiModule = new ModuleContext(apiModulePath);
         int pathDepth = apiModulePath.getComponents().size();
 
         MustacheFactory factory = new DefaultMustacheFactory();
@@ -124,13 +125,16 @@ public class RedfishCodegen {
             file.generate();
         }
 
-        apiModule.generate();
+        ModuleFile apiFile = this.fileFactory.makeModuleFile(apiModule);
+        apiFile.generate();
     }
 
     public void generateLib() throws IOException {
-        ModuleFile file = this.fileFactory.makeModuleFile(CratePath.crateRoot());
-        file.addNamedSubmodule(RustConfig.API_BASE_MODULE);
-        file.addNamedSubmodule(RustConfig.MODELS_BASE_MODULE);
+        ModuleContext context = new ModuleContext(CratePath.crateRoot());
+        context.addNamedSubmodule(RustConfig.API_BASE_MODULE);
+        context.addNamedSubmodule(RustConfig.MODELS_BASE_MODULE);
+
+        ModuleFile file = this.fileFactory.makeModuleFile(context);
         file.generate();
     }
 
