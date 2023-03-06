@@ -56,7 +56,7 @@ public class RedfishCodegen {
         factories[1] = new FreeFormObjectContextFactory();
         factories[2] = new StructContextFactory(this.modelResolver);
         factories[3] = new TupleContextFactory(this.modelResolver);
-        factories[4] = new UnionContextFactory(this.modelResolver);
+        factories[4] = new UnionContextFactory(this.modelResolver, new UnionVariantParser());
         this.fileFactory = new FileFactory(new DefaultMustacheFactory(), factories);
 
         DocumentParser parser = new DocumentParser(this.apiDirectory + "/openapi.yaml");

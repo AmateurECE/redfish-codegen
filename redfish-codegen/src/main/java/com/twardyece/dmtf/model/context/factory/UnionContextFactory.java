@@ -1,27 +1,22 @@
 package com.twardyece.dmtf.model.context.factory;
 
-import com.twardyece.dmtf.RustConfig;
 import com.twardyece.dmtf.RustIdentifier;
 import com.twardyece.dmtf.RustType;
-import com.twardyece.dmtf.api.NameMapper;
-import com.twardyece.dmtf.identifiers.VersionedSchemaIdentifier;
 import com.twardyece.dmtf.model.ModelResolver;
 import com.twardyece.dmtf.model.context.EnumContext;
 import com.twardyece.dmtf.model.context.ModelContext;
-import com.twardyece.dmtf.text.PascalCaseName;
-import com.twardyece.dmtf.text.SnakeCaseName;
 import io.swagger.v3.oas.models.media.Schema;
 
-import java.util.*;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
-import java.util.stream.Collectors;
+import java.util.ArrayList;
+import java.util.List;
 
 public class UnionContextFactory implements IModelContextFactory {
     private ModelResolver modelResolver;
+    private final UnionVariantParser variantParser;
 
-    public UnionContextFactory(ModelResolver modelResolver) {
+    public UnionContextFactory(ModelResolver modelResolver, UnionVariantParser variantParser) {
         this.modelResolver = modelResolver;
+        this.variantParser = variantParser;
     }
 
     @Override
@@ -37,23 +32,12 @@ public class UnionContextFactory implements IModelContextFactory {
     private List<EnumContext.Variant> makeVariants(Schema schema) {
         List<EnumContext.Variant> variants = new ArrayList<>();
 
-        // TODO: We should probably delegate this parsing to an injected dependency in the future, since it's possible
-        //  this will change in future revisions of the Redfish data model.
-        NameMapper mapper = new NameMapper(Pattern.compile("odata-v4_(?<model>[a-zA-Z0-9]*)"), "model");
-
         for (Object object : schema.getAnyOf()) {
             Schema variant = (Schema)object;
             String identifier = this.modelResolver.getSchemaIdentifier(variant);
-            SnakeCaseName identifierName = mapper.matchComponent(identifier);
-            RustIdentifier value;
-            if (null == identifierName) {
-                VersionedSchemaIdentifier versioned = new VersionedSchemaIdentifier(identifier);
-                value = new RustIdentifier(versioned.getVersion());
-            } else {
-                value = new RustIdentifier(new PascalCaseName(identifierName));
-            }
-
-            variants.add(new EnumContext.Variant(value, new EnumContext.Variant.Type(this.modelResolver.resolveSchema(variant)),
+            RustIdentifier value = this.variantParser.getVariantName(identifier);
+            variants.add(new EnumContext.Variant(value,
+                    new EnumContext.Variant.Type(this.modelResolver.resolveSchema(variant)),
                     null, null));
         }
 

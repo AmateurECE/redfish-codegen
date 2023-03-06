@@ -5,11 +5,7 @@ import com.twardyece.dmtf.RustType;
 import com.twardyece.dmtf.model.context.ModelContext;
 import com.twardyece.dmtf.model.context.TupleContext;
 import com.twardyece.dmtf.text.PascalCaseName;
-import com.twardyece.dmtf.text.SnakeCaseName;
 import io.swagger.v3.oas.models.media.Schema;
-
-import java.util.ArrayList;
-import java.util.List;
 
 public class FreeFormObjectContextFactory implements IModelContextFactory {
     private static final RustType jsonValue = new RustType(CratePath.parse("serde_json"), new PascalCaseName("Value"));
