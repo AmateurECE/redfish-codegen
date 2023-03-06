@@ -34,7 +34,13 @@ pub struct {{name}} {
 {{#serdeName}}
     #[serde(rename = "{{{serdeName}}}")]
 {{/serdeName}}
+{{#optional}}
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub {{name}}: Option<{{{type}}}>,
+{{/optional}}
+{{^optional}}
     pub {{name}}: {{{type}}},
+{{/optional}}
 {{/properties}}
 }
 {{/structContext}}

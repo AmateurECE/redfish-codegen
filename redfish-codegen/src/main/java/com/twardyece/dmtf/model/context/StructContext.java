@@ -17,9 +17,10 @@ public class StructContext {
     }
 
     public static class Property {
-        public Property(SnakeCaseName name, RustType type, String serdeName, String docComment) {
+        public Property(SnakeCaseName name, RustType type, boolean optional, String serdeName, String docComment) {
             this.propertyName = name;
             this.rustType = type;
+            this.optional = optional;
             this.serdeName = serdeName;
             this.docComment = docComment;
         }
@@ -30,6 +31,7 @@ public class StructContext {
 
         SnakeCaseName propertyName;
         public RustType rustType;
+        boolean optional;
         String serdeName;
         String docComment;
     }

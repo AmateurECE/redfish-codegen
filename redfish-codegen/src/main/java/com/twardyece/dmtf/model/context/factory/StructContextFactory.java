@@ -43,12 +43,12 @@ public class StructContextFactory implements IModelContextFactory {
         }
 
         RustType dataType = this.modelResolver.resolveSchema(property.getValue());
-        List<String> requiredProperties = model.getRequired();
-        if (null != requiredProperties && !requiredProperties.contains(property.getKey())) {
-            dataType = new RustType(null, new PascalCaseName("Option"), dataType);
+        boolean optional = true;
+        if (null != model.getRequired() && model.getRequired().contains(property.getKey())) {
+            optional = false;
         }
 
         String docComment = property.getValue().getDescription();
-        return new StructContext.Property(sanitizedName, dataType, serdeName, docComment);
+        return new StructContext.Property(sanitizedName, dataType, optional, serdeName, docComment);
     }
 }
