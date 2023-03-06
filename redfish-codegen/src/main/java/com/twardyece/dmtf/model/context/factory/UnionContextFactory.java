@@ -26,7 +26,7 @@ public class UnionContextFactory implements IModelContextFactory {
         }
 
         List<EnumContext.Variant> variants = makeVariants(schema);
-        return ModelContext.forEnum(type, new EnumContext(variants, false), schema.getDescription());
+        return ModelContext.forEnum(type, new EnumContext(variants, 0, false), schema.getDescription());
     }
 
     private List<EnumContext.Variant> makeVariants(Schema schema) {

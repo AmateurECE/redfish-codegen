@@ -133,7 +133,7 @@ public class TraitContextFactory {
             PascalCaseName typeName = new PascalCaseName(context.traitName.toString()
                     + CaseConversion.toPascalCase(context.methodName) + "RequestBody");
             ModelContext supportingType = ModelContext.forEnum(new RustType(context.path, typeName),
-                    new EnumContext(variants, false), docComment);
+                    new EnumContext(variants, 0, false), docComment);
             result.supportingTypes = new ArrayList<>();
             result.supportingTypes.add(supportingType);
             result.parameter = new TraitContext.Parameter(new SnakeCaseName("body"), supportingType.rustType);
@@ -181,7 +181,7 @@ public class TraitContextFactory {
                     + CaseConversion.toPascalCase(context.methodName) + "Response");
             RustType supportingType = new RustType(context.path, typeName);
 
-            ModelContext supportingModel = ModelContext.forEnum(supportingType, new EnumContext(variants, false), docComment);
+            ModelContext supportingModel = ModelContext.forEnum(supportingType, new EnumContext(variants, 0, false), docComment);
             result.supportingTypes = new ArrayList<>();
             result.supportingTypes.add(supportingModel);
 

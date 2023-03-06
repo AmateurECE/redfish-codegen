@@ -25,6 +25,9 @@ use {{{path}}};
 /// {{docComment}}
 {{/docComment}}
 #[derive(Clone, Debug, serde::Deserialize, serde::Serialize)]
+{{^enumContext}}
+#[derive(Default)]
+{{/enumContext}}
 {{#structContext}}
 pub struct {{name}} {
 {{#properties}}
@@ -58,6 +61,12 @@ pub enum {{name}} {
 {{/serdeName}}
     {{name}}{{#type}}({{type}}){{/type}},
 {{/variants}}
+}
+
+impl Default for {{name}} {
+     fn default() -> {{name}} {
+        {{name}}::{{#defaultVariant}}{{name}}{{#type}}({{type}}::default()){{/type}}{{/defaultVariant}}
+     }
 }
 {{/enumContext}}
 {{#tupleContext}}

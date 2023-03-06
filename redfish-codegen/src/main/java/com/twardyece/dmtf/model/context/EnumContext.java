@@ -2,18 +2,18 @@ package com.twardyece.dmtf.model.context;
 
 import com.twardyece.dmtf.RustIdentifier;
 import com.twardyece.dmtf.RustType;
-import com.twardyece.dmtf.text.PascalCaseName;
 
-import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
 
 public class EnumContext {
     List<Variant> variants;
+    int defaultVariantIndex;
     boolean tagged;
 
-    public EnumContext(List<Variant> variants, boolean tagged) {
+    public EnumContext(List<Variant> variants, int defaultVariantIndex, boolean tagged) {
         this.variants = variants;
+        this.defaultVariantIndex = defaultVariantIndex;
         this.tagged = tagged;
     }
 
@@ -25,6 +25,7 @@ public class EnumContext {
                 .collect(Collectors.toList());
     }
 
+    public Variant defaultVariant() { return this.variants.get(this.defaultVariantIndex); }
 
     public static class Variant {
         RustIdentifier variantName;
