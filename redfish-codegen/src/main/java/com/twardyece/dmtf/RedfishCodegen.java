@@ -12,6 +12,8 @@ import com.twardyece.dmtf.model.mapper.SimpleModelMapper;
 import com.twardyece.dmtf.model.mapper.UnversionedModelMapper;
 import com.twardyece.dmtf.model.mapper.VersionedModelMapper;
 import com.twardyece.dmtf.openapi.DocumentParser;
+import com.twardyece.dmtf.policies.IModelGenerationPolicy;
+import com.twardyece.dmtf.policies.ODataTypePolicy;
 import com.twardyece.dmtf.text.PascalCaseName;
 import com.twardyece.dmtf.text.SnakeCaseName;
 import io.swagger.v3.oas.models.OpenAPI;
@@ -37,6 +39,7 @@ public class RedfishCodegen {
     private String crateDirectory;
     private ModelResolver modelResolver;
     private TraitContextFactory traitContextFactory;
+    private IModelGenerationPolicy[] modelGenerationPolicies;
     private OpenAPI document;
     private FileFactory fileFactory;
     static final Logger LOGGER = LoggerFactory.getLogger(RedfishCodegen.class);
@@ -70,6 +73,11 @@ public class RedfishCodegen {
         parser.addInlineSchemaNameMapping("_redfish_v1_odata_get_200_response", "odata-v4_ServiceDocument");
         parser.addInlineSchemaNameMapping("_redfish_v1_odata_get_200_response_value_inner", "odata-v4_Service");
 
+        // These intrusive/low-level policies need to be applied to the set of models as a whole, but should not be
+        // coupled to context factories.
+        this.modelGenerationPolicies = new IModelGenerationPolicy[1];
+        this.modelGenerationPolicies[0] = new ODataTypePolicy();
+
         // API generation setup
         NameMapper[] nameMappers = new NameMapper[4];
         nameMappers[0] = new NameMapper(Pattern.compile("^(?<name>[A-Za-z0-9]+)$"), "name");
@@ -87,7 +95,8 @@ public class RedfishCodegen {
     }
 
     public void generateModels() throws IOException {
-        HashMap<String, ModuleContext> modules = new HashMap<>();
+        // Translate each schema into a ModuleFile with associated model context
+        Map<String, ModuleFile<ModelContext>> models = new HashMap<>();
         for (Map.Entry<String, Schema> schema : this.document.getComponents().getSchemas().entrySet()) {
             RustType result = this.modelResolver.resolvePath(schema.getKey());
             if (null == result) {
@@ -97,12 +106,24 @@ public class RedfishCodegen {
 
             ModuleFile<ModelContext> modelFile = this.fileFactory.makeModelFile(result, schema.getValue());
             if (null != modelFile) {
-                modelFile.getContext().moduleContext.registerModel(modules);
-                modelFile.generate();
+                models.put(schema.getKey(), modelFile);
             }
         }
 
-        for (ModuleContext module : modules.values()) {
+        // Apply model generation policies
+        for (IModelGenerationPolicy policy : this.modelGenerationPolicies) {
+            policy.apply(models);
+        }
+
+        // Generate all the models
+        Map<String, ModuleContext> intermediateModules = new HashMap<>();
+        for (ModuleFile<ModelContext> modelFile : models.values()) {
+            modelFile.getContext().moduleContext.registerModel(intermediateModules);
+            modelFile.generate();
+        }
+
+        // Generate intermediate modules
+        for (ModuleContext module : intermediateModules.values()) {
             ModuleFile file = this.fileFactory.makeModuleFile(module);
             file.generate();
         }
