@@ -122,7 +122,7 @@ public class TraitContextFactory {
             List<EnumContext.Variant> variants = new ArrayList<>();
             for (Map.Entry<String, MediaType> content : contents.entrySet()) {
                 Schema contentSchema = content.getValue().getSchema();
-                RustIdentifier identifier = new RustIdentifier(RustConfig.sanitizeIdentifier(content.getKey()));
+                RustIdentifier identifier = translateResponseCodeToName(content.getKey());
                 variants.add(new EnumContext.Variant(identifier,
                         new EnumContext.Variant.Type(this.modelResolver.resolveSchema(contentSchema)),
                         null, contentSchema.getDescription()));
@@ -152,7 +152,7 @@ public class TraitContextFactory {
         if (responses.size() > 1) {
             List<EnumContext.Variant> variants = new ArrayList<>();
             for (Map.Entry<String, ApiResponse> entry : responses.entrySet()) {
-                RustIdentifier identifier = new RustIdentifier(RustConfig.sanitizeIdentifier(entry.getKey()));
+                RustIdentifier identifier = translateResponseCodeToName(entry.getKey());
                 EnumContext.Variant variant;
                 Content content = entry.getValue().getContent();
                 if (null == content) {
@@ -220,6 +220,24 @@ public class TraitContextFactory {
         }
 
         return name;
+    }
+
+    private static RustIdentifier translateResponseCodeToName(String responseCode) {
+        try {
+            String name;
+            int value = Integer.parseInt(responseCode);
+            switch (value) {
+                case 200: name = "Ok"; break;
+                case 201: name = "Created"; break;
+                case 202: name = "Accepted"; break;
+                case 204: name = "NoContent"; break;
+                default: throw new RuntimeException("Unexpected response code " + value);
+            }
+
+            return new RustIdentifier(new PascalCaseName(name));
+        } catch (NumberFormatException e) {
+            return new RustIdentifier(RustConfig.sanitizeIdentifier(responseCode));
+        }
     }
 
     private static class PathItemParseContext {
