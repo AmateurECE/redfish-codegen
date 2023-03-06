@@ -6,6 +6,7 @@ import com.twardyece.dmtf.text.SnakeCaseName;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collection;
 import java.util.List;
 import java.util.stream.Collectors;
@@ -81,6 +82,12 @@ public class CratePath implements Comparable<CratePath> {
         String path = String.join("/", this.path.stream().map((name) -> name.toString()).collect(Collectors.toList()))
                 + RustConfig.FILE_EXTENSION;
         return Paths.get(path);
+    }
+
+    public static CratePath parse(String value) {
+        CratePath path = CratePath.empty();
+        path.path.addAll(Arrays.stream(value.split("::")).map(SnakeCaseName::new).toList());
+        return path;
     }
 
     @Override

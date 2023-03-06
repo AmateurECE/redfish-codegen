@@ -12,14 +12,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 public class FreeFormObjectContextFactory implements IModelContextFactory {
-    private static final RustType jsonValue;
-
-    static {
-        List<SnakeCaseName> components = new ArrayList<>();
-        components.add(new SnakeCaseName("serde_json"));
-        CratePath path = CratePath.relative(components);
-        jsonValue = new RustType(path, new PascalCaseName("Value"));
-    }
+    private static final RustType jsonValue = new RustType(CratePath.parse("serde_json"), new PascalCaseName("Value"));
 
     public FreeFormObjectContextFactory() {}
 

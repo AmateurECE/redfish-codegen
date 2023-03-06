@@ -29,15 +29,7 @@ public class TraitContextFactory {
     private final EndpointResolver endpointResolver;
     private final Map<PascalCaseName, PascalCaseName> traitNameOverrides;
 
-    private static final RustType httpBody;
-
-    static {
-        List<SnakeCaseName> components = new ArrayList<>();
-        components.add(new SnakeCaseName("hyper"));
-        components.add(new SnakeCaseName("body"));
-        CratePath cratePath = CratePath.relative(components);
-        httpBody = new RustType(cratePath, new PascalCaseName("Body"));
-    }
+    private static final RustType httpBody = new RustType(CratePath.parse("hyper::body"), new PascalCaseName("Body"));
 
     public TraitContextFactory(ModelResolver modelResolver, EndpointResolver endpointResolver,
                                Map<PascalCaseName, PascalCaseName> traitNameOverrides) {
