@@ -5,8 +5,13 @@ public class CaseConversion {
         try {
             return new PascalCaseName(name);
         } catch (ICaseConvertible.CaseConversionError e) {
-            SnakeCaseName snakeCaseName = new SnakeCaseName(name);
-            return new PascalCaseName(snakeCaseName);
+            try {
+                SnakeCaseName snakeCaseName = new SnakeCaseName(name);
+                return new PascalCaseName(snakeCaseName);
+            } catch (ICaseConvertible.CaseConversionError f) {
+                CamelCaseName camelCaseName = new CamelCaseName(name);
+                return new PascalCaseName(camelCaseName);
+            }
         }
     }
 
@@ -14,8 +19,13 @@ public class CaseConversion {
         try {
             return new SnakeCaseName(name);
         } catch (ICaseConvertible.CaseConversionError e) {
-            PascalCaseName pascalCaseName = new PascalCaseName(name);
-            return new SnakeCaseName(pascalCaseName);
+            try {
+                PascalCaseName pascalCaseName = new PascalCaseName(name);
+                return new SnakeCaseName(pascalCaseName);
+            } catch (ICaseConvertible.CaseConversionError f) {
+                CamelCaseName camelCaseName = new CamelCaseName(name);
+                return new SnakeCaseName(camelCaseName);
+            }
         }
     }
 }

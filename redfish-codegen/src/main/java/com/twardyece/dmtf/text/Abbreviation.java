@@ -1,7 +1,5 @@
 package com.twardyece.dmtf.text;
 
-import org.checkerframework.checker.units.qual.A;
-
 import java.util.HashMap;
 import java.util.Map;
 
@@ -20,6 +18,7 @@ public class Abbreviation implements IWord {
         SPECIAL_ABBREVIATIONS.put("IPv4", new Abbreviation("IPv4"));
         SPECIAL_ABBREVIATIONS.put("IPv6", new Abbreviation("IPv6"));
         SPECIAL_ABBREVIATIONS.put("kWh", new Abbreviation("kWh"));
+        SPECIAL_ABBREVIATIONS.put("iSCSI", new Word("iSCSI"));
     }
 
     public Abbreviation(String upperCaseValue) {

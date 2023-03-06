@@ -17,7 +17,7 @@ public class RustConfig {
     public static final List<SnakeCaseName> RESERVED_KEYWORDS;
 
     private static final Pattern reservedCharactersInFirstPosition = Pattern.compile("^@");
-    private static final Pattern invalidCharacters = Pattern.compile("[@./-]");
+    private static final Pattern invalidCharacters = Pattern.compile("[@./:#-]");
 
     static {
         RESERVED_KEYWORDS = new ArrayList<>();
@@ -38,6 +38,7 @@ public class RustConfig {
                         replaceInvalidCharacters(
                                 removeReservedCharactersInFirstPosition(name))
                                 .split(" "))
+                .filter((identifier) -> !"".equals(identifier))
                 .map((identifier) -> CaseConversion.toSnakeCase(identifier))
                 .collect(Collectors.toList());
         return RustConfig.escapeReservedKeyword(new SnakeCaseName(safeName));
@@ -48,6 +49,7 @@ public class RustConfig {
                 replaceInvalidCharacters(
                         removeReservedCharactersInFirstPosition(name)
                 ).split(" "))
+                .filter((identifier) -> !"".equals(identifier))
                 .map((identifier) -> CaseConversion.toPascalCase(identifier))
                 .collect(Collectors.toList());
         return new PascalCaseName(components);

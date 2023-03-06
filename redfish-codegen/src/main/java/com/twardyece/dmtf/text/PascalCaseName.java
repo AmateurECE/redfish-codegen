@@ -54,6 +54,13 @@ public class PascalCaseName implements ICaseConvertible, Comparable<PascalCaseNa
             }
         }
 
+        if (identifiers.size() > 0) {
+            String identifier = identifiers.get(0);
+            if (!Abbreviation.SPECIAL_ABBREVIATIONS.containsKey(identifier) && !Character.isUpperCase(identifier.charAt(0))) {
+                throw new CaseConversionError("PascalCase", name);
+            }
+        }
+
         this.words = new ArrayList<>();
         for (String identifier : identifiers) {
             // Each identifier is either a special abbreviation, or a PascalCased string.
