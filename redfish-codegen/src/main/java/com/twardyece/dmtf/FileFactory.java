@@ -5,7 +5,6 @@ import com.github.mustachejava.MustacheFactory;
 import com.twardyece.dmtf.api.TraitContext;
 import com.twardyece.dmtf.model.context.ModelContext;
 import com.twardyece.dmtf.model.context.factory.IModelContextFactory;
-import com.twardyece.dmtf.text.SnakeCaseName;
 import io.swagger.v3.oas.models.media.Schema;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;

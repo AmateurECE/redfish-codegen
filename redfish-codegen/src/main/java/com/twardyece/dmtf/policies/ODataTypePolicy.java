@@ -6,7 +6,10 @@ import com.twardyece.dmtf.model.context.ModelContext;
 import java.util.Map;
 
 public class ODataTypePolicy implements IModelGenerationPolicy {
-    public ODataTypePolicy() {}
+    private ODataTypeIdentifier identifier;
+    public ODataTypePolicy(ODataTypeIdentifier identifier) {
+        this.identifier = identifier;
+    }
 
     @Override
     public void apply(Map<String, ModuleFile<ModelContext>> models) {

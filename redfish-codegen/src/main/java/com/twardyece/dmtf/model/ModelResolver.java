@@ -32,11 +32,14 @@ public class ModelResolver {
         this.mappers = mappers;
     }
 
-    public String getSchemaIdentifier(Schema schema) {
-        String url = schema.get$ref();
-        Matcher matcher = schemaPath.matcher(url);
+    public static String getSchemaIdentifier(Schema schema) {
+        return getPathIdentifier(schema.get$ref());
+    }
+
+    public static String getPathIdentifier(String path) {
+        Matcher matcher = schemaPath.matcher(path);
         if (!matcher.find()) {
-            throw new RuntimeException("Schema $ref path " + url + " appears to be malformed");
+            throw new RuntimeException("Schema $ref path " + path + " appears to be malformed");
         }
 
         // Get the schema name

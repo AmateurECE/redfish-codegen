@@ -2,14 +2,10 @@ package com.twardyece.dmtf.model.mapper;
 
 import com.twardyece.dmtf.identifiers.IdentifierParseError;
 import com.twardyece.dmtf.identifiers.VersionedSchemaIdentifier;
-import com.twardyece.dmtf.text.CaseConversion;
-import com.twardyece.dmtf.text.PascalCaseName;
 import com.twardyece.dmtf.text.SnakeCaseName;
 
-import java.util.List;
 import java.util.ArrayList;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
+import java.util.List;
 
 public class VersionedModelMapper implements IModelFileMapper {
     public VersionedModelMapper() {}

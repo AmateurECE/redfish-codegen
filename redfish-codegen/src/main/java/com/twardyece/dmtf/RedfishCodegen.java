@@ -1,8 +1,6 @@
 package com.twardyece.dmtf;
 
 import com.github.mustachejava.DefaultMustacheFactory;
-import com.github.mustachejava.Mustache;
-import com.github.mustachejava.MustacheFactory;
 import com.twardyece.dmtf.api.*;
 import com.twardyece.dmtf.model.ModelResolver;
 import com.twardyece.dmtf.model.context.ModelContext;
@@ -13,6 +11,7 @@ import com.twardyece.dmtf.model.mapper.UnversionedModelMapper;
 import com.twardyece.dmtf.model.mapper.VersionedModelMapper;
 import com.twardyece.dmtf.openapi.DocumentParser;
 import com.twardyece.dmtf.policies.IModelGenerationPolicy;
+import com.twardyece.dmtf.policies.ODataTypeIdentifier;
 import com.twardyece.dmtf.policies.ODataTypePolicy;
 import com.twardyece.dmtf.text.PascalCaseName;
 import com.twardyece.dmtf.text.SnakeCaseName;
@@ -76,7 +75,7 @@ public class RedfishCodegen {
         // These intrusive/low-level policies need to be applied to the set of models as a whole, but should not be
         // coupled to context factories.
         this.modelGenerationPolicies = new IModelGenerationPolicy[1];
-        this.modelGenerationPolicies[0] = new ODataTypePolicy();
+        this.modelGenerationPolicies[0] = new ODataTypePolicy(new ODataTypeIdentifier());
 
         // API generation setup
         NameMapper[] nameMappers = new NameMapper[4];
