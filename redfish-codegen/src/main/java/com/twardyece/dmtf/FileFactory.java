@@ -2,6 +2,7 @@ package com.twardyece.dmtf;
 
 import com.github.mustachejava.Mustache;
 import com.github.mustachejava.MustacheFactory;
+import com.twardyece.dmtf.api.TraitContext;
 import com.twardyece.dmtf.model.context.ModelContext;
 import com.twardyece.dmtf.model.context.factory.IModelContextFactory;
 import com.twardyece.dmtf.text.SnakeCaseName;
@@ -12,12 +13,14 @@ import org.slf4j.LoggerFactory;
 public class FileFactory {
     private Mustache modelTemplate;
     private Mustache moduleTemplate;
+    private Mustache traitTemplate;
     private IModelContextFactory[] contextFactories;
     private static final Logger LOGGER = LoggerFactory.getLogger(FileFactory.class);
 
     public FileFactory(MustacheFactory factory, IModelContextFactory[] contextFactories) {
         this.modelTemplate = factory.compile("templates/model.mustache");
         this.moduleTemplate = factory.compile("templates/module.mustache");
+        this.traitTemplate = factory.compile("templates/api.mustache");
         this.contextFactories = contextFactories;
     }
 
@@ -36,5 +39,7 @@ public class FileFactory {
         return new ModuleFile<>(context.path, context, this.moduleTemplate);
     }
 
-    // TODO: Add a makeTraitFile method here?
+    public ModuleFile<TraitContext> makeTraitFile(TraitContext trait) {
+        return new ModuleFile<>(trait.moduleContext.path, trait, this.traitTemplate);
+    }
 }

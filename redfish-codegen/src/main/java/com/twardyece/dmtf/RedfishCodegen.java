@@ -36,6 +36,7 @@ public class RedfishCodegen {
     // TODO: Seems like this is no longer being used. Consider whether to fix that, or remove it.
     private String crateDirectory;
     private ModelResolver modelResolver;
+    private TraitContextFactory traitContextFactory;
     private OpenAPI document;
     private FileFactory fileFactory;
     static final Logger LOGGER = LoggerFactory.getLogger(RedfishCodegen.class);
@@ -44,13 +45,14 @@ public class RedfishCodegen {
         this.apiDirectory = apiDirectory;
         this.crateDirectory = crateDirectory;
 
-        IModelFileMapper[] mappers = new IModelFileMapper[4];
-        mappers[0] = new VersionedModelMapper();
-        mappers[1] = new SimpleModelMapper(Pattern.compile("Redfish(?<model>[a-zA-Z0-9]*)"), new SnakeCaseName("redfish"));
-        mappers[2] = new SimpleModelMapper(Pattern.compile("odata-v4_(?<model>[a-zA-Z0-9]*)"), new SnakeCaseName("odata_v4"));
-        mappers[3] = new UnversionedModelMapper();
+        // Model generation setup
+        IModelFileMapper[] modelMappers = new IModelFileMapper[4];
+        modelMappers[0] = new VersionedModelMapper();
+        modelMappers[1] = new SimpleModelMapper(Pattern.compile("Redfish(?<model>[a-zA-Z0-9]*)"), new SnakeCaseName("redfish"));
+        modelMappers[2] = new SimpleModelMapper(Pattern.compile("odata-v4_(?<model>[a-zA-Z0-9]*)"), new SnakeCaseName("odata_v4"));
+        modelMappers[3] = new UnversionedModelMapper();
 
-        this.modelResolver = new ModelResolver(mappers);
+        this.modelResolver = new ModelResolver(modelMappers);
         IModelContextFactory[] factories = new IModelContextFactory[5];
         factories[0] = new EnumContextFactory();
         factories[1] = new FreeFormObjectContextFactory();
@@ -67,6 +69,19 @@ public class RedfishCodegen {
         parser.addInlineSchemaNameMapping("RedfishError_error", "RedfishRedfishError");
         parser.addInlineSchemaNameMapping("_redfish_v1_odata_get_200_response", "odata-v4_ServiceDocument");
         parser.addInlineSchemaNameMapping("_redfish_v1_odata_get_200_response_value_inner", "odata-v4_Service");
+
+        // API generation setup
+        NameMapper[] nameMappers = new NameMapper[4];
+        nameMappers[0] = new NameMapper(Pattern.compile("^(?<name>[A-Za-z0-9]+)$"), "name");
+        nameMappers[1] = new NameMapper(Pattern.compile("^\\{(?<name>[A-Za-z0-9]+)\\}$"), "name");
+        nameMappers[2] = new NameMapper(Pattern.compile("(?<=\\.)(?<name>[A-Za-z0-9]+)$"), "name");
+        nameMappers[3] = new NameMapper(Pattern.compile("^\\$(?<name>metadata)$"), "name");
+        EndpointResolver endpointResolver = new EndpointResolver(nameMappers);
+
+        Map<PascalCaseName, PascalCaseName> traitNameOverrides = new HashMap<>();
+        traitNameOverrides.put(new PascalCaseName("V1"), new PascalCaseName("ServiceRoot"));
+
+        this.traitContextFactory = new TraitContextFactory(this.modelResolver, endpointResolver, traitNameOverrides);
 
         this.document = parser.parse();
     }
@@ -96,33 +111,17 @@ public class RedfishCodegen {
     public void generateApis() throws IOException {
         PathMap map = new PathMap(this.document.getPaths());
 
-        NameMapper[] mappers = new NameMapper[4];
-        mappers[0] = new NameMapper(Pattern.compile("^(?<name>[A-Za-z0-9]+)$"), "name");
-        mappers[1] = new NameMapper(Pattern.compile("^\\{(?<name>[A-Za-z0-9]+)\\}$"), "name");
-        mappers[2] = new NameMapper(Pattern.compile("(?<=\\.)(?<name>[A-Za-z0-9]+)$"), "name");
-        mappers[3] = new NameMapper(Pattern.compile("^\\$(?<name>metadata)$"), "name");
-        EndpointResolver endpointResolver = new EndpointResolver(mappers);
-
         List<SnakeCaseName> apiModulePathComponents = new ArrayList<>();
         apiModulePathComponents.add(RustConfig.API_BASE_MODULE);
         CratePath apiModulePath = CratePath.crateLocal(apiModulePathComponents);
         ModuleContext apiModule = new ModuleContext(apiModulePath, null);
         int pathDepth = apiModulePath.getComponents().size();
 
-        MustacheFactory factory = new DefaultMustacheFactory();
-        Mustache template = factory.compile("templates/api.mustache");
-
-        Map<PascalCaseName, PascalCaseName> traitNameOverrides = new HashMap<>();
-        traitNameOverrides.put(new PascalCaseName("V1"), new PascalCaseName("ServiceRoot"));
-
-        TraitContextFactory traitContextFactory = new TraitContextFactory(this.modelResolver, endpointResolver,
-                traitNameOverrides);
-
-        for (TraitContext trait : map.getTraits(traitContextFactory)) {
+        for (TraitContext trait : map.getTraits(this.traitContextFactory)) {
             if (trait.moduleContext.path.getComponents().size() == pathDepth + 1) {
                 apiModule.addNamedSubmodule(trait.moduleContext.path.getLastComponent());
             }
-            ModuleFile<TraitContext> file = new ModuleFile<>(trait.moduleContext.path, trait, template);
+            ModuleFile<TraitContext> file = this.fileFactory.makeTraitFile(trait);
             file.generate();
         }
 
