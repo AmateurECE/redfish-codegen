@@ -13,6 +13,7 @@ public class FileFactory {
     private Mustache modelTemplate;
     private Mustache moduleTemplate;
     private Mustache traitTemplate;
+    private Mustache libTemplate;
     private IModelContextFactory[] contextFactories;
     private static final Logger LOGGER = LoggerFactory.getLogger(FileFactory.class);
 
@@ -20,6 +21,7 @@ public class FileFactory {
         this.modelTemplate = factory.compile("templates/model.mustache");
         this.moduleTemplate = factory.compile("templates/module.mustache");
         this.traitTemplate = factory.compile("templates/api.mustache");
+        this.libTemplate = factory.compile("templates/lib.mustache");
         this.contextFactories = contextFactories;
     }
 
@@ -40,5 +42,11 @@ public class FileFactory {
 
     public ModuleFile<TraitContext> makeTraitFile(TraitContext trait) {
         return new ModuleFile<>(trait.moduleContext.path, trait, this.traitTemplate);
+    }
+
+    public ModuleFile<LibContext> makeLibFile(String specVersion) {
+        ModuleContext module = new ModuleContext(CratePath.crateRoot(), null);
+        LibContext context = new LibContext(module, specVersion);
+        return new ModuleFile<>(context.moduleContext.path, context, this.libTemplate);
     }
 }

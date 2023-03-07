@@ -34,8 +34,7 @@ import java.util.regex.Pattern;
  */
 public class RedfishCodegen {
     private String apiDirectory;
-    // TODO: Seems like this is no longer being used. Consider whether to fix that, or remove it.
-    private String crateDirectory;
+    private String specVersion;
     private ModelResolver modelResolver;
     private TraitContextFactory traitContextFactory;
     private IModelGenerationPolicy[] modelGenerationPolicies;
@@ -43,9 +42,9 @@ public class RedfishCodegen {
     private FileFactory fileFactory;
     static final Logger LOGGER = LoggerFactory.getLogger(RedfishCodegen.class);
 
-    RedfishCodegen(String apiDirectory, String crateDirectory) {
+    RedfishCodegen(String apiDirectory, String specVersion) {
         this.apiDirectory = apiDirectory;
-        this.crateDirectory = crateDirectory;
+        this.specVersion = specVersion;
 
         // Model generation setup
         IModelFileMapper[] modelMappers = new IModelFileMapper[4];
@@ -150,18 +149,19 @@ public class RedfishCodegen {
     }
 
     public void generateLib() throws IOException {
-        ModuleContext context = new ModuleContext(CratePath.crateRoot(), null);
-        context.addNamedSubmodule(RustConfig.API_BASE_MODULE);
-        context.addNamedSubmodule(RustConfig.MODELS_BASE_MODULE);
+        ModuleFile<LibContext> file = this.fileFactory.makeLibFile(this.specVersion);
+        file.getContext().moduleContext.addNamedSubmodule(RustConfig.API_BASE_MODULE);
+        file.getContext().moduleContext.addNamedSubmodule(RustConfig.MODELS_BASE_MODULE);
 
-        ModuleFile file = this.fileFactory.makeModuleFile(context);
         file.generate();
     }
 
     public static void main(String[] args) {
-        Option apiDirectoryOption = new Option("apiDirectory", true, "Directory containing openapi resource files");
+        Option apiDirectoryOption = new Option("apiDirectory", true,
+                "Directory containing openapi resource files");
         apiDirectoryOption.setRequired(true);
-        Option crateDirectoryOption = new Option("crateDirectory", true, "Directory containing Cargo.toml, into which output sources are written");
+        Option crateDirectoryOption = new Option("specVersion", true,
+                "The version of the redfish data model specification that will be provided by the generated crate");
         crateDirectoryOption.setRequired(true);
 
         Options options = new Options();
@@ -175,9 +175,9 @@ public class RedfishCodegen {
             CommandLine command = parser.parse(options, args);
 
             String apiDirectory = command.getOptionValue("apiDirectory");
-            String crateDirectory = command.getOptionValue("crateDirectory");
+            String specVersion = command.getOptionValue("specVersion");
 
-            RedfishCodegen codegen = new RedfishCodegen(apiDirectory, crateDirectory);
+            RedfishCodegen codegen = new RedfishCodegen(apiDirectory, specVersion);
             codegen.generateModels();
             codegen.generateApis();
             codegen.generateLib();
