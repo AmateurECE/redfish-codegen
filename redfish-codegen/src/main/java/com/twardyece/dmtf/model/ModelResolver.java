@@ -33,13 +33,10 @@ public class ModelResolver {
     }
 
     public static String getSchemaIdentifier(Schema schema) {
-        return getPathIdentifier(schema.get$ref());
-    }
-
-    public static String getPathIdentifier(String path) {
-        Matcher matcher = schemaPath.matcher(path);
+        String url = schema.get$ref();
+        Matcher matcher = schemaPath.matcher(url);
         if (!matcher.find()) {
-            throw new RuntimeException("Schema $ref path " + path + " appears to be malformed");
+            throw new RuntimeException("Schema $ref path " + url + " appears to be malformed");
         }
 
         // Get the schema name
