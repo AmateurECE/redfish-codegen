@@ -8,22 +8,24 @@
 #
 # CREATED:          01/29/2023
 #
-# LAST EDITED:	    02/08/2023
+# LAST EDITED:	    03/06/2023
 #
 ####
 
 RELEASE_LINK=https://www.dmtf.org/sites/default/files/standards/documents
-RELEASE_FILE=DSP8010_2022.3.zip
+RELEASE_VERSION=2022.3
+RELEASE_FILE=DSP8010_$(RELEASE_VERSION).zip
 
 OPENAPI_DOCUMENT=api/openapi/openapi.yaml
 
-all: api/openapi/openapi.yaml
+all: src/lib.rs
 
 $(RELEASE_FILE):
 	curl -L -O $(RELEASE_LINK)/$(RELEASE_FILE)
 
 api/openapi/openapi.yaml: $(RELEASE_FILE)
 	unzip -o -DD -d api $(RELEASE_FILE)
+	QUILT_PATCHES=patches quilt push -a
 
 JAR_FILE=redfish-codegen/target/redfish-codegen-1.0-SNAPSHOT.jar
 JVM_ARGS=-DmaxYamlCodePoints=6291456 -Dfile.encoding=UTF-8
@@ -31,7 +33,8 @@ JVM_ARGS=-DmaxYamlCodePoints=6291456 -Dfile.encoding=UTF-8
 $(JAR_FILE): redfish-codegen/pom.xml
 	(cd redfish-codegen && mvn clean package)
 
-src/models: api/openapi/openapi.yaml $(JAR_FILE)
-	java $(JVM_ARGS) -jar $(JAR_FILE) -apiDirectory api -crateDirectory .
+src/lib.rs: api/openapi/openapi.yaml $(JAR_FILE)
+	java $(JVM_ARGS) -jar $(JAR_FILE) -apiDirectory api/openapi \
+		-specVersion $(RELEASE_VERSION)
 
 ###############################################################################
