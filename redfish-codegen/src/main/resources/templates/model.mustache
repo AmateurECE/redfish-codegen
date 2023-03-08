@@ -22,7 +22,7 @@ use {{{path}}};
 {{/moduleContext}}
 
 {{#docComment}}
-/// {{docComment}}
+/// {{{docComment}}}
 {{/docComment}}
 #[derive(Clone, Debug, serde::Deserialize, serde::Serialize)]
 {{^enumContext}}
@@ -32,7 +32,7 @@ use {{{path}}};
 pub struct {{name}} {
 {{#properties}}
 {{#docComment}}
-    /// {{docComment}}
+    /// {{{docComment}}}
 {{/docComment}}
 {{#serdeName}}
     #[serde(rename = "{{{serdeName}}}")]
@@ -54,7 +54,7 @@ pub struct {{name}} {
 pub enum {{name}} {
 {{#variants}}
 {{#docComment}}
-    /// {{docComment}}
+    /// {{{docComment}}}
 {{/docComment}}
 {{#serdeName}}
     #[serde(rename = "{{{serdeName}}}")]
