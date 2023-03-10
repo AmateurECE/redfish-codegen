@@ -10,9 +10,7 @@ import com.twardyece.dmtf.model.mapper.SimpleModelMapper;
 import com.twardyece.dmtf.model.mapper.UnversionedModelMapper;
 import com.twardyece.dmtf.model.mapper.VersionedModelMapper;
 import com.twardyece.dmtf.openapi.DocumentParser;
-import com.twardyece.dmtf.policies.IModelGenerationPolicy;
-import com.twardyece.dmtf.policies.ODataTypeIdentifier;
-import com.twardyece.dmtf.policies.ODataTypePolicy;
+import com.twardyece.dmtf.policies.*;
 import com.twardyece.dmtf.text.PascalCaseName;
 import com.twardyece.dmtf.text.SnakeCaseName;
 import io.swagger.v3.oas.models.OpenAPI;
@@ -38,6 +36,7 @@ public class RedfishCodegen {
     private ModelResolver modelResolver;
     private TraitContextFactory traitContextFactory;
     private IModelGenerationPolicy[] modelGenerationPolicies;
+    private IApiGenerationPolicy[] apiGenerationPolicies;
     private OpenAPI document;
     private FileFactory fileFactory;
     static final Logger LOGGER = LoggerFactory.getLogger(RedfishCodegen.class);
@@ -89,6 +88,9 @@ public class RedfishCodegen {
 
         this.traitContextFactory = new TraitContextFactory(this.modelResolver, endpointResolver, traitNameOverrides);
 
+        this.apiGenerationPolicies = new IApiGenerationPolicy[1];
+        this.apiGenerationPolicies[0] = new PatchRequestBodyTypePolicy();
+
         this.document = parser.parse();
     }
 
@@ -129,6 +131,9 @@ public class RedfishCodegen {
 
     public void generateApis() throws IOException {
         PathMap map = new PathMap(this.document.getPaths(), this.traitContextFactory);
+        for (IApiGenerationPolicy policy : this.apiGenerationPolicies) {
+            policy.apply(map.borrowGraph(), map.getRoot());
+        }
 
         List<SnakeCaseName> apiModulePathComponents = new ArrayList<>();
         apiModulePathComponents.add(RustConfig.API_BASE_MODULE);

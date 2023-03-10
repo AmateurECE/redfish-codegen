@@ -129,6 +129,9 @@ public class PathMap {
         return apiPaths.get(0);
     }
 
+    public Graph<TraitContext, DefaultEdge> borrowGraph() { return this.graph; }
+    public TraitContext getRoot() { return this.root; }
+
     public List<TraitContext> getTraits() {
         Map<String, TraitContext> traits = new HashMap<>();
 
