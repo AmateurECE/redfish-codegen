@@ -128,7 +128,7 @@ public class RedfishCodegen {
     }
 
     public void generateApis() throws IOException {
-        PathMap map = new PathMap(this.document.getPaths());
+        PathMap map = new PathMap(this.document.getPaths(), this.traitContextFactory);
 
         List<SnakeCaseName> apiModulePathComponents = new ArrayList<>();
         apiModulePathComponents.add(RustConfig.API_BASE_MODULE);
@@ -136,7 +136,7 @@ public class RedfishCodegen {
         ModuleContext apiModule = new ModuleContext(apiModulePath, null);
         int pathDepth = apiModulePath.getComponents().size();
 
-        for (TraitContext trait : map.getTraits(this.traitContextFactory)) {
+        for (TraitContext trait : map.getTraits()) {
             if (trait.moduleContext.path.getComponents().size() == pathDepth + 1) {
                 apiModule.addNamedSubmodule(trait.moduleContext.path.getLastComponent());
             }

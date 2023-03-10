@@ -38,11 +38,22 @@ public class TraitContextFactory {
         this.traitNameOverrides = traitNameOverrides;
     }
 
-    public TraitContext makeTraitContext(List<String> path, PathItem pathItem, List<String> mountpoints) {
+    private EndpointResolver.ApiMatchResult getMatch(List<String> path) {
         EndpointResolver.ApiMatchResult result = endpointResolver.resolve(path);
         if (traitNameOverrides.containsKey(result.name)) {
             result.name = traitNameOverrides.get(result.name);
         }
+
+        return result;
+    }
+
+    public RustType getRustType(List<String> path) {
+        EndpointResolver.ApiMatchResult result = getMatch(path);
+        return new RustType(result.path, result.name);
+    }
+
+    public TraitContext makeTraitContext(List<String> path, PathItem pathItem) {
+        EndpointResolver.ApiMatchResult result = getMatch(path);
 
         Map<PathItem.HttpMethod, io.swagger.v3.oas.models.Operation> pathOperations = pathItem.readOperationsMap();
         List<ModelContext> supportingTypes = new ArrayList<>();
@@ -64,7 +75,7 @@ public class TraitContextFactory {
             }
         }
 
-        TraitContext traitContext = new TraitContext(result.path, result.name, supportingTypes, mountpoints, operations);
+        TraitContext traitContext = new TraitContext(new RustType(result.path, result.name), supportingTypes, operations);
         // Supporting types will have their own imports. Make sure to include them in the top-level module context
         for (ModelContext model : traitContext.supportingTypes) {
             traitContext.moduleContext.imports.addAll(model.moduleContext.imports);

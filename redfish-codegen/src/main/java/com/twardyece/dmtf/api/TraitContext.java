@@ -1,37 +1,31 @@
 package com.twardyece.dmtf.api;
 
-import com.twardyece.dmtf.CratePath;
 import com.twardyece.dmtf.ModuleContext;
 import com.twardyece.dmtf.RustType;
-import com.twardyece.dmtf.model.context.EnumContext;
 import com.twardyece.dmtf.model.context.ModelContext;
-import com.twardyece.dmtf.text.PascalCaseName;
 import com.twardyece.dmtf.text.SnakeCaseName;
 
 import java.util.LinkedList;
 import java.util.List;
 
-public class TraitContext {
-    public TraitContext(CratePath path, PascalCaseName name, List<ModelContext> supportingTypes, List<String> mountpoints,
-                        List<Operation> operations) {
+public class TraitContext implements Comparable<TraitContext> {
+    public final ModuleContext moduleContext;
+    public final RustType rustType;
+    public final List<ModelContext> supportingTypes;
+    public final List<Operation> operations;
+
+    public TraitContext(RustType rustType, List<ModelContext> supportingTypes, List<Operation> operations) {
         List<RustType> dependentTypes = new LinkedList<>();
         for (Operation operation : operations) {
             dependentTypes.addAll(operation.getDependentTypes());
         }
-        this.moduleContext = new ModuleContext(path, dependentTypes);
-        this.traitName = name;
+        this.moduleContext = new ModuleContext(rustType.getPath(), dependentTypes);
+        this.rustType = rustType;
         this.supportingTypes = supportingTypes;
-        this.mountpoints = mountpoints;
         this.operations = operations;
     }
 
-    public final ModuleContext moduleContext;
-    public final PascalCaseName traitName;
-    public final List<ModelContext> supportingTypes;
-    public final List<String> mountpoints;
-    public final List<Operation> operations;
-
-    public String name() { return this.traitName.toString(); }
+    public String name() { return this.rustType.getName().toString(); }
 
     public static class Operation {
         public Operation(String name, List<Parameter> parameters, ReturnType returnType) {
@@ -79,6 +73,26 @@ public class TraitContext {
 
         public String type() {
             return this.rustType.toString();
+        }
+    }
+
+    @Override
+    public String toString() { return this.rustType.toString(); }
+
+    @Override
+    public int compareTo(TraitContext o) { return this.rustType.compareTo(o.rustType); }
+
+    @Override
+    public int hashCode() {
+        return this.rustType.hashCode();
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (o instanceof TraitContext) {
+            return this.rustType.equals(((TraitContext) o).rustType);
+        } else {
+            return false;
         }
     }
 }

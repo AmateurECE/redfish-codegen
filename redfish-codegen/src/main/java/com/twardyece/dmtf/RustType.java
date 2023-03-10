@@ -4,7 +4,7 @@ import com.twardyece.dmtf.text.ICaseConvertible;
 import com.twardyece.dmtf.text.PascalCaseName;
 import com.twardyece.dmtf.text.SnakeCaseName;
 
-public class RustType {
+public class RustType implements Comparable<RustType> {
     // The absolute path of the type (i.e., where its definition lives)
     private CratePath path;
     // The path of the type, taking into consideration any namespaces which are importing with "use" statements
@@ -55,4 +55,23 @@ public class RustType {
     public RustType getInnerType() { return this.innerType; }
 
     public ICaseConvertible getName() { return this.name; }
+
+    @Override
+    public int compareTo(RustType o) {
+        return this.toString().compareTo(o.toString());
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (o instanceof RustType) {
+            return this.toString().equals(o.toString());
+        } else {
+            return false;
+        }
+    }
+
+    @Override
+    public int hashCode() {
+        return this.toString().hashCode();
+    }
 }
