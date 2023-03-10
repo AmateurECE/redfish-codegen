@@ -47,7 +47,7 @@ public class CratePath implements Comparable<CratePath> {
     }
 
     public boolean isCrateLocal() {
-        return null != this.path.get(0) && this.path.get(0).equals(RustConfig.CRATE_ROOT_MODULE);
+        return 0 < this.path.size() && this.path.get(0).equals(RustConfig.CRATE_ROOT_MODULE);
     }
 
     public boolean isEmpty() {
@@ -60,7 +60,11 @@ public class CratePath implements Comparable<CratePath> {
     }
 
     public String joinComponent(ICaseConvertible component) {
-        return this + "::" + component.toString();
+        if (this.path.size() > 0) {
+            return this + "::" + component.toString();
+        } else {
+            return component.toString();
+        }
     }
 
     public CratePath append(SnakeCaseName component) {

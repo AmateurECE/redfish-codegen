@@ -46,6 +46,7 @@ public class RustType implements Comparable<RustType> {
     }
 
     public CratePath getPath() { return this.path; }
+    public void setPath(CratePath cratePath) { this.path = cratePath; }
 
     // A type is primitive if it does not require importing its containing module.
     public boolean isPrimitive() { return null == this.path; }
@@ -55,6 +56,7 @@ public class RustType implements Comparable<RustType> {
     public RustType getInnerType() { return this.innerType; }
 
     public ICaseConvertible getName() { return this.name; }
+    public void setName(ICaseConvertible name) { this.name = name; }
 
     @Override
     public int compareTo(RustType o) {

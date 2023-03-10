@@ -190,7 +190,7 @@ public class TraitContextFactory {
                     + context.traitName.toString();
             PascalCaseName typeName = new PascalCaseName(context.traitName.toString()
                     + CaseConversion.toPascalCase(context.methodName) + "Response");
-            RustType supportingType = new RustType(context.path, typeName);
+            RustType supportingType = new RustType(CratePath.empty(), typeName);
 
             ModelContext supportingModel = ModelContext.forEnum(supportingType, new EnumContext(variants, 0, false), docComment);
             result.supportingTypes = new ArrayList<>();
