@@ -2,6 +2,9 @@ package com.twardyece.dmtf;
 
 import com.github.mustachejava.DefaultMustacheFactory;
 import com.twardyece.dmtf.api.*;
+import com.twardyece.dmtf.api.name.DetailNameMapper;
+import com.twardyece.dmtf.api.name.INameMapper;
+import com.twardyece.dmtf.api.name.NameMapper;
 import com.twardyece.dmtf.model.ModelResolver;
 import com.twardyece.dmtf.model.context.ModelContext;
 import com.twardyece.dmtf.model.context.factory.*;
@@ -76,11 +79,11 @@ public class RedfishCodegen {
         this.modelGenerationPolicies[0] = new ODataTypePolicy(new ODataTypeIdentifier());
 
         // API generation setup
-        NameMapper[] nameMappers = new NameMapper[4];
-        nameMappers[0] = new NameMapper(Pattern.compile("^(?<name>[A-Za-z0-9]+)$"), "name");
-        nameMappers[1] = new NameMapper(Pattern.compile("^\\{(?<name>[A-Za-z0-9]+)\\}$"), "name");
-        nameMappers[2] = new NameMapper(Pattern.compile("(?<=\\.)(?<name>[A-Za-z0-9]+)$"), "name");
-        nameMappers[3] = new NameMapper(Pattern.compile("^\\$(?<name>metadata)$"), "name");
+        List<INameMapper> nameMappers = new ArrayList<>();
+        nameMappers.add(new NameMapper(Pattern.compile("^(?<name>[A-Za-z0-9]+)$"), "name"));
+        nameMappers.add(new DetailNameMapper());
+        nameMappers.add(new NameMapper(Pattern.compile("(?<=\\.)(?<name>[A-Za-z0-9]+)$"), "name"));
+        nameMappers.add(new NameMapper(Pattern.compile("^\\$(?<name>metadata)$"), "name"));
         EndpointResolver endpointResolver = new EndpointResolver(nameMappers);
 
         Map<PascalCaseName, PascalCaseName> traitNameOverrides = new HashMap<>();

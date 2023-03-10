@@ -2,6 +2,7 @@ package com.twardyece.dmtf.api;
 
 import com.twardyece.dmtf.CratePath;
 import com.twardyece.dmtf.RustConfig;
+import com.twardyece.dmtf.api.name.INameMapper;
 import com.twardyece.dmtf.text.PascalCaseName;
 import com.twardyece.dmtf.text.SnakeCaseName;
 
@@ -9,15 +10,15 @@ import java.util.ArrayList;
 import java.util.List;
 
 public class EndpointResolver {
-    private NameMapper[] mappers;
+    private List<INameMapper> mappers;
 
-    public EndpointResolver(NameMapper[] mappers) { this.mappers = mappers; }
+    public EndpointResolver(List<INameMapper> mappers) { this.mappers = mappers; }
 
     public ApiMatchResult resolve(List<String> path) {
         List<SnakeCaseName> name = new ArrayList<>();
         for (String component : path) {
             boolean matched = false;
-            for (NameMapper mapper : this.mappers) {
+            for (INameMapper mapper : this.mappers) {
                 SnakeCaseName result = mapper.matchComponent(component);
                 if (null != result) {
                     matched = true;
