@@ -19,6 +19,8 @@ import com.twardyece.dmtf.text.SnakeCaseName;
 import io.swagger.v3.oas.models.OpenAPI;
 import io.swagger.v3.oas.models.media.Schema;
 import org.apache.commons.cli.*;
+import org.apache.commons.lang3.tuple.ImmutablePair;
+import org.apache.commons.lang3.tuple.Pair;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -75,8 +77,11 @@ public class RedfishCodegen {
 
         // These intrusive/low-level policies need to be applied to the set of models as a whole, but should not be
         // coupled to context factories.
-        this.modelGenerationPolicies = new IModelGenerationPolicy[1];
+        this.modelGenerationPolicies = new IModelGenerationPolicy[2];
         this.modelGenerationPolicies[0] = new ODataTypePolicy(new ODataTypeIdentifier());
+        Map<Pair<String, String>, String> overrides = new HashMap<>();
+        overrides.put(new ImmutablePair<>("odata-v4_Service", "kind"), "monostate::MustBe!(\"Singleton\")");
+        this.modelGenerationPolicies[1] = new PropertyTypeStringOverridePolicy(overrides);
 
         // API generation setup
         List<INameMapper> nameMappers = new ArrayList<>();
