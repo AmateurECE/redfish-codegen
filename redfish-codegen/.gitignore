@@ -1,2 +1,3 @@
+/src/
 /target/
-/.idea/
+Cargo.lock

@@ -28,31 +28,31 @@ $(SCHEMA_FILE):
 
 api/openapi/openapi.yaml: $(SCHEMA_FILE)
 	unzip -o -DD -d api $(SCHEMA_FILE)
-	QUILT_PATCHES=schema-patches quilt push -a
+	QUILT_PC=api/.pc QUILT_PATCHES=schema-patches quilt push -a
 
 # Registry
 
 $(REGISTRY_FILE):
 	curl -L -O $(RELEASE_LINK)/$(REGISTRY_FILE)
 
-registry/DSP8011_2022.3.pdf:
+registry/DSP8011_2022.3.pdf: $(REGISTRY_FILE)
 	unzip -o -DD -d registry $(REGISTRY_FILE)
-	QUILT_PATCHES=registry-patches quilt push -a
+	QUILT_PC=registry/.pc QUILT_PATCHES=registry-patches quilt push -a
 
 # Jar
 
-JAR_FILE=redfish-codegen/target/redfish-codegen-1.0-SNAPSHOT.jar
+JAR_FILE=redfish-generator/target/redfish-codegen-1.0-SNAPSHOT.jar
 JVM_ARGS=-DmaxYamlCodePoints=6291456 -Dfile.encoding=UTF-8
 
-$(JAR_FILE): redfish-codegen/pom.xml
-	(cd redfish-codegen && mvn clean package)
+$(JAR_FILE): redfish-generator/pom.xml
+	(cd redfish-generator && mvn clean package)
 
 # Code generation
 
 src/lib.rs: api/openapi/openapi.yaml registry/DSP8011_2022.3.pdf $(JAR_FILE)
-	java $(JVM_ARGS) -jar $(JAR_FILE) \
-		-apiDirectory api/openapi \
+	(cd redfish-codegen && java $(JVM_ARGS) -jar ../$(JAR_FILE) \
+		-apiDirectory ../api/openapi \
 		-specVersion $(RELEASE_VERSION) \
-		-registryDirectory registry
+		-registryDirectory ../registry)
 
 ###############################################################################

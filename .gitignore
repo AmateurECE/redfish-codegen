@@ -1,8 +1,4 @@
-/target
-/Cargo.lock
 /api/
 /registry/
 /*.zip
-/src/
-paths.txt
-/.pc/
+
