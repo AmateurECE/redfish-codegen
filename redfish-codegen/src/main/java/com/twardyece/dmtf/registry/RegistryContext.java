@@ -24,11 +24,21 @@ public class RegistryContext {
     public static class Variant {
         public PascalCaseName variantName;
         public String docComment;
+        public List<Type> types;
 
-        public Variant(PascalCaseName variantName) {
+        public Variant(PascalCaseName variantName, String docComment, List<Type> types) {
             this.variantName = variantName;
+            this.docComment = docComment;
+            this.types = types;
         }
 
         public String name() { return this.variantName.toString(); }
+        public boolean hasTypes() { return null != this.types && !this.types.isEmpty(); }
+
+        public static class Type {
+            public RustType rustType;
+            public Type(RustType rustType) { this.rustType = rustType; }
+            public String name() { return this.rustType.toString(); }
+        }
     }
 }

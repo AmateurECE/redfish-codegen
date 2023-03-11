@@ -1,0 +1,22 @@
+Some messages in License v1.0.1 appear to use "String"
+instead of type "string" (n.b. capitalization)
+--- a/registry/License.1.0.1.json
++++ b/registry/License.1.0.1.json
+@@ -18,7 +18,7 @@
+             "MessageSeverity": "OK",
+             "NumberOfArgs": 1,
+             "ParamTypes": [
+-                "String"
++                "string"
+             ],
+             "ArgDescriptions": [
+                 "The name of the license."
+@@ -96,7 +96,7 @@
+             "MessageSeverity": "Critical",
+             "NumberOfArgs": 1,
+             "ParamTypes": [
+-                "String"
++                "string"
+             ],
+             "ArgDescriptions": [
+                 "The reason for the license installation failure."

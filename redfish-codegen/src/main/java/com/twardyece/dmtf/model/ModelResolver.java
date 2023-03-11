@@ -16,7 +16,7 @@ public class ModelResolver {
     private IModelFileMapper[] mappers;
     private static final Logger LOGGER = LoggerFactory.getLogger(ModelResolver.class);
     private static final PascalCaseName VEC_NAME = new PascalCaseName("Vec");
-    private static final Map<String, RustType> RUST_TYPE_MAP;
+    public static final Map<String, RustType> RUST_TYPE_MAP;
     private static final Pattern schemaPath = Pattern.compile("#/components/schemas/");
 
     static {

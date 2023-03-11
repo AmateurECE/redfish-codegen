@@ -4,9 +4,11 @@ import com.twardyece.dmtf.CratePath;
 import com.twardyece.dmtf.ModuleContext;
 import com.twardyece.dmtf.RustConfig;
 import com.twardyece.dmtf.RustType;
+import com.twardyece.dmtf.model.ModelResolver;
 import com.twardyece.dmtf.text.CaseConversion;
 import com.twardyece.dmtf.text.PascalCaseName;
 import com.twardyece.dmtf.text.SnakeCaseName;
+import org.json.JSONArray;
 import org.json.JSONObject;
 
 import java.io.IOException;
@@ -31,6 +33,18 @@ public class RegistryFactory {
     }
 
     private RegistryContext.Variant makeVariant(String name, JSONObject object) {
-        return new RegistryContext.Variant(new PascalCaseName(name));
+        List<RegistryContext.Variant.Type> innerTypes = null;
+        if (object.keySet().contains("ParamTypes")) {
+            JSONArray array = object.getJSONArray("ParamTypes");
+            innerTypes = new ArrayList<>();
+            for (int i = 0; i < array.length(); ++i) {
+                RustType type = ModelResolver.RUST_TYPE_MAP.get(array.getString(i));
+                if (null == type) {
+                    System.out.println("I");
+                }
+                innerTypes.add(new RegistryContext.Variant.Type(type));
+            }
+        }
+        return new RegistryContext.Variant(new PascalCaseName(name), object.getString("LongDescription"), innerTypes);
     }
 }

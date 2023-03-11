@@ -28,15 +28,16 @@ $(SCHEMA_FILE):
 
 api/openapi/openapi.yaml: $(SCHEMA_FILE)
 	unzip -o -DD -d api $(SCHEMA_FILE)
-	QUILT_PATCHES=patches quilt push -a
+	QUILT_PATCHES=schema-patches quilt push -a
 
-# Registration
+# Registry
 
 $(REGISTRY_FILE):
 	curl -L -O $(RELEASE_LINK)/$(REGISTRY_FILE)
 
 registry/DSP8011_2022.3.pdf:
 	unzip -o -DD -d registry $(REGISTRY_FILE)
+	QUILT_PATCHES=registry-patches quilt push -a
 
 # Jar
 
