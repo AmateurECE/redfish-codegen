@@ -85,19 +85,19 @@ public class RegistryFileDiscovery {
 
         @Override
         public int compareTo(Version o) {
-            if (o.major < this.major) {
+            if (this.major < o.major) {
                 return -1;
-            } else if (o.major > this.major) {
+            } else if (this.major > o.major) {
                 return 1;
             } else {
-                if (o.minor < this.minor) {
+                if (this.minor < o.minor) {
                     return -1;
-                } else if (o.minor > this.minor) {
+                } else if (this.minor > o.minor) {
                     return 1;
                 } else {
-                    if (o.patch < this.patch) {
+                    if (this.patch < o.patch) {
                         return -1;
-                    } else if (o.patch > this.patch) {
+                    } else if (this.patch > o.patch) {
                         return 1;
                     } else {
                         return 0;
