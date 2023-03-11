@@ -26,17 +26,17 @@ const MESSAGE_IDENT: &str = "message";
 struct VariantContext {
     message: Option<syn::LitStr>,
     id: Option<syn::LitStr>,
-    severity: Option<proc_macro2::Literal>,
+    severity: Option<syn::Path>,
     resolution: Option<syn::LitStr>,
 }
 
-fn attribute_list<'a, I>(mut attributes: I, ident: &str) -> Vec<Meta>
+fn attribute_list<'a, I>(attributes: I, ident: &str) -> Vec<Meta>
 where
     I: Iterator<Item = &'a Attribute>,
 {
     attributes
-        .find(|a| a.path.is_ident(ident))
-        .and_then(|a| {
+        .filter(|a| a.path.is_ident(ident))
+        .map(|a| {
             let meta = a.parse_meta().expect("Failed to parse attribute");
             if let Meta::List(ref list) = meta {
                 Some(
@@ -54,7 +54,9 @@ where
                 panic!("Expecting a list of nested attributes")
             }
         })
+        .collect::<Option<Vec<_>>>()
         .unwrap_or_else(|| panic!("No attribute matching identifier \"{}\"", ident))
+        .concat()
 }
 
 fn attribute_path_list<'a, I>(attributes: I, ident: &str) -> Vec<syn::Path>
@@ -116,7 +118,11 @@ fn define_variant_coersion(data: &syn::Data, message_type: &TokenStream) -> Toke
                         }
                     } else if attribute.path.is_ident("severity") {
                         match attribute.lit {
-                            Lit::Verbatim(ref value) => context.severity = Some(value.clone()),
+                            Lit::Str(ref value) => {
+                                context.severity = Some(value.parse().expect(
+                                    "severity expects a path to a resource::Health variant",
+                                ))
+                            }
                             _ => panic!("{}", NOT_LIST_ERROR),
                         }
                     } else if attribute.path.is_ident("resolution") {
@@ -129,12 +135,16 @@ fn define_variant_coersion(data: &syn::Data, message_type: &TokenStream) -> Toke
                     }
                 }
 
+                let message = context.message.expect("Missing \"message\" property");
+                let severity = context.severity.expect("Missing \"severity\" property");
+                let id = context.id.expect("Missing \"id\" property");
+                let resolution = context.resolution.expect("Missing \"resolution\"property");
                 quote_spanned! {
-                    variant.span() => Self::#name => #message_type {
-                        // message: Some(#(context.message)),
-                        // message_id: Some(#(context.id)),
-                        // message_severity: Some(#(context.severity)),
-                        // resolution: Some(#(context.resolution)),
+                    variant.span() => Self::#name (_) => #message_type {
+                        message: Some(#message.to_string()),
+                        message_id: #id.to_string(),
+                        message_severity: Some(#severity),
+                        resolution: Some(#resolution.to_string()),
                         ..Default::default()
                     }
                 }
