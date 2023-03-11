@@ -1,0 +1,5 @@
+[workspace]
+members = [
+        "redfish-codegen",
+        "into-redfish-message",
+]

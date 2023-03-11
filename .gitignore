@@ -1,4 +1,5 @@
 /api/
 /registry/
 /*.zip
-
+/Cargo.lock
+/target/
