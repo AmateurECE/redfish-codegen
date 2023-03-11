@@ -1,5 +1,5 @@
 [package]
-name = "redfish-models"
+name = "redfish-codegen"
 version = "0.1.0"
 authors = ["Ethan D. Twardy <ethan.twardy@gmail.com>"]
 description = "This contains the definition of a Redfish service."
