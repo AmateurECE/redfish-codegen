@@ -32,6 +32,9 @@ pub enum {{name}} {
 {{/docComment}}
     {{name}}{{^hasTypes}},{{/hasTypes}}{{#hasTypes}}({{/hasTypes}}
 {{#types}}
+{{#docComment}}
+        /// {{{docComment}}}
+{{/docComment}}
         {{name}},
 {{/types}}
 {{#hasTypes}}    ),{{/hasTypes}}

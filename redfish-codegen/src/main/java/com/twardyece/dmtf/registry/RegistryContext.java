@@ -37,7 +37,11 @@ public class RegistryContext {
 
         public static class Type {
             public RustType rustType;
-            public Type(RustType rustType) { this.rustType = rustType; }
+            public String docComment;
+            public Type(RustType rustType, String docComment) {
+                this.rustType = rustType;
+                this.docComment = docComment;
+            }
             public String name() { return this.rustType.toString(); }
         }
     }

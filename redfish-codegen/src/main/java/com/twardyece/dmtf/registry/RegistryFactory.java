@@ -35,14 +35,19 @@ public class RegistryFactory {
     private RegistryContext.Variant makeVariant(String name, JSONObject object) {
         List<RegistryContext.Variant.Type> innerTypes = null;
         if (object.keySet().contains("ParamTypes")) {
-            JSONArray array = object.getJSONArray("ParamTypes");
+            JSONArray params = object.getJSONArray("ParamTypes");
+            JSONArray descriptions = null;
+            if (object.keySet().contains("ArgLongDescriptions")) {
+                descriptions = object.getJSONArray("ArgLongDescriptions");
+            }
             innerTypes = new ArrayList<>();
-            for (int i = 0; i < array.length(); ++i) {
-                RustType type = ModelResolver.RUST_TYPE_MAP.get(array.getString(i));
-                if (null == type) {
-                    System.out.println("I");
+            for (int i = 0; i < params.length(); ++i) {
+                RustType type = ModelResolver.RUST_TYPE_MAP.get(params.getString(i));
+                String docComment = null;
+                if (null != descriptions) {
+                    docComment = descriptions.getString(i);
                 }
-                innerTypes.add(new RegistryContext.Variant.Type(type));
+                innerTypes.add(new RegistryContext.Variant.Type(type, docComment));
             }
         }
         return new RegistryContext.Variant(new PascalCaseName(name), object.getString("LongDescription"), innerTypes);
