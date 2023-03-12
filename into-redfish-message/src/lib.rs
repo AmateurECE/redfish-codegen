@@ -131,9 +131,26 @@ fn construct_format(literal: &syn::LitStr) -> TokenStream {
         });
         let format_string = ARGUMENT_PATTERN.replace_all(&message, "{}");
 
-        quote! { format!(#format_string, #(#arguments ,)*) }
+        quote! { format!(#format_string, #(& #arguments ,)*) }
     } else {
         quote! { #message.to_string() }
+    }
+}
+
+fn construct_message_args(fields: &syn::Fields) -> TokenStream {
+    match fields {
+        syn::Fields::Unnamed(inner_fields) => {
+            let field_names = (0..inner_fields.unnamed.len())
+                .map(|i| {
+                    let name = field_name_for_index(i);
+                    quote!( ::std::string::ToString::to_string(& #name) )
+                });
+            quote! {
+                Some(vec![ #(#field_names ,)* ])
+            }
+        },
+        syn::Fields::Unit => quote!(None),
+        _ => panic!("Enum variants must either be units or contain unnamed fields"),
     }
 }
 
@@ -183,9 +200,11 @@ fn define_variant_coersion(data: &syn::Data, message_type: &TokenStream) -> Toke
 
                 let destructured_fields = destructure_fields(&variant.fields);
                 let message_format = construct_format(&message);
+                let message_args = construct_message_args(&variant.fields);
                 quote_spanned! {
                     variant.span() => Self::#name #destructured_fields => #message_type {
                         message: Some(#message_format),
+                        message_args: #message_args,
                         message_id: #id.to_string(),
                         message_severity: Some(#severity),
                         resolution: Some(#resolution.to_string()),
