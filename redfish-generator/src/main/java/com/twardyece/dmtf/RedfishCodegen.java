@@ -5,6 +5,8 @@ import com.twardyece.dmtf.api.*;
 import com.twardyece.dmtf.api.name.DetailNameMapper;
 import com.twardyece.dmtf.api.name.INameMapper;
 import com.twardyece.dmtf.api.name.NameMapper;
+import com.twardyece.dmtf.identifiers.IdentifierParseError;
+import com.twardyece.dmtf.identifiers.VersionedSchemaIdentifier;
 import com.twardyece.dmtf.model.ModelResolver;
 import com.twardyece.dmtf.model.context.ModelContext;
 import com.twardyece.dmtf.model.context.factory.*;
@@ -17,6 +19,7 @@ import com.twardyece.dmtf.policies.*;
 import com.twardyece.dmtf.registry.RegistryContext;
 import com.twardyece.dmtf.registry.RegistryFactory;
 import com.twardyece.dmtf.registry.RegistryFileDiscovery;
+import com.twardyece.dmtf.registry.Version;
 import com.twardyece.dmtf.text.CaseConversion;
 import com.twardyece.dmtf.text.PascalCaseName;
 import com.twardyece.dmtf.text.SnakeCaseName;
@@ -30,10 +33,8 @@ import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
 import java.nio.file.Path;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
+import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 /**
@@ -49,7 +50,6 @@ public class RedfishCodegen {
     private final OpenAPI document;
     private final FileFactory fileFactory;
     private final RegistryFileDiscovery registryFileDiscovery;
-    private final RegistryFactory registryFactory;
     static final Logger LOGGER = LoggerFactory.getLogger(RedfishCodegen.class);
 
     RedfishCodegen(String apiDirectory, String specVersion, String registryDirectory) {
@@ -106,12 +106,11 @@ public class RedfishCodegen {
 
         // Registry generation
         this.registryFileDiscovery = new RegistryFileDiscovery(Path.of(registryDirectory));
-        this.registryFactory = new RegistryFactory();
 
         this.document = parser.parse();
     }
 
-    public void generateModels() throws IOException {
+    private Map<String, ModuleFile<ModelContext>> generateModels() throws IOException {
         // Translate each schema into a ModuleFile with associated model context
         Map<String, ModuleFile<ModelContext>> models = new HashMap<>();
         for (Map.Entry<String, Schema> schema : this.document.getComponents().getSchemas().entrySet()) {
@@ -144,9 +143,11 @@ public class RedfishCodegen {
             ModuleFile<ModuleContext> file = this.fileFactory.makeModuleFile(module);
             file.generate();
         }
+
+        return models;
     }
 
-    public void generateApis() throws IOException {
+    private void generateApis() throws IOException {
         PathMap map = new PathMap(this.document.getPaths(), this.traitContextFactory);
         for (IApiGenerationPolicy policy : this.apiGenerationPolicies) {
             policy.apply(map.borrowGraph(), map.getRoot());
@@ -170,7 +171,7 @@ public class RedfishCodegen {
         apiFile.generate();
     }
 
-    public void generateLib() throws IOException {
+    private void generateLib() throws IOException {
         ModuleFile<LibContext> file = this.fileFactory.makeLibFile(this.specVersion);
         file.getContext().moduleContext.addNamedSubmodule(RustConfig.API_BASE_MODULE);
         file.getContext().moduleContext.addNamedSubmodule(RustConfig.MODELS_BASE_MODULE);
@@ -179,7 +180,7 @@ public class RedfishCodegen {
         file.generate();
     }
 
-    public void generateRegistries() throws IOException {
+    private void generateRegistries(RegistryFactory factory) throws IOException {
         List<SnakeCaseName> components = new ArrayList<>();
         components.add(RustConfig.REGISTRY_BASE_MODULE);
         CratePath registryModulePath = CratePath.crateLocal(components);
@@ -194,7 +195,7 @@ public class RedfishCodegen {
 
             SnakeCaseName version = new SnakeCaseName("v" + registry.version);
             CratePath registryPath = parentPath.append(version);
-            RegistryContext context = this.registryFactory.makeRegistry(
+            RegistryContext context = factory.makeRegistry(
                     new RustType(registryPath, new PascalCaseName(registry.name)), registry.file);
 
             registryContext.addNamedSubmodule(version);
@@ -208,6 +209,43 @@ public class RedfishCodegen {
 
         ModuleFile<ModuleContext> registriesFile = this.fileFactory.makeModuleFile(registriesModule);
         registriesFile.generate();
+    }
+
+    public void generate() throws IOException {
+        Map<String, ModuleFile<ModelContext>> models = this.generateModels();
+
+        this.generateApis();
+        this.generateLib();
+
+        RustType messageType = this.getMessageType(models);
+        RustType health = this.modelResolver.resolvePath("Resource_Health");
+        RegistryFactory factory = new RegistryFactory(messageType, health);
+        this.generateRegistries(factory);
+    }
+
+    private RustType getMessageType(Map<String, ModuleFile<ModelContext>> models) {
+        Pattern messagePattern = Pattern.compile("^Message_.*");
+        Version latestVersion = models.keySet().stream()
+                .filter((k) -> {
+                    Matcher matcher = messagePattern.matcher(k);
+                    return matcher.find();
+                })
+                .map((m) -> {
+                    try {
+                        VersionedSchemaIdentifier identifier = new VersionedSchemaIdentifier(m);
+                        return Version.parse(identifier.getVersion().toString(),
+                                Pattern.compile("v([0-9]+)_([0-9]+)_([0-9]+)"));
+                    } catch (IdentifierParseError e) {
+                        return null;
+                    }
+                })
+                .filter(Objects::nonNull)
+                .max(Version::compareTo)
+                .get();
+
+        String messageModel = "Message_v" + latestVersion.major + "_" + latestVersion.minor + "_" + latestVersion.patch
+                + "_Message";
+        return models.get(messageModel).getContext().rustType;
     }
 
     public static void main(String[] args) {
@@ -237,10 +275,7 @@ public class RedfishCodegen {
             String registryDirectory = command.getOptionValue("registryDirectory");
 
             RedfishCodegen codegen = new RedfishCodegen(apiDirectory, specVersion, registryDirectory);
-            codegen.generateModels();
-            codegen.generateApis();
-            codegen.generateLib();
-            codegen.generateRegistries();
+            codegen.generate();
         } catch (ParseException e) {
             System.out.println(e.getMessage());
             formatter.printHelp("RedfishCodegen", options);

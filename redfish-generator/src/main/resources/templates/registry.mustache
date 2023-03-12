@@ -15,6 +15,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+use into_redfish_message::IntoRedfishMessage;
 {{#moduleContext}}
 {{#imports}}
 use {{{path}}};
@@ -24,19 +25,24 @@ use {{{path}}};
 {{#docComment}}
 /// {{{docComment}}}
 {{/docComment}}
-#[derive(Clone, Debug)]
+#[derive(Clone, Debug, IntoRedfishMessage)]
+#[message({{messageType}})]
 pub enum {{name}} {
 {{#variants}}
 {{#docComment}}
     /// {{{docComment}}}
 {{/docComment}}
-    {{name}}{{^hasTypes}},{{/hasTypes}}{{#hasTypes}}({{/hasTypes}}
-{{#types}}
+    #[message(message = "{{{message}}}")]
+    #[message(id = "{{id}}")]
+    #[message(severity = "{{{severity}}}")]
+    #[message(resolution = "{{{resolution}}}")]
+    {{name}}{{^hasFields}},{{/hasFields}}{{#hasFields}}({{/hasFields}}
+{{#fields}}
 {{#docComment}}
         /// {{{docComment}}}
 {{/docComment}}
         {{name}},
-{{/types}}
-{{#hasTypes}}    ),{{/hasTypes}}
+{{/fields}}
+{{#hasFields}}    ),{{/hasFields}}
 {{/variants}}
 }

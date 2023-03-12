@@ -8,7 +8,7 @@ import java.util.regex.Pattern;
 
 public class RustIdentifier implements Comparable<RustIdentifier> {
     private String value;
-
+    private RustType owner;
     private static final Pattern numbersOnly = Pattern.compile("^[0-9]+$");
 
     public RustIdentifier(PascalCaseName name) {
@@ -27,8 +27,20 @@ public class RustIdentifier implements Comparable<RustIdentifier> {
         }
     }
 
+    public RustIdentifier(RustType owner, PascalCaseName name) {
+        this(name);
+        this.owner = owner;
+    }
+
     @Override
-    public String toString() { return this.value; }
+    public String toString() {
+        String value = this.value;
+        if (null != this.owner) {
+            value = this.owner + "::" + value;
+        }
+
+        return value;
+    }
 
     @Override
     public int compareTo(RustIdentifier o) {
