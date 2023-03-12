@@ -14,7 +14,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-use proc_macro2::TokenStream;
+use proc_macro2::{Ident, TokenStream};
 use quote::{quote, quote_spanned};
 use syn::spanned::Spanned;
 use syn::{Attribute, DeriveInput, Lit, Meta, MetaNameValue, NestedMeta};
@@ -96,6 +96,23 @@ fn get_message_type(input: &DeriveInput) -> TokenStream {
     quote!(#message_type)
 }
 
+fn field_name_for_index(number: usize) -> Ident {
+    quote::format_ident!("_{}", number)
+}
+
+fn destructure_fields(fields: &syn::Fields) -> TokenStream {
+    match fields {
+        syn::Fields::Unnamed(inner_fields) => {
+            let field_names = (0..inner_fields.unnamed.len()).map(|i| field_name_for_index(i));
+            quote! {
+                ( #(#field_names ,)* )
+            }
+        },
+        syn::Fields::Unit => TokenStream::new(),
+        _ => panic!("Enum variants must either be units or contain unnamed fields"),
+    }
+}
+
 fn define_variant_coersion(data: &syn::Data, message_type: &TokenStream) -> TokenStream {
     match *data {
         syn::Data::Enum(ref data) => {
@@ -139,8 +156,10 @@ fn define_variant_coersion(data: &syn::Data, message_type: &TokenStream) -> Toke
                 let severity = context.severity.expect("Missing \"severity\" property");
                 let id = context.id.expect("Missing \"id\" property");
                 let resolution = context.resolution.expect("Missing \"resolution\"property");
+
+                let destructured_fields = destructure_fields(&variant.fields);
                 quote_spanned! {
-                    variant.span() => Self::#name (_) => #message_type {
+                    variant.span() => Self::#name #destructured_fields => #message_type {
                         message: Some(#message.to_string()),
                         message_id: #id.to_string(),
                         message_severity: Some(#severity),
