@@ -1,5 +1,5 @@
 [package]
-name = "into-redfish-message"
+name = "redfish-macros"
 version = "0.1.0"
 edition = "2021"
 

@@ -1,6 +1,5 @@
 [workspace]
 members = [
         "redfish-codegen",
-        "into-redfish-message",
-        "message-example",
+        "redfish-macros",
 ]
