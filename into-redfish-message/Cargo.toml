@@ -10,3 +10,5 @@ proc-macro = true
 proc-macro2 = "1.0.51"
 quote = "1.0.23"
 syn = "1.0.109"
+lazy_static = "1.4.0"
+regex = "1.7.1"

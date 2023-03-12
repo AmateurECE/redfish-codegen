@@ -14,8 +14,11 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+use lazy_static::lazy_static;
 use proc_macro2::{Ident, TokenStream};
 use quote::{quote, quote_spanned};
+use regex::Regex;
+use std::str::FromStr;
 use syn::spanned::Spanned;
 use syn::{Attribute, DeriveInput, Lit, Meta, MetaNameValue, NestedMeta};
 
@@ -107,9 +110,30 @@ fn destructure_fields(fields: &syn::Fields) -> TokenStream {
             quote! {
                 ( #(#field_names ,)* )
             }
-        },
+        }
         syn::Fields::Unit => TokenStream::new(),
         _ => panic!("Enum variants must either be units or contain unnamed fields"),
+    }
+}
+
+fn construct_format(literal: &syn::LitStr) -> TokenStream {
+    lazy_static! {
+        static ref ARGUMENT_PATTERN: Regex = Regex::new(r"('%\d+')").unwrap();
+        static ref DIGIT_PATTERN: Regex = Regex::new(r"(\d+)").unwrap();
+    }
+
+    let message = literal.value();
+    if ARGUMENT_PATTERN.is_match(&message) {
+        let arguments = ARGUMENT_PATTERN.captures_iter(&message).map(|cap| {
+            let digit = DIGIT_PATTERN.find(&cap[1]).unwrap();
+            // The fields in the Redfish registries are 1-indexed.
+            field_name_for_index(usize::from_str(digit.as_str()).unwrap() - 1)
+        });
+        let format_string = ARGUMENT_PATTERN.replace_all(&message, "{}");
+
+        quote! { format!(#format_string, #(#arguments ,)*) }
+    } else {
+        quote! { #message.to_string() }
     }
 }
 
@@ -158,9 +182,10 @@ fn define_variant_coersion(data: &syn::Data, message_type: &TokenStream) -> Toke
                 let resolution = context.resolution.expect("Missing \"resolution\"property");
 
                 let destructured_fields = destructure_fields(&variant.fields);
+                let message_format = construct_format(&message);
                 quote_spanned! {
                     variant.span() => Self::#name #destructured_fields => #message_type {
-                        message: Some(#message.to_string()),
+                        message: Some(#message_format),
                         message_id: #id.to_string(),
                         message_severity: Some(#severity),
                         resolution: Some(#resolution.to_string()),
