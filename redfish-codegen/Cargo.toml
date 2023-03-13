@@ -16,4 +16,4 @@ hyper = "0.14.24"
 monostate = "0.1.4"
 serde = { version = "1.0.152", features = ["derive"] }
 serde_json = "1.0.93"
-redfish-macros = { path = "../redfish-macros" }
+redfish-macros = { version = "0.1.0", path = "../redfish-macros" }
