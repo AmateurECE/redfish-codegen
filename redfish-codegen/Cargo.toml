@@ -2,9 +2,14 @@
 name = "redfish-codegen"
 version = "0.1.0"
 authors = ["Ethan D. Twardy <ethan.twardy@gmail.com>"]
-description = "This contains the definition of a Redfish service."
+description = "An unopinionated translation of the Redfish specification into Rust."
 license = "Apache-2.0"
 edition = "2021"
+homepage = "https://github.com/AmateurECE/redfish-codegen"
+documentation = "https://docs.rs/redfish-codegen"
+repository = "https://github.com/AmateurECE/redfish-codegen"
+readme = "README.md"
+keywords = ["redfish", "web-programming::http-server"]
 
 [dependencies]
 hyper = "0.14.24"

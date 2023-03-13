@@ -1,7 +1,15 @@
 [package]
 name = "redfish-macros"
+authors = ["Ethan D. Twardy <ethan.twardy@gmail.com>"]
 version = "0.1.0"
 edition = "2021"
+license = "Apache-2.0"
+description = "Macros useful in Redfish service implementation."
+homepage = "https://github.com/AmateurECE/redfish-codegen"
+repository = "https://github.com/AmateurECE/redfish-codegen"
+documentation = "https://docs.rs/redfish-macros"
+readme = "README.md"
+keywords = ["redfish"]
 
 [lib]
 proc-macro = true
