@@ -9,7 +9,7 @@ homepage = "https://github.com/AmateurECE/redfish-codegen"
 documentation = "https://docs.rs/redfish-codegen"
 repository = "https://github.com/AmateurECE/redfish-codegen"
 readme = "README.md"
-keywords = ["redfish", "web-programming::http-server"]
+keywords = ["redfish"]
 
 [dependencies]
 hyper = "0.14.24"
