@@ -10,6 +10,7 @@ documentation = "https://docs.rs/redfish-codegen"
 repository = "https://github.com/AmateurECE/redfish-codegen"
 readme = "README.md"
 keywords = ["redfish"]
+build = "build.rs"
 
 [dependencies]
 hyper = "0.14.24"
