@@ -118,18 +118,18 @@ fn destructure_fields(fields: &syn::Fields) -> TokenStream {
 
 fn construct_format(literal: &syn::LitStr) -> TokenStream {
     lazy_static! {
-        static ref ARGUMENT_PATTERN: Regex = Regex::new(r"('%\d+')").unwrap();
-        static ref DIGIT_PATTERN: Regex = Regex::new(r"(\d+)").unwrap();
+        static ref PATTERN: Regex = Regex::new(r"(%\d+)").unwrap();
     }
 
     let message = literal.value();
-    if ARGUMENT_PATTERN.is_match(&message) {
-        let arguments = ARGUMENT_PATTERN.captures_iter(&message).map(|cap| {
-            let digit = DIGIT_PATTERN.find(&cap[1]).unwrap();
+    if PATTERN.is_match(&message) {
+        let arguments = PATTERN.captures_iter(&message).map(|cap| {
+            let digit = &mut cap[1].to_string();
+            digit.remove(0);
             // The fields in the Redfish registries are 1-indexed.
-            field_name_for_index(usize::from_str(digit.as_str()).unwrap() - 1)
+            field_name_for_index(usize::from_str(&digit).unwrap() - 1)
         });
-        let format_string = ARGUMENT_PATTERN.replace_all(&message, "{}");
+        let format_string = PATTERN.replace_all(&message, "{}");
 
         quote! { format!(#format_string, #(& #arguments ,)*) }
     } else {
