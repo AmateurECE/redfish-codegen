@@ -14,5 +14,11 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-pub mod service;
-pub mod endpoint;
+mod service_root;
+pub use service_root::*;
+
+pub trait Endpoint {
+    fn mountpoint(&self) -> &str;
+    fn mount(self, path: String) -> Self;
+}
+

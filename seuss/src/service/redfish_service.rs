@@ -15,33 +15,25 @@
 // limitations under the License.
 
 use axum::{body::Body, Router, routing::get, Json};
-use redfish_codegen::api::v1;
-use redfish_codegen::models::{odata_v4, resource, service_root};
+use redfish_codegen::api::v1::{self, ServiceRoot};
+use redfish_codegen::models::resource;
+use crate::endpoint;
 
 pub struct RedfishService(Router);
 
 impl RedfishService {
     pub fn new() -> RedfishService {
         let router = Router::new().route("/redfish/v1", get(|| async {
-            let response = <Self as v1::ServiceRoot>::get();
-            match response {
+            let service_root = endpoint::ServiceRoot::new(
+                resource::Name("Basic Redfish Service".to_string()),
+                resource::Id("example-basic".to_string()),
+            );
+            match service_root.get() {
                 v1::ServiceRootGetResponse::Ok(service_root) => Ok(Json(service_root)),
                 v1::ServiceRootGetResponse::Default(error) => Err(Json(error)),
             }
         }));
         RedfishService(router)
-    }
-}
-
-impl v1::ServiceRoot for RedfishService {
-    fn get() -> v1::ServiceRootGetResponse {
-        v1::ServiceRootGetResponse::Ok(
-            service_root::v1_15_0::ServiceRoot{
-                name: resource::Name("Basic Redfish Service".to_string()),
-                id: resource::Id("example-bin".to_string()),
-                odata_id: odata_v4::Id("/redfish/v1".to_string()),
-                ..Default::default()
-            })
     }
 }
 
