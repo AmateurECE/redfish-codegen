@@ -14,4 +14,14 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-pub mod service;
+use axum::Router;
+use seuss::service::RedfishService;
+
+#[tokio::main]
+async fn main() {
+    let app: Router = RedfishService::new().into();
+    axum::Server::bind(&"127.0.0.1:3000".parse().unwrap())
+        .serve(app.into_make_service())
+        .await
+        .unwrap();
+}
