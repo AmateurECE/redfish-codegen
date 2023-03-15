@@ -16,14 +16,15 @@
 
 use axum::{extract::State, body::Body, Router, routing::get, Json};
 use redfish_codegen::api::v1::{self, ServiceRoot};
-use crate::endpoint;
 
 pub struct RedfishService(Router);
 
 impl RedfishService {
-    pub fn new(state: endpoint::ServiceRoot) -> RedfishService {
+    pub fn new<S>(state: S) -> RedfishService
+    where S: ServiceRoot + Send + Sync + Clone + 'static,
+    {
         let router = Router::new()
-            .route("/redfish/v1", get(|State(state): State<endpoint::ServiceRoot>| async move {
+            .route("/redfish/v1", get(|State(state): State<S>| async move {
                 match state.get() {
                     v1::ServiceRootGetResponse::Ok(service_root) => Ok(Json(service_root)),
                     v1::ServiceRootGetResponse::Default(error) => Err(Json(error)),
