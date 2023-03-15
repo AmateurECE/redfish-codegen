@@ -16,6 +16,7 @@
 
 use redfish_codegen::models::{odata_v4, resource, service_root};
 use redfish_codegen::api::v1;
+use crate::endpoint::Endpoint;
 
 #[derive(Clone)]
 pub struct ServiceRoot {
@@ -29,8 +30,19 @@ impl ServiceRoot {
         Self {
             name,
             id,
-            odata_id: odata_v4::Id("/redfish/v1".to_string()),
+            odata_id: odata_v4::Id(String::default()),
         }
+    }
+}
+
+impl Endpoint for ServiceRoot {
+    fn mountpoint(&self) -> &str {
+        &self.odata_id.0
+    }
+
+    fn mount(mut self, path: String) -> Self {
+        self.odata_id.0 = path;
+        self
     }
 }
 
