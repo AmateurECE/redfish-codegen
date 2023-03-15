@@ -16,10 +16,17 @@
 
 use axum::Router;
 use seuss::service::RedfishService;
+use seuss::endpoint;
+use redfish_codegen::models::resource;
 
 #[tokio::main]
 async fn main() {
-    let app: Router = RedfishService::new().into();
+    let service_root = endpoint::ServiceRoot::new(
+        resource::Name("Basic Redfish Service".to_string()),
+        resource::Id("example-basic".to_string()),
+    );
+
+    let app: Router = RedfishService::new(service_root).into();
     axum::Server::bind(&"127.0.0.1:3000".parse().unwrap())
         .serve(app.into_make_service())
         .await
