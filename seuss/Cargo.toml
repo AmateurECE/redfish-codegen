@@ -5,5 +5,5 @@ edition = "2021"
 
 [dependencies]
 axum = "0.6.11"
-redfish-codegen = { path = "../redfish-codegen/redfish-codegen" }
+redfish-codegen = "0.2.0"
 tokio = { version = "1.26.0", features = ["full"] }
