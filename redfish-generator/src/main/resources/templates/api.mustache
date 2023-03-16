@@ -47,7 +47,7 @@ pub enum {{name}} {
 
 pub trait {{name}} {
 {{#operations}}
-    fn {{name}}(
+    fn {{name}}(&{{#mutable}}mut {{/mutable}}self,
 {{#parameters}}
         {{name}}: {{type}},
 {{/parameters}}

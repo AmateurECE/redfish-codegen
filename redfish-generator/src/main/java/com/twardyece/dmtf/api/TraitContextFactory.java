@@ -65,6 +65,7 @@ public class TraitContextFactory {
 
         for (Map.Entry<PathItem.HttpMethod, Operation> entry : pathOperations.entrySet()) {
             context.operation = entry.getValue();
+            context.method = entry.getKey();
             context.methodName = nameForMethod(entry.getKey());
 
             PathItemParseResult parseResult = this.makeOperation(context);
@@ -112,8 +113,18 @@ public class TraitContextFactory {
             result.supportingTypes.addAll(returnType.supportingTypes);
         }
 
-        result.operation = new TraitContext.Operation(context.methodName, parameters, returnType.returnType);
+        boolean mutable = methodRequiresMutable(context.method);
+        result.operation = new TraitContext.Operation(context.methodName, mutable, parameters, returnType.returnType);
         return result;
+    }
+
+    private static boolean methodRequiresMutable(PathItem.HttpMethod method) {
+        boolean mutable = false;
+        switch (method) {
+            case POST, PUT, PATCH, DELETE -> mutable = true;
+        }
+
+        return mutable;
     }
 
     private PathItemParseResult makeParameterForRequestBody(PathItemParseContext context) {
@@ -258,6 +269,7 @@ public class TraitContextFactory {
         public PascalCaseName traitName;
         public Operation operation;
         public String methodName;
+        public PathItem.HttpMethod method;
     }
 
     private static class PathItemParseResult {

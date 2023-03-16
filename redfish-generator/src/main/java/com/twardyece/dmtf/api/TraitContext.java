@@ -28,8 +28,9 @@ public class TraitContext implements Comparable<TraitContext> {
     public String name() { return this.rustType.getName().toString(); }
 
     public static class Operation {
-        public Operation(String name, List<Parameter> parameters, ReturnType returnType) {
+        public Operation(String name, boolean mutable, List<Parameter> parameters, ReturnType returnType) {
             this.name = name;
+            this.mutable = mutable;
             this.parameters = parameters;
             this.returnType = returnType;
         }
@@ -46,6 +47,7 @@ public class TraitContext implements Comparable<TraitContext> {
         }
 
         public String name;
+        public boolean mutable;
         public List<Parameter> parameters;
         public ReturnType returnType;
     }
