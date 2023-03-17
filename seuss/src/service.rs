@@ -14,8 +14,8 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-mod redfish_service;
-pub use redfish_service::*;
+mod service_root;
+pub use service_root::*;
 
 mod systems;
 pub use systems::*;

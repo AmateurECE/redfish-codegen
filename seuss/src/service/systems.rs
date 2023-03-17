@@ -14,52 +14,48 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-use axum::{extract::State, http::StatusCode, response::IntoResponse, routing::get, Json, Router};
+use axum::{extract::State, http::StatusCode, response::IntoResponse, routing, Json};
 use redfish_codegen::api::v1::systems;
 use redfish_codegen::models::computer_system::v1_20_0::ComputerSystem;
 
-pub struct Systems(Router);
+pub struct Systems(routing::MethodRouter);
 
 impl Systems {
     pub fn new<S>(state: S) -> Self
     where
         S: systems::Systems + Send + Sync + Clone + 'static,
     {
-        let router = Router::new()
-            .route(
-                "/",
-                get(|State(state): State<S>| async move {
-                    match state.get() {
-                        systems::SystemsGetResponse::Ok(collection) => Ok(Json(collection)),
-                        systems::SystemsGetResponse::Default(error) => Err(Json(error)),
+        let router = routing::get(|State(state): State<S>| async move {
+            match state.get() {
+                systems::SystemsGetResponse::Ok(collection) => Ok(Json(collection)),
+                systems::SystemsGetResponse::Default(error) => Err(Json(error)),
+            }
+        })
+        .post(
+            |State(mut state): State<S>, Json(body): Json<ComputerSystem>| async move {
+                match state.post(body) {
+                    systems::SystemsPostResponse::Created(computer_system) => {
+                        (StatusCode::CREATED, Json(computer_system)).into_response()
                     }
-                })
-                .post(
-                    |State(mut state): State<S>, Json(body): Json<ComputerSystem>| async move {
-                        match state.post(body) {
-                            systems::SystemsPostResponse::Created(computer_system) => {
-                                (StatusCode::CREATED, Json(computer_system)).into_response()
-                            }
-                            systems::SystemsPostResponse::Accepted(task) => {
-                                (StatusCode::ACCEPTED, Json(task)).into_response()
-                            }
-                            systems::SystemsPostResponse::NoContent => {
-                                StatusCode::NO_CONTENT.into_response()
-                            }
-                            systems::SystemsPostResponse::Default(error) => {
-                                (StatusCode::BAD_REQUEST, Json(error)).into_response()
-                            }
-                        }
-                    },
-                ),
-            )
-            .with_state(state);
+                    systems::SystemsPostResponse::Accepted(task) => {
+                        (StatusCode::ACCEPTED, Json(task)).into_response()
+                    }
+                    systems::SystemsPostResponse::NoContent => {
+                        StatusCode::NO_CONTENT.into_response()
+                    }
+                    systems::SystemsPostResponse::Default(error) => {
+                        (StatusCode::BAD_REQUEST, Json(error)).into_response()
+                    }
+                }
+            },
+        )
+        .with_state(state);
         Systems(router)
     }
 }
 
-impl Into<Router> for Systems {
-    fn into(self) -> Router {
+impl Into<routing::MethodRouter> for Systems {
+    fn into(self) -> routing::MethodRouter {
         self.0
     }
 }
