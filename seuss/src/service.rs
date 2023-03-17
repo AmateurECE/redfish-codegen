@@ -19,3 +19,6 @@ pub use service_root::*;
 
 mod systems;
 pub use systems::*;
+
+mod computer_system_detail;
+pub use computer_system_detail::*;
