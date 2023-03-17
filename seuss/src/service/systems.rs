@@ -15,8 +15,9 @@
 // limitations under the License.
 
 use crate::endpoint::Endpoint;
-use axum::{extract::State, routing::get, Json, Router};
+use axum::{extract::State, http::StatusCode, response::IntoResponse, routing::get, Json, Router};
 use redfish_codegen::api::v1::systems;
+use redfish_codegen::models::computer_system::v1_20_0::ComputerSystem;
 
 pub struct Systems(Router);
 
@@ -33,7 +34,25 @@ impl Systems {
                         systems::SystemsGetResponse::Ok(collection) => Ok(Json(collection)),
                         systems::SystemsGetResponse::Default(error) => Err(Json(error)),
                     }
-                }),
+                })
+                .post(
+                    |State(mut state): State<S>, Json(body): Json<ComputerSystem>| async move {
+                        match state.post(body) {
+                            systems::SystemsPostResponse::Created(computer_system) => {
+                                (StatusCode::CREATED, Json(computer_system)).into_response()
+                            }
+                            systems::SystemsPostResponse::Accepted(task) => {
+                                (StatusCode::ACCEPTED, Json(task)).into_response()
+                            }
+                            systems::SystemsPostResponse::NoContent => {
+                                StatusCode::NO_CONTENT.into_response()
+                            }
+                            systems::SystemsPostResponse::Default(error) => {
+                                (StatusCode::BAD_REQUEST, Json(error)).into_response()
+                            }
+                        }
+                    },
+                ),
             )
             .with_state(state);
         Systems(router)
