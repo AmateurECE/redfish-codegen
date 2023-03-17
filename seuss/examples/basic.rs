@@ -15,9 +15,9 @@
 // limitations under the License.
 
 use axum::Router;
-use seuss::service::RedfishService;
-use seuss::endpoint;
 use redfish_codegen::models::resource;
+use seuss::endpoint;
+use seuss::service::RedfishService;
 
 #[tokio::main]
 async fn main() {

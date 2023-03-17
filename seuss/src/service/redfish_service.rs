@@ -14,9 +14,9 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-use axum::{extract::State, body::Body, Router, routing::get, Json};
-use redfish_codegen::api::v1::{self, ServiceRoot};
 use crate::endpoint::Endpoint;
+use axum::{body::Body, extract::State, routing::get, Json, Router};
+use redfish_codegen::api::v1::{self, ServiceRoot};
 
 pub struct RedfishService(Router);
 
@@ -24,15 +24,20 @@ impl RedfishService {
     const URL: &str = "/redfish/v1";
 
     pub fn new<S>(state: S) -> RedfishService
-    where S: ServiceRoot + Endpoint + Send + Sync + Clone + 'static,
+    where
+        S: ServiceRoot + Endpoint + Send + Sync + Clone + 'static,
     {
         let state = state.mount(Self::URL.to_string());
         let router = Router::new()
-            .route(Self::URL, get(|State(state): State<S>| async move {
-                match state.get() {
-                    v1::ServiceRootGetResponse::Ok(service_root) => Ok(Json(service_root)),
-                    v1::ServiceRootGetResponse::Default(error) => Err(Json(error)),
-            }}))
+            .route(
+                Self::URL,
+                get(|State(state): State<S>| async move {
+                    match state.get() {
+                        v1::ServiceRootGetResponse::Ok(service_root) => Ok(Json(service_root)),
+                        v1::ServiceRootGetResponse::Default(error) => Err(Json(error)),
+                    }
+                }),
+            )
             .with_state(state);
         RedfishService(router)
     }

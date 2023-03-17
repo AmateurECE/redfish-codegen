@@ -15,27 +15,34 @@
 // limitations under the License.
 
 use crate::endpoint::Endpoint;
-use redfish_codegen::api::v1;
-use redfish_codegen::models::{odata_v4, resource, service_root};
+use crate::redfish_error;
+use redfish_codegen::api::v1::systems;
+use redfish_codegen::models::{
+    computer_system::v1_20_0::ComputerSystem, computer_system_collection::ComputerSystemCollection,
+    resource,
+};
+use redfish_codegen::registries::base::v1_15_0::Base;
 
 #[derive(Clone)]
-pub struct ServiceRoot {
-    name: resource::Name,
-    id: resource::Id,
-    odata_id: odata_v4::Id,
+pub struct Systems {
+    odata_id: resource::Id,
 }
 
-impl ServiceRoot {
-    pub fn new(name: resource::Name, id: resource::Id) -> Self {
-        Self {
-            name,
-            id,
-            odata_id: odata_v4::Id(String::default()),
-        }
+impl systems::Systems for Systems {
+    fn get(&self) -> systems::SystemsGetResponse {
+        systems::SystemsGetResponse::Ok(ComputerSystemCollection {
+            ..Default::default()
+        })
+    }
+
+    fn post(&mut self, _body: ComputerSystem) -> systems::SystemsPostResponse {
+        systems::SystemsPostResponse::Default(redfish_error::one_message(
+            Base::QueryNotSupportedOnResource.into(),
+        ))
     }
 }
 
-impl Endpoint for ServiceRoot {
+impl Endpoint for Systems {
     fn mountpoint(&self) -> &str {
         &self.odata_id.0
     }
@@ -43,17 +50,5 @@ impl Endpoint for ServiceRoot {
     fn mount(mut self, path: String) -> Self {
         self.odata_id.0 = path;
         self
-    }
-}
-
-impl v1::ServiceRoot for ServiceRoot {
-    fn get(&self) -> v1::ServiceRootGetResponse {
-        let ServiceRoot { name, id, odata_id } = self.clone();
-        v1::ServiceRootGetResponse::Ok(service_root::v1_15_0::ServiceRoot {
-            name,
-            id,
-            odata_id,
-            ..Default::default()
-        })
     }
 }

@@ -14,13 +14,22 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-mod service_root;
-pub use service_root::*;
+use redfish_codegen::models::message::v1_1_2::Message;
+use redfish_codegen::models::redfish::{Error, RedfishError};
 
-mod systems;
-pub use systems::*;
-
-pub trait Endpoint {
-    fn mountpoint(&self) -> &str;
-    fn mount(self, path: String) -> Self;
+pub fn one_message(error: Message) -> Error {
+    let message = error
+        .message
+        .as_ref()
+        .map(|m| m.as_str())
+        .unwrap_or("")
+        .to_string();
+    let code = error.message_id.clone();
+    Error {
+        error: RedfishError {
+            message_extended_info: Some(vec![error]),
+            message,
+            code,
+        },
+    }
 }
