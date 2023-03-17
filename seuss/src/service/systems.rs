@@ -14,7 +14,6 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-use crate::endpoint::Endpoint;
 use axum::{extract::State, http::StatusCode, response::IntoResponse, routing::get, Json, Router};
 use redfish_codegen::api::v1::systems;
 use redfish_codegen::models::computer_system::v1_20_0::ComputerSystem;
@@ -24,7 +23,7 @@ pub struct Systems(Router);
 impl Systems {
     pub fn new<S>(state: S) -> Self
     where
-        S: systems::Systems + Endpoint + Send + Sync + Clone + 'static,
+        S: systems::Systems + Send + Sync + Clone + 'static,
     {
         let router = Router::new()
             .route(

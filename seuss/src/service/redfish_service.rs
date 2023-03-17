@@ -14,7 +14,6 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-use crate::endpoint::Endpoint;
 use axum::{body::Body, extract::State, routing::get, Json, Router};
 use redfish_codegen::api::v1::{self, ServiceRoot};
 
@@ -25,9 +24,8 @@ impl RedfishService {
 
     pub fn new<S>(state: S) -> RedfishService
     where
-        S: ServiceRoot + Endpoint + Send + Sync + Clone + 'static,
+        S: ServiceRoot + Send + Sync + Clone + 'static,
     {
-        let state = state.mount(Self::URL.to_string());
         let router = Router::new()
             .route(
                 Self::URL,
