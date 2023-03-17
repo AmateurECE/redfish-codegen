@@ -16,3 +16,6 @@
 
 mod redfish_service;
 pub use redfish_service::*;
+
+mod systems;
+pub use systems::*;

@@ -19,18 +19,27 @@ use crate::redfish_error;
 use redfish_codegen::api::v1::systems;
 use redfish_codegen::models::{
     computer_system::v1_20_0::ComputerSystem, computer_system_collection::ComputerSystemCollection,
-    resource,
+    odata_v4,
 };
 use redfish_codegen::registries::base::v1_15_0::Base;
 
-#[derive(Clone)]
+#[derive(Clone, Default)]
 pub struct Systems {
-    odata_id: resource::Id,
+    odata_id: odata_v4::Id,
+}
+
+impl Systems {
+    pub fn new() -> Self {
+        Systems {
+            ..Default::default()
+        }
+    }
 }
 
 impl systems::Systems for Systems {
     fn get(&self) -> systems::SystemsGetResponse {
         systems::SystemsGetResponse::Ok(ComputerSystemCollection {
+            odata_id: self.odata_id.clone(),
             ..Default::default()
         })
     }
