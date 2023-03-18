@@ -23,19 +23,20 @@ use axum::{
 use redfish_codegen::{
     api::v1::computer_system_detail, models::computer_system::v1_20_0::ComputerSystem,
 };
+use std::sync::{Arc, Mutex};
 
 pub mod reset;
 
 pub struct ComputerSystemDetail(routing::MethodRouter);
 
 impl ComputerSystemDetail {
-    pub fn new<S>(state: S) -> Self
+    pub fn new<S>(state: Arc<Mutex<S>>) -> Self
     where
         S: computer_system_detail::ComputerSystemDetail + Send + Sync + Clone + 'static,
     {
         let router = routing::get(
-            |State(state): State<S>, Path(id): Path<String>| async move {
-                match state.get(id) {
+            |State(state): State<Arc<Mutex<S>>>, Path(id): Path<String>| async move {
+                match state.lock().unwrap().get(id) {
                     computer_system_detail::ComputerSystemDetailGetResponse::Ok(response) => {
                         Ok(Json(response))
                     }
@@ -46,10 +47,10 @@ impl ComputerSystemDetail {
             },
         )
         .put(
-            |State(mut state): State<S>,
+            |State(state): State<Arc<Mutex<S>>>,
              Path(id): Path<String>,
              Json(body): Json<ComputerSystem>| async move {
-                match state.put(id, body) {
+                match state.lock().unwrap().put(id, body) {
                     computer_system_detail::ComputerSystemDetailPutResponse::Ok(
                         computer_system,
                     ) => (StatusCode::OK, Json(computer_system)).into_response(),
@@ -66,8 +67,8 @@ impl ComputerSystemDetail {
             },
         )
         .delete(
-            |State(mut state): State<S>, Path(id): Path<String>| async move {
-                match state.delete(id) {
+            |State(state): State<Arc<Mutex<S>>>, Path(id): Path<String>| async move {
+                match state.lock().unwrap().delete(id) {
                     computer_system_detail::ComputerSystemDetailDeleteResponse::Ok(
                         computer_system,
                     ) => (StatusCode::OK, Json(computer_system)).into_response(),
@@ -84,10 +85,10 @@ impl ComputerSystemDetail {
             },
         )
         .patch(
-            |State(mut state): State<S>,
+            |State(state): State<Arc<Mutex<S>>>,
              Path(id): Path<String>,
              Json(body): Json<serde_json::Value>| async move {
-                match state.patch(id, body) {
+                match state.lock().unwrap().patch(id, body) {
                     computer_system_detail::ComputerSystemDetailPatchResponse::Ok(
                         computer_system,
                     ) => (StatusCode::OK, Json(computer_system)).into_response(),
@@ -104,7 +105,6 @@ impl ComputerSystemDetail {
             },
         )
         .with_state(state);
-        // .patch();
 
         ComputerSystemDetail(router)
     }
