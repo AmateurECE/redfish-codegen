@@ -17,24 +17,23 @@
 use axum::{extract::State, http::StatusCode, response::IntoResponse, routing, Json};
 use redfish_codegen::api::v1::systems;
 use redfish_codegen::models::computer_system::v1_20_0::ComputerSystem;
-use std::sync::{Arc, Mutex};
 
 pub struct Systems(routing::MethodRouter);
 
 impl Systems {
-    pub fn new<S>(state: Arc<Mutex<S>>) -> Self
+    pub fn new<S>(state: S) -> Self
     where
         S: systems::Systems + Send + Sync + Clone + 'static,
     {
-        let router = routing::get(|State(state): State<Arc<Mutex<S>>>| async move {
-            match state.lock().unwrap().get() {
+        let router = routing::get(|State(state): State<S>| async move {
+            match state.get() {
                 systems::SystemsGetResponse::Ok(collection) => Ok(Json(collection)),
                 systems::SystemsGetResponse::Default(error) => Err(Json(error)),
             }
         })
         .post(
-            |State(state): State<Arc<Mutex<S>>>, Json(body): Json<ComputerSystem>| async move {
-                match state.lock().unwrap().post(body) {
+            |State(mut state): State<S>, Json(body): Json<ComputerSystem>| async move {
+                match state.post(body) {
                     systems::SystemsPostResponse::Created(computer_system) => {
                         (StatusCode::CREATED, Json(computer_system)).into_response()
                     }
