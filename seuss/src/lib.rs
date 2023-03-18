@@ -16,3 +16,8 @@
 
 pub mod redfish_error;
 pub mod service;
+
+pub trait ResourceCollection {
+    type Resource;
+    fn access(&self, id: String) -> Self::Resource;
+}

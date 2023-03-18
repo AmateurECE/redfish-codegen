@@ -24,6 +24,8 @@ use redfish_codegen::{
     api::v1::computer_system_detail, models::computer_system::v1_20_0::ComputerSystem,
 };
 
+pub mod reset;
+
 pub struct ComputerSystemDetail(routing::MethodRouter);
 
 impl ComputerSystemDetail {
