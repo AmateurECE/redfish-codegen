@@ -14,7 +14,5 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-pub mod auth;
-pub mod extract;
-pub mod redfish_error;
-pub mod service;
+mod redfish_auth;
+pub use redfish_auth::*;

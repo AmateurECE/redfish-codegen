@@ -14,6 +14,8 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+use crate::auth::Login;
+use crate::extract::RedfishAuth;
 use axum::{extract::State, http::StatusCode, response::IntoResponse, routing, Json};
 use redfish_codegen::api::v1::systems;
 use redfish_codegen::models::computer_system::v1_20_0::ComputerSystem;
@@ -25,7 +27,7 @@ impl Systems {
     where
         S: systems::Systems + Send + Sync + Clone + 'static,
     {
-        let router = routing::get(|State(state): State<S>| async move {
+        let router = routing::get(|State(state): State<S>, _: RedfishAuth<Login>| async move {
             match state.get() {
                 systems::SystemsGetResponse::Ok(collection) => Ok(Json(collection)),
                 systems::SystemsGetResponse::Default(error) => Err(Json(error)),
