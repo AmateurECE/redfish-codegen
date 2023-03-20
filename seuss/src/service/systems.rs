@@ -14,7 +14,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-use crate::auth::Login;
+use crate::auth::{ConfigureComponents, Login};
 use crate::extract::RedfishAuth;
 use axum::{extract::State, http::StatusCode, response::IntoResponse, routing, Json};
 use redfish_codegen::api::v1::systems;
@@ -34,7 +34,9 @@ impl Systems {
             }
         })
         .post(
-            |State(mut state): State<S>, Json(body): Json<ComputerSystem>| async move {
+            |State(mut state): State<S>,
+             _: RedfishAuth<ConfigureComponents>,
+             Json(body): Json<ComputerSystem>| async move {
                 match state.post(body) {
                     systems::SystemsPostResponse::Created(computer_system) => {
                         (StatusCode::CREATED, Json(computer_system)).into_response()

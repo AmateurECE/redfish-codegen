@@ -14,6 +14,8 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+use crate::auth::ConfigureComponents;
+use crate::extract::RedfishAuth;
 use axum::{
     extract::{Path, State},
     http::StatusCode,
@@ -34,7 +36,9 @@ impl ComputerSystemDetail {
         S: computer_system_detail::ComputerSystemDetail + Send + Sync + Clone + 'static,
     {
         let router = routing::get(
-            |State(state): State<S>, Path(id): Path<String>| async move {
+            |State(state): State<S>,
+             Path(id): Path<String>,
+             _: RedfishAuth<ConfigureComponents>| async move {
                 match state.get(id) {
                     computer_system_detail::ComputerSystemDetailGetResponse::Ok(response) => {
                         Ok(Json(response))
@@ -48,6 +52,7 @@ impl ComputerSystemDetail {
         .put(
             |State(mut state): State<S>,
              Path(id): Path<String>,
+             _: RedfishAuth<ConfigureComponents>,
              Json(body): Json<ComputerSystem>| async move {
                 match state.put(id, body) {
                     computer_system_detail::ComputerSystemDetailPutResponse::Ok(
@@ -66,7 +71,9 @@ impl ComputerSystemDetail {
             },
         )
         .delete(
-            |State(mut state): State<S>, Path(id): Path<String>| async move {
+            |State(mut state): State<S>,
+             Path(id): Path<String>,
+             _: RedfishAuth<ConfigureComponents>| async move {
                 match state.delete(id) {
                     computer_system_detail::ComputerSystemDetailDeleteResponse::Ok(
                         computer_system,
@@ -86,6 +93,7 @@ impl ComputerSystemDetail {
         .patch(
             |State(mut state): State<S>,
              Path(id): Path<String>,
+             _: RedfishAuth<ConfigureComponents>,
              Json(body): Json<serde_json::Value>| async move {
                 match state.patch(id, body) {
                     computer_system_detail::ComputerSystemDetailPatchResponse::Ok(

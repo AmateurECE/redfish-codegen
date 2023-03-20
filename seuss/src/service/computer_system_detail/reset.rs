@@ -14,6 +14,8 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+use crate::auth::ConfigureComponents;
+use crate::extract::RedfishAuth;
 use axum::{
     extract::{Path, State},
     http::StatusCode,
@@ -35,6 +37,7 @@ impl ResetRouter {
         let router = routing::post(
             |State(mut state): State<S>,
              Path(id): Path<String>,
+             _: RedfishAuth<ConfigureComponents>,
              Json(body): Json<ResetRequestBody>| async move {
                 match state.post(String::default(), id, body) {
                     reset::ResetPostResponse::Ok(error) => {
