@@ -140,15 +140,14 @@ fn construct_format(literal: &syn::LitStr) -> TokenStream {
 fn construct_message_args(fields: &syn::Fields) -> TokenStream {
     match fields {
         syn::Fields::Unnamed(inner_fields) => {
-            let field_names = (0..inner_fields.unnamed.len())
-                .map(|i| {
-                    let name = field_name_for_index(i);
-                    quote!( ::std::string::ToString::to_string(& #name) )
-                });
+            let field_names = (0..inner_fields.unnamed.len()).map(|i| {
+                let name = field_name_for_index(i);
+                quote!( ::std::string::ToString::to_string(& #name) )
+            });
             quote! {
                 Some(vec![ #(#field_names ,)* ])
             }
-        },
+        }
         syn::Fields::Unit => quote!(None),
         _ => panic!("Enum variants must either be units or contain unnamed fields"),
     }

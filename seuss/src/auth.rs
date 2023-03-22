@@ -16,75 +16,15 @@
 
 use axum::http::request::Parts;
 use redfish_codegen::models::redfish;
-use std::fmt;
 
-pub trait Privilege: fmt::Display {}
+mod session;
+pub use session::*;
 
-pub struct Login;
-impl fmt::Display for Login {
-    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        write!(f, "Login")
-    }
-}
-impl Privilege for Login {}
+mod basic;
+pub use basic::*;
 
-pub struct ConfigureManager;
-impl fmt::Display for ConfigureManager {
-    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        write!(f, "ConfigureManager")
-    }
-}
-impl Privilege for ConfigureManager {}
-
-pub struct ConfigureUsers;
-impl fmt::Display for ConfigureUsers {
-    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        write!(f, "ConfigureUsers")
-    }
-}
-impl Privilege for ConfigureUsers {}
-
-pub struct ConfigureComponents;
-impl fmt::Display for ConfigureComponents {
-    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        write!(f, "ConfigureComponents")
-    }
-}
-impl Privilege for ConfigureComponents {}
-
-pub struct ConfigureSelf;
-impl fmt::Display for ConfigureSelf {
-    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        write!(f, "ConfigureSelf")
-    }
-}
-impl Privilege for ConfigureSelf {}
-
-pub enum Role {
-    Administrator,
-    Operator,
-    ReadOnly,
-}
-
-impl Role {
-    pub fn privileges(&self) -> Vec<String> {
-        match &self {
-            Self::Administrator => vec![
-                "Login".to_string(),
-                "ConfigureManager".to_string(),
-                "ConfigureUsers".to_string(),
-                "ConfigureComponents".to_string(),
-                "ConfigureSelf".to_string(),
-            ],
-            Self::Operator => vec![
-                "Login".to_string(),
-                "ConfigureComponents".to_string(),
-                "ConfigureSelf".to_string(),
-            ],
-            Self::ReadOnly => vec!["Login".to_string(), "ConfigureSelf".to_string()],
-        }
-    }
-}
+mod privilege;
+pub use privilege::*;
 
 pub struct AuthenticatedUser {
     pub username: String,
@@ -94,44 +34,3 @@ pub struct AuthenticatedUser {
 pub trait AuthenticateRequest {
     fn authenticate_request(&self, parts: &mut Parts) -> Result<AuthenticatedUser, redfish::Error>;
 }
-
-pub trait BasicAuthentication {
-    fn authenticate(username: &str, password: &str) -> Result<(), String>;
-}
-
-#[derive(Clone)]
-pub struct BasicAuthenticationProxy<B>
-where
-    B: BasicAuthentication + Clone,
-{
-    pub authenticator: B,
-}
-
-impl<B> AuthenticateRequest for BasicAuthenticationProxy<B>
-where
-    B: BasicAuthentication + Clone,
-{
-    fn authenticate_request(
-        &self,
-        _parts: &mut Parts,
-    ) -> Result<AuthenticatedUser, redfish::Error> {
-        Ok(AuthenticatedUser {
-            username: String::default(),
-            role: Role::ReadOnly,
-        })
-    }
-}
-
-// pub trait SessionAuthentication {
-//     fn session_start(username: &str, password: &str) -> Result<(), String>;
-// }
-
-// #[derive(Clone)]
-// pub struct SessionAuthenticationProxy<B, S>
-// where
-//     B: BasicAuthentication + Clone,
-//     S: SessionAuthentication + Clone,
-// {
-//     basic: BasicAuthenticationProxy<B>,
-//     authenticator: S,
-// }
