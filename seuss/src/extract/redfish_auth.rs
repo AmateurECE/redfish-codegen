@@ -14,15 +14,14 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-use crate::auth::Privilege;
-use crate::redfish_error;
+use crate::auth::{AuthenticateRequest, Privilege};
 use axum::{
     async_trait,
     extract::FromRequestParts,
     http::{request::Parts, StatusCode},
     Json,
 };
-use redfish_codegen::{models::redfish, registries::base::v1_15_0::Base};
+use redfish_codegen::models::redfish;
 use std::marker::PhantomData;
 
 pub struct RedfishAuth<T: Privilege> {
@@ -32,18 +31,17 @@ pub struct RedfishAuth<T: Privilege> {
 #[async_trait]
 impl<S, T> FromRequestParts<S> for RedfishAuth<T>
 where
-    S: Send + Sync,
+    S: AsRef<dyn AuthenticateRequest> + Send + Sync + Clone + 'static,
     T: Privilege,
 {
     type Rejection = (StatusCode, Json<redfish::Error>);
 
     async fn from_request_parts(parts: &mut Parts, state: &S) -> Result<Self, Self::Rejection> {
-        Err((
-            StatusCode::UNAUTHORIZED,
-            Json(redfish_error::one_message(
-                Base::ResourceAtUriUnauthorized(parts.uri.to_string(), "Unauthorized".to_string())
-                    .into(),
-            )),
-        ))
+        match state.as_ref().authenticate_request(parts) {
+            Ok(_) => Ok(RedfishAuth::<T> {
+                privilege: Default::default(),
+            }),
+            Err(error) => Err((StatusCode::UNAUTHORIZED, Json(error))),
+        }
     }
 }

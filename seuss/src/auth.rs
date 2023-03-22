@@ -14,6 +14,8 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+use axum::http::request::Parts;
+use redfish_codegen::models::redfish;
 use std::fmt;
 
 pub trait Privilege: fmt::Display {}
@@ -57,3 +59,79 @@ impl fmt::Display for ConfigureSelf {
     }
 }
 impl Privilege for ConfigureSelf {}
+
+pub enum Role {
+    Administrator,
+    Operator,
+    ReadOnly,
+}
+
+impl Role {
+    pub fn privileges(&self) -> Vec<String> {
+        match &self {
+            Self::Administrator => vec![
+                "Login".to_string(),
+                "ConfigureManager".to_string(),
+                "ConfigureUsers".to_string(),
+                "ConfigureComponents".to_string(),
+                "ConfigureSelf".to_string(),
+            ],
+            Self::Operator => vec![
+                "Login".to_string(),
+                "ConfigureComponents".to_string(),
+                "ConfigureSelf".to_string(),
+            ],
+            Self::ReadOnly => vec!["Login".to_string(), "ConfigureSelf".to_string()],
+        }
+    }
+}
+
+pub struct AuthenticatedUser {
+    pub username: String,
+    pub role: Role,
+}
+
+pub trait AuthenticateRequest {
+    fn authenticate_request(&self, parts: &mut Parts) -> Result<AuthenticatedUser, redfish::Error>;
+}
+
+pub trait BasicAuthentication {
+    fn authenticate(username: &str, password: &str) -> Result<(), String>;
+}
+
+#[derive(Clone)]
+pub struct BasicAuthenticationProxy<B>
+where
+    B: BasicAuthentication + Clone,
+{
+    pub authenticator: B,
+}
+
+impl<B> AuthenticateRequest for BasicAuthenticationProxy<B>
+where
+    B: BasicAuthentication + Clone,
+{
+    fn authenticate_request(
+        &self,
+        _parts: &mut Parts,
+    ) -> Result<AuthenticatedUser, redfish::Error> {
+        Ok(AuthenticatedUser {
+            username: String::default(),
+            role: Role::ReadOnly,
+        })
+    }
+}
+
+// pub trait SessionAuthentication {
+//     fn session_start(username: &str, password: &str) -> Result<(), String>;
+// }
+
+// #[derive(Clone)]
+// pub struct SessionAuthenticationProxy<B, S>
+// where
+//     B: BasicAuthentication + Clone,
+//     S: SessionAuthentication + Clone,
+// {
+//     basic: BasicAuthenticationProxy<B>,
+//     authenticator: S,
+// }

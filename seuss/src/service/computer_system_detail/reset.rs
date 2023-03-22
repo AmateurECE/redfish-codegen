@@ -14,7 +14,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-use crate::auth::ConfigureComponents;
+use crate::auth::{AuthenticateRequest, ConfigureComponents};
 use crate::extract::RedfishAuth;
 use axum::{
     extract::{Path, State},
@@ -32,7 +32,7 @@ pub struct ResetRouter(routing::MethodRouter);
 impl ResetRouter {
     pub fn new<S>(state: S) -> Self
     where
-        S: Reset + Send + Sync + Clone + 'static,
+        S: AsRef<dyn AuthenticateRequest> + Reset + Send + Sync + Clone + 'static,
     {
         let router = routing::post(
             |State(mut state): State<S>,

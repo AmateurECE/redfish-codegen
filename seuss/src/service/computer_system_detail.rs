@@ -14,7 +14,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-use crate::auth::ConfigureComponents;
+use crate::auth::{AuthenticateRequest, ConfigureComponents};
 use crate::extract::RedfishAuth;
 use axum::{
     extract::{Path, State},
@@ -33,7 +33,12 @@ pub struct ComputerSystemDetail(routing::MethodRouter);
 impl ComputerSystemDetail {
     pub fn new<S>(state: S) -> Self
     where
-        S: computer_system_detail::ComputerSystemDetail + Send + Sync + Clone + 'static,
+        S: AsRef<dyn AuthenticateRequest>
+            + computer_system_detail::ComputerSystemDetail
+            + Send
+            + Sync
+            + Clone
+            + 'static,
     {
         let router = routing::get(
             |State(state): State<S>,

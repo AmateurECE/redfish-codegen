@@ -14,7 +14,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-use crate::auth::{ConfigureComponents, Login};
+use crate::auth::{AuthenticateRequest, ConfigureComponents, Login};
 use crate::extract::RedfishAuth;
 use axum::{extract::State, http::StatusCode, response::IntoResponse, routing, Json};
 use redfish_codegen::api::v1::systems;
@@ -25,7 +25,7 @@ pub struct Systems(routing::MethodRouter);
 impl Systems {
     pub fn new<S>(state: S) -> Self
     where
-        S: systems::Systems + Send + Sync + Clone + 'static,
+        S: AsRef<dyn AuthenticateRequest> + systems::Systems + Send + Sync + Clone + 'static,
     {
         let router = routing::get(|State(state): State<S>, _: RedfishAuth<Login>| async move {
             match state.get() {
