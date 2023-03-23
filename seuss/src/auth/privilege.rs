@@ -14,50 +14,55 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-use std::fmt;
+#[derive(PartialEq)]
+pub enum Privilege {
+    Login,
+    ConfigureComponents,
+    ConfigureManager,
+    ConfigureSelf,
+    ConfigureUsers,
+}
 
-pub trait Privilege: fmt::Display {}
+pub trait AsPrivilege {
+    fn privilege() -> Privilege;
+}
 
 pub struct Login;
-impl fmt::Display for Login {
-    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        write!(f, "Login")
+impl AsPrivilege for Login {
+    fn privilege() -> Privilege {
+        Privilege::Login
     }
 }
-impl Privilege for Login {}
 
 pub struct ConfigureManager;
-impl fmt::Display for ConfigureManager {
-    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        write!(f, "ConfigureManager")
+impl AsPrivilege for ConfigureManager {
+    fn privilege() -> Privilege {
+        Privilege::ConfigureManager
     }
 }
-impl Privilege for ConfigureManager {}
 
 pub struct ConfigureUsers;
-impl fmt::Display for ConfigureUsers {
-    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        write!(f, "ConfigureUsers")
+impl AsPrivilege for ConfigureUsers {
+    fn privilege() -> Privilege {
+        Privilege::ConfigureUsers
     }
 }
-impl Privilege for ConfigureUsers {}
 
 pub struct ConfigureComponents;
-impl fmt::Display for ConfigureComponents {
-    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        write!(f, "ConfigureComponents")
+impl AsPrivilege for ConfigureComponents {
+    fn privilege() -> Privilege {
+        Privilege::ConfigureComponents
     }
 }
-impl Privilege for ConfigureComponents {}
 
 pub struct ConfigureSelf;
-impl fmt::Display for ConfigureSelf {
-    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        write!(f, "ConfigureSelf")
+impl AsPrivilege for ConfigureSelf {
+    fn privilege() -> Privilege {
+        Privilege::ConfigureSelf
     }
 }
-impl Privilege for ConfigureSelf {}
 
+#[derive(PartialEq)]
 pub enum Role {
     Administrator,
     Operator,
@@ -65,21 +70,21 @@ pub enum Role {
 }
 
 impl Role {
-    pub fn privileges(&self) -> Vec<String> {
+    pub fn privileges(&self) -> Vec<Privilege> {
         match &self {
             Self::Administrator => vec![
-                "Login".to_string(),
-                "ConfigureManager".to_string(),
-                "ConfigureUsers".to_string(),
-                "ConfigureComponents".to_string(),
-                "ConfigureSelf".to_string(),
+                Privilege::Login,
+                Privilege::ConfigureManager,
+                Privilege::ConfigureUsers,
+                Privilege::ConfigureComponents,
+                Privilege::ConfigureSelf,
             ],
             Self::Operator => vec![
-                "Login".to_string(),
-                "ConfigureComponents".to_string(),
-                "ConfigureSelf".to_string(),
+                Privilege::Login,
+                Privilege::ConfigureComponents,
+                Privilege::ConfigureSelf,
             ],
-            Self::ReadOnly => vec!["Login".to_string(), "ConfigureSelf".to_string()],
+            Self::ReadOnly => vec![Privilege::Login, Privilege::ConfigureSelf],
         }
     }
 }
