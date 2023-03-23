@@ -17,9 +17,8 @@
 use crate::auth::{AuthenticateRequest, AuthenticatedUser};
 use crate::redfish_error;
 use axum::http::{request::Parts, uri::Uri};
-use base64::{engine::general_purpose, read::DecoderReader};
+use base64::engine::{general_purpose, Engine};
 use redfish_codegen::{models::redfish, registries::base::v1_15_0::Base};
-use std::io::{Cursor, Read};
 use std::str;
 
 fn unauthorized(uri: &Uri, message: String) -> redfish::Error {
@@ -68,17 +67,15 @@ where
             .map_err(|_| {
                 unauthorized_str(&parts.uri, "Invalid characters in Authorization header")
             })?
-            .strip_prefix("basic ")
+            .strip_prefix("Basic ")
             .ok_or_else(|| unauthorized_str(&parts.uri, "Authorization header is malformed"))?
             .to_string();
 
-        let mut cursor = Cursor::new(authorization.as_bytes());
-        let mut decoder = DecoderReader::new(&mut cursor, &general_purpose::STANDARD);
-
-        let mut result = Vec::new();
-        decoder.read_to_end(&mut result).map_err(|_| {
-            unauthorized_str(&parts.uri, "Invalid base64 string in Authorization header")
-        })?;
+        let result = general_purpose::STANDARD
+            .decode(&authorization)
+            .map_err(|_| {
+                unauthorized_str(&parts.uri, "Invalid base64 string in Authorization header")
+            })?;
 
         let credentials: Vec<&str> = str::from_utf8(&result)
             .map_err(|_| {
