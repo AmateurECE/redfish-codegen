@@ -3,4 +3,5 @@ members = [
         "redfish-codegen",
         "redfish-macros",
         "seuss",
+        "seuss-auth-pam",
 ]
