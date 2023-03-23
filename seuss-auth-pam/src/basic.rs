@@ -14,7 +14,3 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-pub(crate) const PAM_SERVICE: &str = "redfish";
-
-mod basic;
-pub use basic::*;
