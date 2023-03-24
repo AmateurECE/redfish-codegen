@@ -32,4 +32,5 @@ pub struct AuthenticatedUser {
 
 pub trait AuthenticateRequest {
     fn authenticate_request(&self, parts: &mut Parts) -> Result<AuthenticatedUser, Response>;
+    fn unauthorized(&self) -> Response;
 }

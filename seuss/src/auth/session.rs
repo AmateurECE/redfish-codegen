@@ -54,4 +54,8 @@ where
     fn authenticate_request(&self, _parts: &mut Parts) -> Result<AuthenticatedUser, Response> {
         todo!()
     }
+
+    fn unauthorized(&self) -> Response {
+        todo!()
+    }
 }

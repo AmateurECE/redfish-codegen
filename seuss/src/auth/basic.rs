@@ -25,21 +25,6 @@ use base64::engine::{general_purpose, Engine};
 use redfish_codegen::{models::redfish, registries::base::v1_15_0::Base};
 use std::str;
 
-fn insufficient_privilege() -> Response {
-    unauthorized_response(redfish_error::one_message(
-        Base::InsufficientPrivilege.into(),
-    ))
-}
-
-fn unauthorized_response(error: redfish::Error) -> Response {
-    (
-        StatusCode::UNAUTHORIZED,
-        AppendHeaders([("WWW-Authenticate", "Basic")]),
-        Json(error),
-    )
-        .into_response()
-}
-
 pub trait BasicAuthentication {
     fn authenticate(
         &self,
@@ -73,28 +58,39 @@ where
         let authorization = parts
             .headers
             .get("Authorization")
-            .ok_or_else(|| insufficient_privilege())?
+            .ok_or_else(|| self.unauthorized())?
             .to_str()
-            .map_err(|_| insufficient_privilege())?
+            .map_err(|_| self.unauthorized())?
             .strip_prefix("Basic ")
-            .ok_or_else(|| insufficient_privilege())?
+            .ok_or_else(|| self.unauthorized())?
             .to_string();
 
         let result = general_purpose::STANDARD
             .decode(&authorization)
-            .map_err(|_| insufficient_privilege())?;
+            .map_err(|_| self.unauthorized())?;
 
         let credentials: Vec<&str> = str::from_utf8(&result)
-            .map_err(|_| insufficient_privilege())?
+            .map_err(|_| self.unauthorized())?
             .split(":")
             .collect();
 
         if credentials.len() != 2 {
-            return Err(insufficient_privilege());
+            return Err(self.unauthorized());
         }
 
         self.authenticator
             .authenticate(credentials[0].to_string(), credentials[1].to_string())
-            .map_err(|error| unauthorized_response(error))
+            .map_err(|_| self.unauthorized())
+    }
+
+    fn unauthorized(&self) -> Response {
+        (
+            StatusCode::UNAUTHORIZED,
+            AppendHeaders([("WWW-Authenticate", "Basic")]),
+            Json(redfish_error::one_message(
+                Base::InsufficientPrivilege.into(),
+            )),
+        )
+            .into_response()
     }
 }

@@ -15,15 +15,7 @@
 // limitations under the License.
 
 use crate::auth::{AsPrivilege, AuthenticateRequest};
-use crate::redfish_error;
-use axum::{
-    async_trait,
-    extract::FromRequestParts,
-    http::{request::Parts, StatusCode},
-    response::{AppendHeaders, IntoResponse, Response},
-    Json,
-};
-use redfish_codegen::registries::base::v1_15_0::Base;
+use axum::{async_trait, extract::FromRequestParts, http::request::Parts, response::Response};
 use std::marker::PhantomData;
 
 pub struct RedfishAuth<T: AsPrivilege> {
@@ -46,14 +38,7 @@ where
                         privilege: Default::default(),
                     })
                 } else {
-                    Err((
-                        StatusCode::UNAUTHORIZED,
-                        AppendHeaders([("WWW-Authenticate", "Basic")]),
-                        Json(redfish_error::one_message(
-                            Base::InsufficientPrivilege.into(),
-                        )),
-                    )
-                        .into_response())
+                    Err(state.as_ref().unauthorized())
                 }
             }
             Err(error) => Err(error),
