@@ -14,8 +14,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-use axum::http::request::Parts;
-use redfish_codegen::models::redfish;
+use axum::{http::request::Parts, response::Response};
 
 mod session;
 pub use session::*;
@@ -32,5 +31,5 @@ pub struct AuthenticatedUser {
 }
 
 pub trait AuthenticateRequest {
-    fn authenticate_request(&self, parts: &mut Parts) -> Result<AuthenticatedUser, redfish::Error>;
+    fn authenticate_request(&self, parts: &mut Parts) -> Result<AuthenticatedUser, Response>;
 }

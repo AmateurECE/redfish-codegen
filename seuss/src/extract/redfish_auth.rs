@@ -20,9 +20,10 @@ use axum::{
     async_trait,
     extract::FromRequestParts,
     http::{request::Parts, StatusCode},
+    response::{AppendHeaders, IntoResponse, Response},
     Json,
 };
-use redfish_codegen::{models::redfish, registries::base::v1_15_0::Base};
+use redfish_codegen::registries::base::v1_15_0::Base;
 use std::marker::PhantomData;
 
 pub struct RedfishAuth<T: AsPrivilege> {
@@ -35,7 +36,7 @@ where
     S: AsRef<dyn AuthenticateRequest> + Send + Sync + Clone + 'static,
     T: AsPrivilege,
 {
-    type Rejection = (StatusCode, Json<redfish::Error>);
+    type Rejection = Response;
 
     async fn from_request_parts(parts: &mut Parts, state: &S) -> Result<Self, Self::Rejection> {
         match state.as_ref().authenticate_request(parts) {
@@ -47,13 +48,15 @@ where
                 } else {
                     Err((
                         StatusCode::UNAUTHORIZED,
+                        AppendHeaders([("WWW-Authenticate", "Basic")]),
                         Json(redfish_error::one_message(
                             Base::InsufficientPrivilege.into(),
                         )),
-                    ))
+                    )
+                        .into_response())
                 }
             }
-            Err(error) => Err((StatusCode::UNAUTHORIZED, Json(error))),
+            Err(error) => Err(error),
         }
     }
 }

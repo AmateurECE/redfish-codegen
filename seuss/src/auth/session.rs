@@ -17,8 +17,7 @@
 use crate::auth::{
     AuthenticateRequest, AuthenticatedUser, BasicAuthentication, BasicAuthenticationProxy,
 };
-use axum::http::request::Parts;
-use redfish_codegen::models::redfish;
+use axum::{http::request::Parts, response::Response};
 
 pub trait SessionAuthentication {
     fn session_start(username: &str, password: &str) -> Result<(), String>;
@@ -52,10 +51,7 @@ where
     B: BasicAuthentication + Clone,
     S: SessionAuthentication + Clone,
 {
-    fn authenticate_request(
-        &self,
-        _parts: &mut Parts,
-    ) -> Result<AuthenticatedUser, redfish::Error> {
+    fn authenticate_request(&self, _parts: &mut Parts) -> Result<AuthenticatedUser, Response> {
         todo!()
     }
 }

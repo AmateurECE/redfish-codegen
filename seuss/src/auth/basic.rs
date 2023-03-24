@@ -16,13 +16,28 @@
 
 use crate::auth::{AuthenticateRequest, AuthenticatedUser};
 use crate::redfish_error;
-use axum::http::{request::Parts, uri::Uri};
+use axum::{
+    http::{request::Parts, StatusCode},
+    response::{AppendHeaders, IntoResponse, Response},
+    Json,
+};
 use base64::engine::{general_purpose, Engine};
 use redfish_codegen::{models::redfish, registries::base::v1_15_0::Base};
 use std::str;
 
-fn insufficient_privilege() -> redfish::Error {
-    redfish_error::one_message(Base::InsufficientPrivilege.into())
+fn insufficient_privilege() -> Response {
+    unauthorized_response(redfish_error::one_message(
+        Base::InsufficientPrivilege.into(),
+    ))
+}
+
+fn unauthorized_response(error: redfish::Error) -> Response {
+    (
+        StatusCode::UNAUTHORIZED,
+        AppendHeaders([("WWW-Authenticate", "Basic")]),
+        Json(error),
+    )
+        .into_response()
 }
 
 pub trait BasicAuthentication {
@@ -54,7 +69,7 @@ impl<B> AuthenticateRequest for BasicAuthenticationProxy<B>
 where
     B: BasicAuthentication + Clone,
 {
-    fn authenticate_request(&self, parts: &mut Parts) -> Result<AuthenticatedUser, redfish::Error> {
+    fn authenticate_request(&self, parts: &mut Parts) -> Result<AuthenticatedUser, Response> {
         let authorization = parts
             .headers
             .get("Authorization")
@@ -80,5 +95,6 @@ where
 
         self.authenticator
             .authenticate(credentials[0].to_string(), credentials[1].to_string())
+            .map_err(|error| unauthorized_response(error))
     }
 }
