@@ -13,3 +13,30 @@
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License.
+
+use crate::DEFAULT_PAM_SERVICE;
+use redfish_codegen::models::redfish;
+use seuss::auth::{AuthenticatedUser, BasicAuthentication};
+
+#[derive(Clone)]
+pub struct LinuxPamBasicAuthenticator {
+    service: String,
+}
+
+impl LinuxPamBasicAuthenticator {
+    pub fn new() -> Self {
+        LinuxPamBasicAuthenticator {
+            service: DEFAULT_PAM_SERVICE.to_string(),
+        }
+    }
+}
+
+impl BasicAuthentication for LinuxPamBasicAuthenticator {
+    fn authenticate(
+        &self,
+        username: String,
+        password: String,
+    ) -> Result<AuthenticatedUser, redfish::Error> {
+        todo!()
+    }
+}
