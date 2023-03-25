@@ -15,8 +15,16 @@
 // limitations under the License.
 
 use crate::DEFAULT_PAM_SERVICE;
-use redfish_codegen::models::redfish;
-use seuss::auth::{AuthenticatedUser, BasicAuthentication};
+use libc::{c_int, c_void};
+use pam_sys::{
+    wrapped as pam, PamConversation, PamHandle, PamMessage, PamResponse, PamReturnCode, PamFlag
+};
+use redfish_codegen::{models::redfish, registries::base::v1_15_0::Base};
+use seuss::{
+    auth::{AuthenticatedUser, BasicAuthentication},
+    redfish_error,
+};
+use std::ptr;
 
 #[derive(Clone)]
 pub struct LinuxPamBasicAuthenticator {
@@ -29,14 +37,54 @@ impl LinuxPamBasicAuthenticator {
             service: DEFAULT_PAM_SERVICE.to_string(),
         }
     }
+
+    fn terminate(&self, handle: &mut PamHandle, result: PamReturnCode) -> redfish::Error {
+        pam::end(handle, result);
+        unauthorized()
+    }
+}
+
+fn unauthorized() -> redfish::Error {
+    redfish_error::one_message(Base::InsufficientPrivilege.into())
+}
+
+extern "C" fn conversation_handler(
+    number_of_messages: c_int,
+    messages: *mut *mut PamMessage,
+    responses: *mut *mut PamResponse,
+    data: *mut c_void,
+) -> c_int {
+    todo!()
 }
 
 impl BasicAuthentication for LinuxPamBasicAuthenticator {
     fn authenticate(
         &self,
         username: String,
-        password: String,
+        mut password: String,
     ) -> Result<AuthenticatedUser, redfish::Error> {
-        todo!()
+        let mut handle: *mut PamHandle = ptr::null_mut();
+        let conversation = PamConversation {
+            conv: Some(conversation_handler),
+            data_ptr: &mut password as *mut String as *mut c_void,
+        };
+
+        // Initialize the PamHandle structure
+        // TODO: LinuxPamBasicAuthenticator should own the PamHandle, not initialize it on every request.
+        let result = pam::start(&self.service, Some(&username), &conversation, &mut handle);
+        if result != PamReturnCode::SUCCESS {
+            // TODO: Better logging here?
+            return Err(unauthorized());
+        }
+
+        // TODO: Implement a delay here.
+        unsafe {
+            let result = pam::authenticate(&mut *handle, PamFlag::DISALLOW_NULL_AUTHTOK);
+            if result != PamReturnCode::SUCCESS {
+                return Err(self.terminate(&mut *handle, result));
+            }
+        }
+
+        Err(unauthorized())
     }
 }

@@ -6,3 +6,5 @@ edition = "2021"
 [dependencies]
 seuss = { version = "0.1.0", path = "../seuss" }
 redfish-codegen = { version = "0.2.0", path = "../redfish-codegen" }
+pam-sys = "0.5.6"
+libc = "0.2.140"
