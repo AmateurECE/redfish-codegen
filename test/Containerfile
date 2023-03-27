@@ -1,0 +1,19 @@
+FROM ubuntu:latest
+
+RUN apt update && apt upgrade -y && apt install -y openssl
+
+# Group 'operator' already exists on Debian as a system group (historical)
+RUN groupadd redfish \
+        && groupadd administrators \
+        && groupadd operators \
+        && groupadd readonly \
+        && useradd -G redfish,administrators -m administrator \
+        -p "$(openssl passwd -1 administrator)" \
+        && useradd -g operator -G redfish,operators -m operator \
+        -p "$(openssl passwd -1 operator)" \
+        && useradd -G redfish,readonly -m viewer \
+        -p "$(openssl passwd -1 viewer)" \
+        && useradd -m unprivileged -p "$(openssl passwd -1 unprivileged)"
+
+COPY access.conf /etc/redfish/access.conf
+COPY pam.conf /etc/pam.d/redfish

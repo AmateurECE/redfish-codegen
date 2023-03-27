@@ -14,7 +14,24 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+use std::error;
+use std::fmt;
+
 pub(crate) const DEFAULT_PAM_SERVICE: &str = "redfish";
+
+#[derive(Debug)]
+pub struct MissingGroupError(String);
+impl fmt::Display for MissingGroupError {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        write!(f, "Group {} does not exist", &self.0)
+    }
+}
+
+impl error::Error for MissingGroupError {
+    fn source(&self) -> Option<&(dyn error::Error + 'static)> {
+        None
+    }
+}
 
 mod basic;
 pub use basic::*;

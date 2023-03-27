@@ -14,7 +14,8 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#[derive(PartialEq)]
+#[derive(Clone, PartialEq, Eq)]
+#[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
 pub enum Privilege {
     Login,
     ConfigureComponents,
@@ -62,7 +63,8 @@ impl AsPrivilege for ConfigureSelf {
     }
 }
 
-#[derive(PartialEq)]
+#[derive(Clone, Copy, PartialEq, Eq, Hash)]
+#[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
 pub enum Role {
     Administrator,
     Operator,

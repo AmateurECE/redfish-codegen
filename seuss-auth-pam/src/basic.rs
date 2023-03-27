@@ -14,33 +14,34 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-use crate::DEFAULT_PAM_SERVICE;
-use libc::{c_int, c_void};
-use pam_sys::{
-    wrapped as pam, PamConversation, PamHandle, PamMessage, PamResponse, PamReturnCode, PamFlag
-};
+use crate::{MissingGroupError, DEFAULT_PAM_SERVICE};
 use redfish_codegen::{models::redfish, registries::base::v1_15_0::Base};
 use seuss::{
-    auth::{AuthenticatedUser, BasicAuthentication},
+    auth::{AuthenticatedUser, BasicAuthentication, Role},
     redfish_error,
 };
-use std::ptr;
+use std::{collections::HashMap, ffi::OsStr};
+use users::Group;
 
 #[derive(Clone)]
 pub struct LinuxPamBasicAuthenticator {
     service: String,
+    role_map: HashMap<Role, Group>,
 }
 
 impl LinuxPamBasicAuthenticator {
-    pub fn new() -> Self {
-        LinuxPamBasicAuthenticator {
+    pub fn new(group_names: HashMap<Role, String>) -> Result<Self, MissingGroupError> {
+        let role_map = group_names
+            .iter()
+            .map(|(role, name)| match users::get_group_by_name(&name) {
+                Some(group) => Ok((*role, group)),
+                None => Err(MissingGroupError(name.clone())),
+            })
+            .collect::<Result<HashMap<Role, Group>, MissingGroupError>>()?;
+        Ok(LinuxPamBasicAuthenticator {
             service: DEFAULT_PAM_SERVICE.to_string(),
-        }
-    }
-
-    fn terminate(&self, handle: &mut PamHandle, result: PamReturnCode) -> redfish::Error {
-        pam::end(handle, result);
-        unauthorized()
+            role_map,
+        })
     }
 }
 
@@ -48,43 +49,36 @@ fn unauthorized() -> redfish::Error {
     redfish_error::one_message(Base::InsufficientPrivilege.into())
 }
 
-extern "C" fn conversation_handler(
-    number_of_messages: c_int,
-    messages: *mut *mut PamMessage,
-    responses: *mut *mut PamResponse,
-    data: *mut c_void,
-) -> c_int {
-    todo!()
-}
-
 impl BasicAuthentication for LinuxPamBasicAuthenticator {
     fn authenticate(
         &self,
         username: String,
-        mut password: String,
+        password: String,
     ) -> Result<AuthenticatedUser, redfish::Error> {
-        let mut handle: *mut PamHandle = ptr::null_mut();
-        let conversation = PamConversation {
-            conv: Some(conversation_handler),
-            data_ptr: &mut password as *mut String as *mut c_void,
-        };
-
-        // Initialize the PamHandle structure
-        // TODO: LinuxPamBasicAuthenticator should own the PamHandle, not initialize it on every request.
-        let result = pam::start(&self.service, Some(&username), &conversation, &mut handle);
-        if result != PamReturnCode::SUCCESS {
-            // TODO: Better logging here?
+        let mut auth = pam::Authenticator::with_password(&self.service).unwrap();
+        auth.get_handler().set_credentials(&username, &password);
+        if auth.authenticate().is_err() || auth.open_session().is_err() {
             return Err(unauthorized());
         }
 
-        // TODO: Implement a delay here.
-        unsafe {
-            let result = pam::authenticate(&mut *handle, PamFlag::DISALLOW_NULL_AUTHTOK);
-            if result != PamReturnCode::SUCCESS {
-                return Err(self.terminate(&mut *handle, result));
-            }
-        }
+        let gid = users::get_user_by_name(&username)
+            .ok_or_else(|| unauthorized())?
+            .primary_group_id();
+        let groups = users::get_user_groups(&username, gid).ok_or_else(|| unauthorized())?;
+        let group_names = groups
+            .iter()
+            .map(|group| group.name())
+            .collect::<Vec<&OsStr>>();
 
-        Err(unauthorized())
+        let (role, _) = self
+            .role_map
+            .iter()
+            .find(|(_, group)| group_names.contains(&group.name()))
+            .ok_or_else(|| unauthorized())?;
+
+        Ok(AuthenticatedUser {
+            username: username,
+            role: *role,
+        })
     }
 }
