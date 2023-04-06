@@ -21,3 +21,6 @@ mod systems;
 pub use systems::*;
 
 pub mod computer_system_detail;
+
+mod session_service;
+pub use session_service::*;
