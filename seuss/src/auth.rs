@@ -14,7 +14,12 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-use axum::{http::request::Parts, response::Response};
+use axum::{
+    http::{request::Parts, StatusCode},
+    response::{AppendHeaders, IntoResponse, Response},
+    Json,
+};
+use redfish_codegen::registries::base::v1_15_0::Base;
 
 mod session;
 pub use session::*;
@@ -25,12 +30,25 @@ pub use basic::*;
 mod privilege;
 pub use privilege::*;
 
+use crate::redfish_error;
+
 pub struct AuthenticatedUser {
     pub username: String,
     pub role: Role,
 }
 
+pub fn unauthorized(realm: &[&str]) -> Response {
+    (
+        StatusCode::UNAUTHORIZED,
+        AppendHeaders([("WWW-Authenticate", realm.join(", "))]),
+        Json(redfish_error::one_message(
+            Base::InsufficientPrivilege.into(),
+        )),
+    )
+        .into_response()
+}
+
 pub trait AuthenticateRequest {
     fn authenticate_request(&self, parts: &mut Parts) -> Result<AuthenticatedUser, Response>;
-    fn unauthorized(&self) -> Response;
+    fn challenge(&self) -> Vec<&'static str>;
 }

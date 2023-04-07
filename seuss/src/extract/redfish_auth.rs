@@ -14,7 +14,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-use crate::auth::{AsPrivilege, AuthenticateRequest};
+use crate::auth::{unauthorized, AsPrivilege, AuthenticateRequest};
 use axum::{async_trait, extract::FromRequestParts, http::request::Parts, response::Response};
 use std::marker::PhantomData;
 
@@ -38,7 +38,7 @@ where
                         privilege: Default::default(),
                     })
                 } else {
-                    Err(state.as_ref().unauthorized())
+                    Err(unauthorized(&state.as_ref().challenge()))
                 }
             }
             Err(error) => Err(error),

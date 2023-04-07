@@ -14,48 +14,64 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-use crate::auth::{
-    AuthenticateRequest, AuthenticatedUser, BasicAuthentication, BasicAuthenticationProxy,
-};
+use crate::auth::{AuthenticateRequest, AuthenticatedUser};
 use axum::{http::request::Parts, response::Response};
 
+use super::unauthorized;
+
 pub trait SessionAuthentication {
-    fn session_start(username: &str, password: &str) -> Result<(), String>;
+    fn session_is_valid(
+        &self,
+        token: String,
+        origin: Option<String>,
+    ) -> Result<AuthenticatedUser, Response>;
 }
 
 #[derive(Clone)]
-pub struct SessionAuthenticationProxy<B, S>
+pub struct SessionAuthenticationProxy<S>
 where
-    B: BasicAuthentication + Clone,
     S: SessionAuthentication + Clone,
 {
-    basic: BasicAuthenticationProxy<B>,
     authenticator: S,
 }
 
-impl<B, S> SessionAuthenticationProxy<B, S>
+impl<S> SessionAuthenticationProxy<S>
 where
-    B: BasicAuthentication + Clone,
     S: SessionAuthentication + Clone,
 {
-    pub fn new(basic: B, authenticator: S) -> Self {
-        Self {
-            basic: BasicAuthenticationProxy::new(basic),
-            authenticator,
-        }
+    pub fn new(authenticator: S) -> Self {
+        Self { authenticator }
     }
 }
 
-impl<B, S> AuthenticateRequest for SessionAuthenticationProxy<B, S>
+impl<S> AuthenticateRequest for SessionAuthenticationProxy<S>
 where
-    B: BasicAuthentication + Clone,
     S: SessionAuthentication + Clone,
 {
-    fn authenticate_request(&self, _parts: &mut Parts) -> Result<AuthenticatedUser, Response> {
-        todo!()
+    fn authenticate_request(&self, parts: &mut Parts) -> Result<AuthenticatedUser, Response> {
+        let token = parts
+            .headers
+            .get("X-Auth-Token")
+            .ok_or_else(|| unauthorized(&self.challenge()))?
+            .to_str()
+            .map_err(|_| unauthorized(&self.challenge()))?
+            .to_string();
+
+        let origin = parts
+            .headers
+            .get("Origin")
+            .map(|value| {
+                Ok(value
+                    .to_str()
+                    .map_err(|_| unauthorized(&self.challenge()))?
+                    .to_string())
+            })
+            .transpose()?;
+
+        self.authenticator.session_is_valid(token, origin)
     }
 
-    fn unauthorized(&self) -> Response {
-        todo!()
+    fn challenge(&self) -> Vec<&'static str> {
+        vec!["Session"]
     }
 }
