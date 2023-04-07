@@ -17,4 +17,4 @@
 pub mod auth;
 pub mod extract;
 pub mod redfish_error;
-pub mod service;
+pub mod routing;
