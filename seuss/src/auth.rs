@@ -30,6 +30,9 @@ pub use basic::*;
 mod privilege;
 pub use privilege::*;
 
+mod combination;
+pub use combination::*;
+
 use crate::redfish_error;
 
 pub struct AuthenticatedUser {
