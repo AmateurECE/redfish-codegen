@@ -10,7 +10,7 @@ pam = { version = "0.7.0", optional = true }
 redfish-codegen = { version = "0.2.0", path = "../redfish-codegen" }
 serde = { version = "1.0.158", features = ["derive"], optional = true}
 serde_json = "1.0.94"
-tokio = { version = "1.26.0", features = ["full"] }
+tokio = { version = "1.27.0", default-features = false, features = ["sync"] }
 users = { version = "0.11.0", optional = true }
 
 [features]

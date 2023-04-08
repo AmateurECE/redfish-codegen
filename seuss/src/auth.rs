@@ -43,15 +43,20 @@ pub struct AuthenticatedUser {
     pub role: Role,
 }
 
-pub fn unauthorized(realm: &[&str]) -> Response {
+pub fn unauthorized_with_error(error: redfish::Error, challenge: &[&str]) -> Response {
     (
         StatusCode::UNAUTHORIZED,
-        AppendHeaders([("WWW-Authenticate", realm.join(", "))]),
-        Json(redfish_error::one_message(
-            Base::InsufficientPrivilege.into(),
-        )),
+        AppendHeaders([("WWW-Authenticate", challenge.join(", "))]),
+        Json(error),
     )
         .into_response()
+}
+
+pub fn unauthorized(challenge: &[&str]) -> Response {
+    unauthorized_with_error(
+        redfish_error::one_message(Base::InsufficientPrivilege.into()),
+        challenge,
+    )
 }
 
 pub fn insufficient_privilege() -> redfish::Error {

@@ -51,9 +51,7 @@ impl Sessions {
             }
         })
         .post(
-            |State(mut state): State<S>,
-             _: RedfishAuth<Login>,
-             Json(body): Json<v1_6_0::Session>| async move {
+            |State(mut state): State<S>, Json(body): Json<v1_6_0::Session>| async move {
                 match state.post(body) {
                     v1::session_service::sessions::SessionsPostResponse::Created(session) => {
                         (StatusCode::CREATED, Json(session)).into_response()

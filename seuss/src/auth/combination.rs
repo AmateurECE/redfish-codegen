@@ -15,14 +15,15 @@
 // limitations under the License.
 
 use super::{
-    AuthenticateRequest, BasicAuthentication, BasicAuthenticationProxy, SessionAuthentication,
-    SessionAuthenticationProxy,
+    AuthenticateRequest, BasicAuthentication, BasicAuthenticationProxy, SessionAuthenticationProxy,
+    SessionManagement,
 };
 
+#[derive(Clone)]
 pub struct CombinedAuthenticationProxy<B, S>
 where
     B: BasicAuthentication + Clone,
-    S: SessionAuthentication + Clone,
+    S: SessionManagement + Clone,
 {
     basic: BasicAuthenticationProxy<B>,
     session: SessionAuthenticationProxy<S>,
@@ -31,7 +32,7 @@ where
 impl<B, S> CombinedAuthenticationProxy<B, S>
 where
     B: BasicAuthentication + Clone,
-    S: SessionAuthentication + Clone,
+    S: SessionManagement + Clone,
 {
     pub fn new(session: S, basic: B) -> Self {
         Self {
@@ -44,7 +45,7 @@ where
 impl<B, S> AuthenticateRequest for CombinedAuthenticationProxy<B, S>
 where
     B: BasicAuthentication + Clone,
-    S: SessionAuthentication + Clone,
+    S: SessionManagement + Clone,
 {
     fn authenticate_request(
         &self,

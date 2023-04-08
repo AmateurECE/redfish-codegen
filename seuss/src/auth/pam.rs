@@ -20,7 +20,7 @@ use std::{collections::HashMap, error, ffi::OsStr};
 use users::Group;
 
 use super::{
-    insufficient_privilege, AuthenticatedUser, BasicAuthentication, Role, SessionManagement,
+    insufficient_privilege, AuthenticatedUser, BasicAuthentication, Role, SessionAuthentication,
 };
 
 const DEFAULT_PAM_SERVICE: &str = "redfish";
@@ -59,21 +59,9 @@ impl LinuxPamAuthenticator {
             role_map,
         })
     }
-}
 
-impl BasicAuthentication for LinuxPamAuthenticator {
-    fn authenticate(
-        &self,
-        username: String,
-        password: String,
-    ) -> Result<AuthenticatedUser, redfish::Error> {
-        let mut auth = pam::Authenticator::with_password(&self.service).unwrap();
-        auth.get_handler().set_credentials(&username, &password);
-        if auth.authenticate().is_err() || auth.open_session().is_err() {
-            return Err(insufficient_privilege());
-        }
-
-        let gid = users::get_user_by_name(&username)
+    fn get_user_role(&self, username: &str) -> Result<Role, redfish::Error> {
+        let gid = users::get_user_by_name(username)
             .ok_or_else(|| insufficient_privilege())?
             .primary_group_id();
         let groups =
@@ -89,24 +77,45 @@ impl BasicAuthentication for LinuxPamAuthenticator {
             .find(|(_, group)| group_names.contains(&group.name()))
             .ok_or_else(|| insufficient_privilege())?;
 
-        Ok(AuthenticatedUser {
-            username: username,
-            role: *role,
-        })
+        Ok(*role)
     }
 }
 
-impl SessionManagement for LinuxPamAuthenticator {
+impl BasicAuthentication for LinuxPamAuthenticator {
+    fn authenticate(
+        &self,
+        username: String,
+        password: String,
+    ) -> Result<AuthenticatedUser, redfish::Error> {
+        let mut auth = pam::Authenticator::with_password(&self.service).unwrap();
+        auth.get_handler().set_credentials(&username, &password);
+        if auth.authenticate().is_err() {
+            return Err(insufficient_privilege());
+        }
+
+        let role = self.get_user_role(&username)?;
+        Ok(AuthenticatedUser { username, role })
+    }
+}
+
+impl SessionAuthentication for LinuxPamAuthenticator {
     fn open_session(
         &self,
         username: String,
         password: String,
-        origin: Option<String>,
-    ) -> Result<AuthenticatedUser, axum::response::Response> {
-        todo!()
+    ) -> Result<AuthenticatedUser, redfish::Error> {
+        let mut auth = pam::Authenticator::with_password(&self.service).unwrap();
+        auth.get_handler().set_credentials(&username, &password);
+        // As opposed to the basic handler, we also invoke a PAM session
+        if auth.authenticate().is_err() || auth.open_session().is_err() {
+            return Err(insufficient_privilege());
+        }
+
+        let role = self.get_user_role(&username)?;
+        Ok(AuthenticatedUser { username, role })
     }
 
-    fn close_session(&self) -> Result<(), axum::response::Response> {
+    fn close_session(&self) -> Result<(), redfish::Error> {
         todo!()
     }
 }

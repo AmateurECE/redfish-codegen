@@ -16,38 +16,38 @@
 
 use crate::auth::{AuthenticateRequest, AuthenticatedUser};
 use axum::{http::request::Parts, response::Response};
+use redfish_codegen::models::redfish;
 
-use super::unauthorized;
+use super::{unauthorized, unauthorized_with_error};
 
-pub trait SessionAuthentication {
+pub trait SessionManagement {
     fn session_is_valid(
         &self,
         token: String,
         origin: Option<String>,
-    ) -> Result<AuthenticatedUser, Response>;
+    ) -> Result<AuthenticatedUser, redfish::Error>;
 }
 
-pub trait SessionManagement {
+pub trait SessionAuthentication {
     fn open_session(
         &self,
         username: String,
         password: String,
-        origin: Option<String>,
-    ) -> Result<AuthenticatedUser, Response>;
-    fn close_session(&self) -> Result<(), Response>;
+    ) -> Result<AuthenticatedUser, redfish::Error>;
+    fn close_session(&self) -> Result<(), redfish::Error>;
 }
 
 #[derive(Clone)]
 pub struct SessionAuthenticationProxy<S>
 where
-    S: SessionAuthentication + Clone,
+    S: SessionManagement + Clone,
 {
     authenticator: S,
 }
 
 impl<S> SessionAuthenticationProxy<S>
 where
-    S: SessionAuthentication + Clone,
+    S: SessionManagement + Clone,
 {
     pub fn new(authenticator: S) -> Self {
         Self { authenticator }
@@ -56,7 +56,7 @@ where
 
 impl<S> AuthenticateRequest for SessionAuthenticationProxy<S>
 where
-    S: SessionAuthentication + Clone,
+    S: SessionManagement + Clone,
 {
     fn authenticate_request(&self, parts: &mut Parts) -> Result<AuthenticatedUser, Response> {
         let token = parts
@@ -78,7 +78,9 @@ where
             })
             .transpose()?;
 
-        self.authenticator.session_is_valid(token, origin)
+        self.authenticator
+            .session_is_valid(token, origin)
+            .map_err(|error| unauthorized_with_error(error, &self.challenge()))
     }
 
     fn challenge(&self) -> Vec<&'static str> {

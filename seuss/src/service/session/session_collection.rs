@@ -22,10 +22,61 @@ use redfish_codegen::{
     },
 };
 
-use crate::auth::{AuthenticateRequest, SessionManagement};
+use crate::auth::{AuthenticateRequest, SessionAuthentication, SessionManagement};
 
 #[derive(Clone)]
-pub struct InMemorySessionCollection<S, A>
+pub struct InMemorySessionManager<S>
+where
+    S: SessionAuthentication + Clone,
+{
+    auth_handler: S,
+}
+
+impl<S> InMemorySessionManager<S>
+where
+    S: SessionAuthentication + Clone,
+{
+    pub fn new(auth_handler: S) -> Self {
+        Self { auth_handler }
+    }
+}
+
+impl<S> SessionManagement for InMemorySessionManager<S>
+where
+    S: SessionAuthentication + Clone,
+{
+    fn session_is_valid(
+        &self,
+        token: String,
+        origin: Option<String>,
+    ) -> Result<crate::auth::AuthenticatedUser, redfish_codegen::models::redfish::Error> {
+        todo!()
+    }
+}
+
+pub enum SessionRequest {
+    Create {
+        username: String,
+        password: String,
+        origin: Option<String>,
+    },
+    Destroy {
+        id: String,
+    },
+    Validate {
+        id: String,
+        origin: Option<String>,
+    },
+}
+
+pub enum SessionResponse {
+    Created(String),
+    Destroyed,
+    IsValid(bool),
+}
+
+#[derive(Clone)]
+pub struct SessionCollection<S, A>
 where
     A: Clone + AuthenticateRequest + 'static,
     S: Clone + SessionManagement,
@@ -36,7 +87,7 @@ where
     session_manager: S,
 }
 
-impl<S, A> AsRef<dyn AuthenticateRequest> for InMemorySessionCollection<S, A>
+impl<S, A> AsRef<dyn AuthenticateRequest> for SessionCollection<S, A>
 where
     S: Clone + SessionManagement,
     A: Clone + AuthenticateRequest + 'static,
@@ -46,7 +97,7 @@ where
     }
 }
 
-impl<S, A> InMemorySessionCollection<S, A>
+impl<S, A> SessionCollection<S, A>
 where
     S: Clone + SessionManagement,
     A: Clone + AuthenticateRequest + 'static,
@@ -66,7 +117,7 @@ where
     }
 }
 
-impl<S, A> sessions::Sessions for InMemorySessionCollection<S, A>
+impl<S, A> sessions::Sessions for SessionCollection<S, A>
 where
     S: Clone + SessionManagement,
     A: Clone + AuthenticateRequest + 'static,
