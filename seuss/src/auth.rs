@@ -14,13 +14,6 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-use axum::{
-    http::{request::Parts, StatusCode},
-    response::{AppendHeaders, IntoResponse, Response},
-    Json,
-};
-use redfish_codegen::registries::base::v1_15_0::Base;
-
 mod session;
 pub use session::*;
 
@@ -32,6 +25,16 @@ pub use privilege::*;
 
 mod combination;
 pub use combination::*;
+
+#[cfg(feature = "auth-pam")]
+pub mod pam;
+
+use axum::{
+    http::{request::Parts, StatusCode},
+    response::{AppendHeaders, IntoResponse, Response},
+    Json,
+};
+use redfish_codegen::{models::redfish, registries::base::v1_15_0::Base};
 
 use crate::redfish_error;
 
@@ -49,6 +52,10 @@ pub fn unauthorized(realm: &[&str]) -> Response {
         )),
     )
         .into_response()
+}
+
+pub fn insufficient_privilege() -> redfish::Error {
+    redfish_error::one_message(Base::InsufficientPrivilege.into())
 }
 
 pub trait AuthenticateRequest {

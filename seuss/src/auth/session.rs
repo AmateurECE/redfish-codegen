@@ -27,6 +27,16 @@ pub trait SessionAuthentication {
     ) -> Result<AuthenticatedUser, Response>;
 }
 
+pub trait SessionManagement {
+    fn open_session(
+        &self,
+        username: String,
+        password: String,
+        origin: Option<String>,
+    ) -> Result<AuthenticatedUser, Response>;
+    fn close_session(&self) -> Result<(), Response>;
+}
+
 #[derive(Clone)]
 pub struct SessionAuthenticationProxy<S>
 where

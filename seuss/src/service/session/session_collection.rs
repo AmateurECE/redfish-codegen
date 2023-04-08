@@ -20,43 +20,56 @@ use redfish_codegen::{
         odata_v4, resource, session::v1_6_0,
         session_collection::SessionCollection as SessionCollectionModel,
     },
-    registries::base::v1_15_0::Base,
 };
 
-use crate::{auth::AuthenticateRequest, redfish_error};
+use crate::auth::{AuthenticateRequest, SessionManagement};
 
 #[derive(Clone)]
-pub struct SessionCollection<S> {
+pub struct InMemorySessionCollection<S, A>
+where
+    A: Clone + AuthenticateRequest + 'static,
+    S: Clone + SessionManagement,
+{
     odata_id: odata_v4::Id,
     name: resource::Name,
-    auth_handler: S,
+    auth_handler: A,
+    session_manager: S,
 }
 
-impl<S> AsRef<dyn AuthenticateRequest> for SessionCollection<S>
+impl<S, A> AsRef<dyn AuthenticateRequest> for InMemorySessionCollection<S, A>
 where
-    S: Clone + AuthenticateRequest + 'static,
+    S: Clone + SessionManagement,
+    A: Clone + AuthenticateRequest + 'static,
 {
     fn as_ref(&self) -> &(dyn AuthenticateRequest + 'static) {
         &self.auth_handler
     }
 }
 
-impl<S> SessionCollection<S>
+impl<S, A> InMemorySessionCollection<S, A>
 where
-    S: Clone + AuthenticateRequest,
+    S: Clone + SessionManagement,
+    A: Clone + AuthenticateRequest + 'static,
 {
-    pub fn new(odata_id: odata_v4::Id, name: resource::Name, auth_handler: S) -> Self {
+    pub fn new(
+        odata_id: odata_v4::Id,
+        name: resource::Name,
+        auth_handler: A,
+        session_manager: S,
+    ) -> Self {
         Self {
             odata_id,
             name,
             auth_handler,
+            session_manager,
         }
     }
 }
 
-impl<S> sessions::Sessions for SessionCollection<S>
+impl<S, A> sessions::Sessions for InMemorySessionCollection<S, A>
 where
-    S: Clone + AuthenticateRequest,
+    S: Clone + SessionManagement,
+    A: Clone + AuthenticateRequest + 'static,
 {
     fn get(&self) -> sessions::SessionsGetResponse {
         sessions::SessionsGetResponse::Ok(SessionCollectionModel {
@@ -66,9 +79,7 @@ where
         })
     }
 
-    fn post(&mut self, _: v1_6_0::Session) -> sessions::SessionsPostResponse {
-        sessions::SessionsPostResponse::Default(redfish_error::one_message(
-            Base::OperationNotAllowed.into(),
-        ))
+    fn post(&mut self, session: v1_6_0::Session) -> sessions::SessionsPostResponse {
+        todo!()
     }
 }

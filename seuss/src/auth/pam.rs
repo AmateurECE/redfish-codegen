@@ -14,22 +14,38 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-use crate::{MissingGroupError, DEFAULT_PAM_SERVICE};
-use redfish_codegen::{models::redfish, registries::base::v1_15_0::Base};
-use seuss::{
-    auth::{AuthenticatedUser, BasicAuthentication, Role},
-    redfish_error,
-};
-use std::{collections::HashMap, ffi::OsStr};
+use core::fmt;
+use redfish_codegen::models::redfish;
+use std::{collections::HashMap, error, ffi::OsStr};
 use users::Group;
 
+use super::{
+    insufficient_privilege, AuthenticatedUser, BasicAuthentication, Role, SessionManagement,
+};
+
+const DEFAULT_PAM_SERVICE: &str = "redfish";
+
+#[derive(Debug)]
+pub struct MissingGroupError(String);
+impl fmt::Display for MissingGroupError {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        write!(f, "Group {} does not exist", &self.0)
+    }
+}
+
+impl error::Error for MissingGroupError {
+    fn source(&self) -> Option<&(dyn error::Error + 'static)> {
+        None
+    }
+}
+
 #[derive(Clone)]
-pub struct LinuxPamBasicAuthenticator {
+pub struct LinuxPamAuthenticator {
     service: String,
     role_map: HashMap<Role, Group>,
 }
 
-impl LinuxPamBasicAuthenticator {
+impl LinuxPamAuthenticator {
     pub fn new(group_names: HashMap<Role, String>) -> Result<Self, MissingGroupError> {
         let role_map = group_names
             .iter()
@@ -38,18 +54,14 @@ impl LinuxPamBasicAuthenticator {
                 None => Err(MissingGroupError(name.clone())),
             })
             .collect::<Result<HashMap<Role, Group>, MissingGroupError>>()?;
-        Ok(LinuxPamBasicAuthenticator {
+        Ok(LinuxPamAuthenticator {
             service: DEFAULT_PAM_SERVICE.to_string(),
             role_map,
         })
     }
 }
 
-fn unauthorized() -> redfish::Error {
-    redfish_error::one_message(Base::InsufficientPrivilege.into())
-}
-
-impl BasicAuthentication for LinuxPamBasicAuthenticator {
+impl BasicAuthentication for LinuxPamAuthenticator {
     fn authenticate(
         &self,
         username: String,
@@ -58,13 +70,14 @@ impl BasicAuthentication for LinuxPamBasicAuthenticator {
         let mut auth = pam::Authenticator::with_password(&self.service).unwrap();
         auth.get_handler().set_credentials(&username, &password);
         if auth.authenticate().is_err() || auth.open_session().is_err() {
-            return Err(unauthorized());
+            return Err(insufficient_privilege());
         }
 
         let gid = users::get_user_by_name(&username)
-            .ok_or_else(|| unauthorized())?
+            .ok_or_else(|| insufficient_privilege())?
             .primary_group_id();
-        let groups = users::get_user_groups(&username, gid).ok_or_else(|| unauthorized())?;
+        let groups =
+            users::get_user_groups(&username, gid).ok_or_else(|| insufficient_privilege())?;
         let group_names = groups
             .iter()
             .map(|group| group.name())
@@ -74,11 +87,26 @@ impl BasicAuthentication for LinuxPamBasicAuthenticator {
             .role_map
             .iter()
             .find(|(_, group)| group_names.contains(&group.name()))
-            .ok_or_else(|| unauthorized())?;
+            .ok_or_else(|| insufficient_privilege())?;
 
         Ok(AuthenticatedUser {
             username: username,
             role: *role,
         })
+    }
+}
+
+impl SessionManagement for LinuxPamAuthenticator {
+    fn open_session(
+        &self,
+        username: String,
+        password: String,
+        origin: Option<String>,
+    ) -> Result<AuthenticatedUser, axum::response::Response> {
+        todo!()
+    }
+
+    fn close_session(&self) -> Result<(), axum::response::Response> {
+        todo!()
     }
 }
