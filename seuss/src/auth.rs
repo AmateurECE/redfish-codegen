@@ -38,6 +38,7 @@ use redfish_codegen::{models::redfish, registries::base::v1_15_0::Base};
 
 use crate::redfish_error;
 
+#[derive(Clone)]
 pub struct AuthenticatedUser {
     pub username: String,
     pub role: Role,

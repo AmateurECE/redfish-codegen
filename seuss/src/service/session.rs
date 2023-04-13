@@ -19,3 +19,5 @@ pub use service::*;
 
 mod session_collection;
 pub use session_collection::*;
+
+pub mod session_manager;

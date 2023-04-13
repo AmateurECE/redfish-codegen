@@ -16,7 +16,7 @@
 
 use crate::auth::{AuthenticateRequest, AuthenticatedUser};
 use axum::{http::request::Parts, response::Response};
-use redfish_codegen::models::redfish;
+use redfish_codegen::models::{odata_v4, redfish, session::v1_6_0};
 
 use super::{unauthorized, unauthorized_with_error};
 
@@ -26,6 +26,12 @@ pub trait SessionManagement {
         token: String,
         origin: Option<String>,
     ) -> Result<AuthenticatedUser, redfish::Error>;
+    fn sessions(&self) -> Result<Vec<odata_v4::IdRef>, redfish::Error>;
+    fn create_session(
+        &mut self,
+        session: v1_6_0::Session,
+    ) -> Result<v1_6_0::Session, redfish::Error>;
+    fn delete_session(&mut self, token: String) -> Result<(), redfish::Error>;
 }
 
 pub trait SessionAuthentication {
