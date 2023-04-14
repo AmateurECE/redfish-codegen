@@ -16,3 +16,6 @@
 
 mod session;
 pub use session::*;
+
+mod redfish_versions;
+pub use redfish_versions::*;
