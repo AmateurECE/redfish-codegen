@@ -49,6 +49,6 @@ public class StructContextFactory implements IModelContextFactory {
         }
 
         String docComment = property.getValue().getDescription();
-        return new StructContext.Property(sanitizedName, dataType, optional, serdeName, docComment);
+        return new StructContext.Property(sanitizedName, dataType, property.getValue().get$ref(), optional, serdeName, docComment);
     }
 }

@@ -25,10 +25,9 @@ use {{{path}}};
 /// {{{docComment}}}
 {{/docComment}}
 #[derive(Clone, Debug, serde::Deserialize, serde::Serialize)]
-{{^enumContext}}
-#[derive(Default)]
-{{/enumContext}}
 {{#structContext}}
+#[derive(derivative::Derivative)]
+#[derivative(Default)]
 pub struct {{name}} {
 {{#properties}}
 {{#docComment}}
@@ -37,6 +36,12 @@ pub struct {{name}} {
 {{#serdeName}}
     #[serde(rename = "{{{serdeName}}}")]
 {{/serdeName}}
+{{#skipDeserializing}}
+    #[serde(skip_deserializing)]
+{{/skipDeserializing}}
+{{#defaultValue}}
+    #[derivative(Default(value = "{{{defaultValue}}}"))]
+{{/defaultValue}}
 {{#optional}}
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub {{name}}: Option<{{{type}}}>,
@@ -70,5 +75,6 @@ impl Default for {{name}} {
 }
 {{/enumContext}}
 {{#tupleContext}}
+#[derive(Default)]
 pub struct {{name}}(pub {{type}});
 {{/tupleContext}}

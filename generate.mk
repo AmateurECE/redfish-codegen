@@ -8,7 +8,7 @@
 #
 # CREATED:          01/29/2023
 #
-# LAST EDITED:	    03/10/2023
+# LAST EDITED:	    04/13/2023
 #
 ####
 
@@ -29,6 +29,10 @@ $(SCHEMA_FILE):
 api/openapi/openapi.yaml: $(SCHEMA_FILE)
 	unzip -o -DD -d api $(SCHEMA_FILE)
 	QUILT_PC=api/.pc QUILT_PATCHES=schema-patches quilt push -a
+	sed -i \
+		-e 's@http://redfish.dmtf.org/schemas/v1@.@' \
+		-e 's@http://redfish.dmtf.org/schemas/swordfish/v1@.@' \
+		api/openapi/*.yaml
 
 # Registry
 

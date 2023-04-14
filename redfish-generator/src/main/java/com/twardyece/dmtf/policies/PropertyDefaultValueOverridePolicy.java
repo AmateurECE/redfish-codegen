@@ -7,10 +7,10 @@ import org.apache.commons.lang3.tuple.Pair;
 
 import java.util.Map;
 
-public class PropertyTypeStringOverridePolicy implements IModelGenerationPolicy {
+public class PropertyDefaultValueOverridePolicy implements IModelGenerationPolicy {
     private Map<Pair<String, String>, String> overrides;
 
-    public PropertyTypeStringOverridePolicy(Map<Pair<String, String>, String> overrides) {
+    public PropertyDefaultValueOverridePolicy(Map<Pair<String, String>, String> overrides) {
         this.overrides = overrides;
     }
 
@@ -23,7 +23,7 @@ public class PropertyTypeStringOverridePolicy implements IModelGenerationPolicy 
                     .findFirst()
                     .get();
 
-            property.setTypeOverride(entry.getValue());
+            property.setDefaultValue(entry.getValue());
         }
     }
 }

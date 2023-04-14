@@ -83,10 +83,10 @@ public class RedfishCodegen {
         // These intrusive/low-level policies need to be applied to the set of models as a whole, but should not be
         // coupled to context factories.
         this.modelGenerationPolicies = new IModelGenerationPolicy[2];
-        this.modelGenerationPolicies[0] = new ODataTypePolicy(new ODataTypeIdentifier());
+        this.modelGenerationPolicies[0] = new ODataPropertyPolicy(new ODataTypeIdentifier());
         Map<Pair<String, String>, String> overrides = new HashMap<>();
-        overrides.put(new ImmutablePair<>("odata-v4_Service", "kind"), "monostate::MustBe!(\"Singleton\")");
-        this.modelGenerationPolicies[1] = new PropertyTypeStringOverridePolicy(overrides);
+        overrides.put(new ImmutablePair<>("odata-v4_Service", "kind"), "\\\"Singleton\\\".to_string()");
+        this.modelGenerationPolicies[1] = new PropertyDefaultValueOverridePolicy(overrides);
 
         // API generation setup
         List<INameMapper> nameMappers = new ArrayList<>();
