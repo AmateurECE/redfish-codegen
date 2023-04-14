@@ -16,11 +16,12 @@
 
 use chrono::{DateTime, Local};
 use redfish_codegen::{
-    models::{odata_v4, redfish, session::v1_6_0},
+    models::{odata_v4, redfish, resource, session::v1_6_0},
     registries::base::v1_15_0::Base,
 };
 use std::{
-    collections::HashMap,
+    collections::{hash_map::DefaultHasher, HashMap},
+    hash::Hasher,
     sync::{Arc, Mutex},
     time::Duration,
 };
@@ -43,6 +44,8 @@ where
     S: SessionAuthentication + Clone,
 {
     sessions: Arc<Mutex<HashMap<String, ManagedSession>>>,
+    last_id: i64,
+    collection_odata_id: odata_v4::Id,
     timeout: Duration,
     auth_handler: S,
 }
@@ -54,13 +57,15 @@ where
     /// Default duration is 30 minutes.
     const DEFAULT_DURATION: Duration = Duration::from_secs(1800);
 
-    pub fn new(auth_handler: S) -> Self {
-        Self::with_duration(Self::DEFAULT_DURATION, auth_handler)
+    pub fn new(auth_handler: S, collection_id: odata_v4::Id) -> Self {
+        Self::with_duration(Self::DEFAULT_DURATION, auth_handler, collection_id)
     }
 
-    pub fn with_duration(timeout: Duration, auth_handler: S) -> Self {
+    pub fn with_duration(timeout: Duration, auth_handler: S, collection_id: odata_v4::Id) -> Self {
         Self {
             auth_handler,
+            last_id: 0,
+            collection_odata_id: collection_id,
             timeout,
             sessions: Arc::new(Mutex::new(HashMap::new())),
         }
@@ -79,8 +84,13 @@ where
         }
     }
 
-    fn token(&self, username: String) -> String {
-        todo!()
+    /// Create a session token from the random session ID
+    fn token(&self, username: &str) -> String {
+        let mut hasher = DefaultHasher::new();
+        let noise: u64 = rand::random();
+        let value = noise.to_string() + "|" + &username;
+        hasher.write(value.as_bytes());
+        hasher.finish().to_string()
     }
 }
 
@@ -118,33 +128,39 @@ where
 
     fn create_session(
         &mut self,
-        mut session: v1_6_0::Session,
+        session: v1_6_0::Session,
     ) -> Result<v1_6_0::Session, redfish::Error> {
-        let v1_6_0::Session {
-            user_name,
-            password,
-            ..
-        } = session.clone();
-        let user_name = user_name.ok_or_else(|| {
-            redfish_error::one_message(Base::PropertyMissing("Password".to_string()).into())
+        let user_name = session.user_name.clone().ok_or_else(|| {
+            redfish_error::one_message(Base::PropertyMissing("UserName".to_string()).into())
         })?;
-        let password = password.ok_or_else(|| {
+        let password = session.password.clone().ok_or_else(|| {
             redfish_error::one_message(Base::PropertyMissing("Password".to_string()).into())
         })?;
         let user = self
             .auth_handler
             .open_session(user_name.clone(), password)?;
+
+        let mut sessions = self.sessions.lock().unwrap();
+        self.last_id += 1;
+        let id = self.last_id.to_string();
+        let token = self.token(&user_name);
+
+        let created_session = v1_6_0::Session {
+            user_name: Some(user_name),
+            odata_id: odata_v4::Id(self.collection_odata_id.0.clone() + "/" + &id),
+            id: resource::Id(id.clone()),
+            name: resource::Name("User Session".to_string()),
+            description: Some(resource::Description("User Session".to_string())),
+            token: Some(token.clone()),
+            ..Default::default()
+        };
         let managed_session = ManagedSession {
-            session: session.clone(),
+            session: created_session.clone(),
             user,
             last_request: Local::now(),
         };
-
-        let mut sessions = self.sessions.lock().unwrap();
-        let token = self.token(user_name);
-        sessions.insert(token.clone(), managed_session);
-        session.token = Some(token);
-        Ok(session)
+        sessions.insert(token, managed_session);
+        Ok(created_session)
     }
 
     fn delete_session(&mut self, token: String) -> Result<(), redfish::Error> {

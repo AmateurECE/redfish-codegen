@@ -53,8 +53,19 @@ impl Sessions {
         .post(
             |State(mut state): State<S>, Json(body): Json<v1_6_0::Session>| async move {
                 match state.post(body) {
-                    v1::session_service::sessions::SessionsPostResponse::Created(session) => {
-                        (StatusCode::CREATED, Json(session)).into_response()
+                    v1::session_service::sessions::SessionsPostResponse::Created(mut session) => {
+                        match session.token.clone() {
+                            Some(token) => {
+                                session.token = None;
+                                (
+                                    StatusCode::CREATED,
+                                    [("X-Auth-Token", token)],
+                                    Json(session),
+                                )
+                                    .into_response()
+                            }
+                            None => StatusCode::INTERNAL_SERVER_ERROR.into_response(),
+                        }
                     }
                     v1::session_service::sessions::SessionsPostResponse::Accepted(task) => {
                         (StatusCode::ACCEPTED, Json(task)).into_response()
