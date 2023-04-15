@@ -45,6 +45,114 @@ impl OData {
         });
         self
     }
+
+    pub fn enable_chassis(mut self) -> Self {
+        self.0.value.push(Service {
+            name: "Chassis".to_string(),
+            url: "/redfish/v1/Chassis".to_string(),
+            ..Default::default()
+        });
+        self
+    }
+
+    pub fn enable_managers(mut self) -> Self {
+        self.0.value.push(Service {
+            name: "Managers".to_string(),
+            url: "/redfish/v1/Managers".to_string(),
+            ..Default::default()
+        });
+        self
+    }
+
+    pub fn enable_task_service(mut self) -> Self {
+        self.0.value.push(Service {
+            name: "TaskService".to_string(),
+            url: "/redfish/v1/TaskService".to_string(),
+            ..Default::default()
+        });
+        self
+    }
+
+    pub fn enable_account_service(mut self) -> Self {
+        self.0.value.push(Service {
+            name: "AccountService".to_string(),
+            url: "/redfish/v1/AccountService".to_string(),
+            ..Default::default()
+        });
+        self
+    }
+
+    pub fn enable_session_service(mut self) -> Self {
+        self.0.value.push(Service {
+            name: "SessionService".to_string(),
+            url: "/redfish/v1/SessionService".to_string(),
+            ..Default::default()
+        });
+        self
+    }
+
+    pub fn enable_event_service(mut self) -> Self {
+        self.0.value.push(Service {
+            name: "EventService".to_string(),
+            url: "/redfish/v1/EventService".to_string(),
+            ..Default::default()
+        });
+        self
+    }
+
+    pub fn enable_registries(mut self) -> Self {
+        self.0.value.push(Service {
+            name: "Registries".to_string(),
+            url: "/redfish/v1/Registries".to_string(),
+            ..Default::default()
+        });
+        self
+    }
+
+    pub fn enable_json_schemas(mut self) -> Self {
+        self.0.value.push(Service {
+            name: "JsonSchemas".to_string(),
+            url: "/redfish/v1/JsonSchemas".to_string(),
+            ..Default::default()
+        });
+        self
+    }
+
+    pub fn enable_certificate_service(mut self) -> Self {
+        self.0.value.push(Service {
+            name: "CertificateService".to_string(),
+            url: "/redfish/v1/CertificateService".to_string(),
+            ..Default::default()
+        });
+        self
+    }
+
+    pub fn enable_key_service(mut self) -> Self {
+        self.0.value.push(Service {
+            name: "KeyService".to_string(),
+            url: "/redfish/v1/KeyService".to_string(),
+            ..Default::default()
+        });
+        self
+    }
+
+    pub fn enable_update_service(mut self) -> Self {
+        self.0.value.push(Service {
+            name: "UpdateService".to_string(),
+            url: "/redfish/v1/UpdateService".to_string(),
+            ..Default::default()
+        });
+        self
+    }
+
+    pub fn enable_sessions(mut self) -> Self {
+        self.0.value.push(Service {
+            name: "Sessions".to_string(),
+            url: "/redfish/v1/SessionService/Sessions".to_string(),
+            ..Default::default()
+        });
+        self
+    }
 }
 
 impl Into<MethodRouter> for OData {
