@@ -44,9 +44,7 @@ public class ModuleContext {
     // Namespace elements from "named" submodules are not re-exported in the parent submodule, so their names must
     // prefix names of any namespace elements they export.
     public void addNamedSubmodule(SnakeCaseName name) {
-        // TODO: Instead of calling escapeReservedKeyword here, create a SanitarySnakeCaseIdentifier class that
-        // ensures the identifier can be used in Rust code.
-        this.submoduleSet.add(new ModuleContext.Submodule(RustConfig.escapeReservedKeyword(name), false));
+        this.addNamedSubmoduleWithFeature(name, null);
     }
 
     // All exported namespace elements from anonymous submodules are re-exported from the parent namespace, like so:
@@ -54,7 +52,13 @@ public class ModuleContext {
     //   pub use name::*;
     // This makes them essentially "invisible" when referring to structs by path.
     public void addAnonymousSubmodule(SnakeCaseName name) {
-        this.submoduleSet.add(new ModuleContext.Submodule(RustConfig.escapeReservedKeyword(name), true));
+        this.submoduleSet.add(new ModuleContext.Submodule(RustConfig.escapeReservedKeyword(name), true, null));
+    }
+
+    public void addNamedSubmoduleWithFeature(SnakeCaseName name, String feature) {
+        // TODO: Instead of calling escapeReservedKeyword here, create a SanitarySnakeCaseIdentifier class that
+        // ensures the identifier can be used in Rust code.
+        this.submoduleSet.add(new ModuleContext.Submodule(RustConfig.escapeReservedKeyword(name), false, feature));
     }
 
     public void registerModel(Map<String, ModuleContext> modules) {
@@ -116,15 +120,17 @@ public class ModuleContext {
     }
 
     static class Submodule implements Comparable<Submodule> {
-        Submodule(SnakeCaseName name, boolean isUsed) {
+        Submodule(SnakeCaseName name, boolean isUsed, String feature) {
             this.snakeCaseName = name;
             this.isUsed = isUsed;
+            this.feature = feature;
         }
 
         String name() { return this.snakeCaseName.toString(); }
 
         SnakeCaseName snakeCaseName;
         boolean isUsed;
+        String feature;
 
         @Override
         public int compareTo(Submodule submodule) {

@@ -176,7 +176,7 @@ public class RedfishCodegen {
 
     private void generateLib() throws IOException {
         ModuleFile<LibContext> file = this.fileFactory.makeLibFile(this.specVersion);
-        file.getContext().moduleContext.addNamedSubmodule(RustConfig.API_BASE_MODULE);
+        file.getContext().moduleContext.addNamedSubmoduleWithFeature(RustConfig.API_BASE_MODULE, "api");
         file.getContext().moduleContext.addNamedSubmodule(RustConfig.MODELS_BASE_MODULE);
         file.getContext().moduleContext.addNamedSubmodule(RustConfig.REGISTRY_BASE_MODULE);
 

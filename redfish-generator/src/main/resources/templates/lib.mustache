@@ -23,6 +23,9 @@ pub use {{name}}::*;
 
 {{/isUsed}}
 {{^isUsed}}
+{{#feature}}
+#[cfg(feature = "{{feature}}")]
+{{/feature}}
 pub mod {{name}};
 {{/isUsed}}
 {{/submodules}}
