@@ -3,6 +3,7 @@ package com.twardyece.dmtf;
 import com.github.mustachejava.Mustache;
 import com.github.mustachejava.MustacheFactory;
 import com.twardyece.dmtf.api.TraitContext;
+import com.twardyece.dmtf.csdl.MetadataRoutingContext;
 import com.twardyece.dmtf.model.context.ModelContext;
 import com.twardyece.dmtf.model.context.factory.IModelContextFactory;
 import com.twardyece.dmtf.registry.RegistryContext;
@@ -16,6 +17,7 @@ public class FileFactory {
     private final Mustache traitTemplate;
     private final Mustache libTemplate;
     private final Mustache registryTemplate;
+    private final Mustache metadataTemplate;
     private final IModelContextFactory[] contextFactories;
     private static final Logger LOGGER = LoggerFactory.getLogger(FileFactory.class);
 
@@ -25,6 +27,7 @@ public class FileFactory {
         this.traitTemplate = factory.compile("templates/api.mustache");
         this.libTemplate = factory.compile("templates/lib.mustache");
         this.registryTemplate = factory.compile("templates/registry.mustache");
+        this.metadataTemplate = factory.compile("templates/metadata.mustache");
         this.contextFactories = contextFactories;
     }
 
@@ -55,5 +58,9 @@ public class FileFactory {
 
     public ModuleFile<RegistryContext> makeRegistryFile(RegistryContext context) {
         return new ModuleFile<>(context.moduleContext.path, context, this.registryTemplate);
+    }
+
+    public ModuleFile<MetadataRoutingContext> makeMetadataRoutingFile(MetadataRoutingContext context) {
+        return new ModuleFile<>(context.module().path, context, this.metadataTemplate);
     }
 }
