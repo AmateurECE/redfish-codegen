@@ -101,8 +101,11 @@ public class RedfishCodegen {
 
         this.traitContextFactory = new TraitContextFactory(this.modelResolver, endpointResolver, traitNameOverrides);
 
-        this.apiGenerationPolicies = new IApiGenerationPolicy[1];
+        this.apiGenerationPolicies = new IApiGenerationPolicy[2];
         this.apiGenerationPolicies[0] = new PatchRequestBodyTypePolicy();
+        List<String> maskedTraits = new ArrayList<>();
+        maskedTraits.add("/redfish/v1/$metadata");
+        this.apiGenerationPolicies[1] = new ApiMaskPolicy(maskedTraits);
 
         // Registry generation
         this.registryFileDiscovery = new RegistryFileDiscovery(Path.of(registryDirectory));

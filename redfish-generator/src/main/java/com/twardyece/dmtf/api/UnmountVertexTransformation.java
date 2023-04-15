@@ -10,11 +10,7 @@ public class UnmountVertexTransformation {
     private static final Pattern collectionMemberPattern = Pattern.compile("^\\{[A-Za-z0-9]+\\}$");
     // If the need to implement additional transformations arises, we can make these methods an interface.
     public boolean check(Graph<ApiEndpoint, DefaultEdge> graph, ApiEndpoint endpoint) {
-        // TODO: Can we get rid of this?
-        //        boolean isCollectionMemberEndpoint = collectionMemberPattern.matcher(endpoint.getName()).matches();
-        boolean hasMultiplePredecessors = 1 < graph.inDegreeOf(endpoint);
-        //        return hasMultiplePredecessors && !isCollectionMemberEndpoint;
-        return hasMultiplePredecessors;
+        return 1 < graph.inDegreeOf(endpoint);
     }
 
     public void perform(Graph<ApiEndpoint, DefaultEdge> graph, ApiEndpoint endpoint, ApiEndpoint mountpoint) {

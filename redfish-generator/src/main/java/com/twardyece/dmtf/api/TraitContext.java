@@ -13,8 +13,9 @@ public class TraitContext implements Comparable<TraitContext> {
     public final RustType rustType;
     public final List<ModelContext> supportingTypes;
     public final List<Operation> operations;
+    public final List<String> mountpoints;
 
-    public TraitContext(RustType rustType, List<ModelContext> supportingTypes, List<Operation> operations) {
+    public TraitContext(RustType rustType, List<ModelContext> supportingTypes, List<Operation> operations, List<String> mountpoints) {
         List<RustType> dependentTypes = new LinkedList<>();
         for (Operation operation : operations) {
             dependentTypes.addAll(operation.getDependentTypes());
@@ -23,6 +24,7 @@ public class TraitContext implements Comparable<TraitContext> {
         this.rustType = rustType;
         this.supportingTypes = supportingTypes;
         this.operations = operations;
+        this.mountpoints = mountpoints;
     }
 
     public String name() { return this.rustType.getName().toString(); }

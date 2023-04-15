@@ -52,7 +52,7 @@ public class TraitContextFactory {
         return new RustType(result.path, result.name);
     }
 
-    public TraitContext makeTraitContext(List<String> path, PathItem pathItem) {
+    public TraitContext makeTraitContext(List<String> path, PathItem pathItem, List<String> mountpoints) {
         EndpointResolver.ApiMatchResult result = getMatch(path);
 
         Map<PathItem.HttpMethod, io.swagger.v3.oas.models.Operation> pathOperations = pathItem.readOperationsMap();
@@ -76,7 +76,7 @@ public class TraitContextFactory {
             }
         }
 
-        TraitContext traitContext = new TraitContext(new RustType(result.path, result.name), supportingTypes, operations);
+        TraitContext traitContext = new TraitContext(new RustType(result.path, result.name), supportingTypes, operations, mountpoints);
         // Supporting types will have their own imports. Make sure to include them in the top-level module context
         for (ModelContext model : traitContext.supportingTypes) {
             traitContext.moduleContext.imports.addAll(model.moduleContext.imports);

@@ -8,7 +8,7 @@
 #
 # CREATED:          01/29/2023
 #
-# LAST EDITED:	    04/13/2023
+# LAST EDITED:	    04/15/2023
 #
 ####
 
@@ -29,10 +29,6 @@ $(SCHEMA_FILE):
 api/openapi/openapi.yaml: $(SCHEMA_FILE)
 	unzip -o -DD -d api $(SCHEMA_FILE)
 	QUILT_PC=api/.pc QUILT_PATCHES=schema-patches quilt push -a
-	sed -i \
-		-e 's@http://redfish.dmtf.org/schemas/v1@.@' \
-		-e 's@http://redfish.dmtf.org/schemas/swordfish/v1@.@' \
-		api/openapi/*.yaml
 
 # Registry
 
@@ -54,9 +50,10 @@ $(JAR_FILE): redfish-generator/pom.xml
 # Code generation
 
 src/lib.rs: api/openapi/openapi.yaml registry/DSP8011_2022.3.pdf $(JAR_FILE)
-	(cd redfish-codegen && java $(JVM_ARGS) -jar ../$(JAR_FILE) \
-		-apiDirectory ../api/openapi \
-		-specVersion $(RELEASE_VERSION) \
-		-registryDirectory ../registry)
+	(cd redfish-codegen && rm -rf src \
+		&& java $(JVM_ARGS) -jar ../$(JAR_FILE) \
+			-apiDirectory ../api/openapi \
+			-specVersion $(RELEASE_VERSION) \
+			-registryDirectory ../registry)
 
 ###############################################################################

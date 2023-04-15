@@ -17,15 +17,15 @@ import java.util.stream.Collectors;
 public class PathMap {
     private Graph<TraitContext, DefaultEdge> graph;
     private TraitContext root;
-    private TraitContextFactory factory;
+    private final TraitContextFactory factory;
     private static final PathNameTranslator pathName = new PathNameTranslator();
 
     public PathMap(HashMap<String, PathItem> paths, TraitContextFactory factory) {
         this.graph = new DefaultDirectedGraph<>(DefaultEdge.class);
         this.factory = factory;
 
-        List<String> sorted = paths.keySet().stream().sorted().collect(Collectors.toList());
-        Map<String, ApiEndpoint> endpoints = new HashMap<>();
+        List<String> sorted = paths.keySet().stream().sorted().toList();
+        Map<ApiEndpoint, List<String>> endpoints = new HashMap<>();
         Graph<ApiEndpoint, DefaultEdge> endpointGraph = new DefaultDirectedGraph<>(DefaultEdge.class);
         ApiEndpoint root = null;
         for (String path : sorted) {
@@ -36,10 +36,10 @@ public class PathMap {
         }
 
         normalizeEndpoints(endpointGraph, root);
-        this.transformToTraitContextGraph(endpointGraph, root);
+        this.transformToTraitContextGraph(endpointGraph, endpoints, root);
     }
 
-    private ApiEndpoint addEndpoint(Graph<ApiEndpoint, DefaultEdge> graph, Map<String, ApiEndpoint> endpoints,
+    private ApiEndpoint addEndpoint(Graph<ApiEndpoint, DefaultEdge> graph, Map<ApiEndpoint, List<String>> endpoints,
                              String path, PathItem pathItem) {
         int endIndex = path.length();
         if ('/' == path.charAt(path.length() - 1)) {
@@ -57,13 +57,16 @@ public class PathMap {
         ApiEndpoint root = null;
         if (!endpoints.isEmpty()) {
             String maxSubstring = "";
-            for (String endpoint : endpoints.keySet()) {
-                if (path.contains(endpoint) && endpoint.length() > maxSubstring.length() && !path.equals(endpoint)) {
-                    maxSubstring = endpoint;
+            ApiEndpoint previous = null;
+            for (Map.Entry<ApiEndpoint, List<String>> endpoint : endpoints.entrySet()) {
+                for (String mountpoint : endpoint.getValue()) {
+                    if (path.contains(mountpoint) && mountpoint.length() > maxSubstring.length() && !path.equals(mountpoint)) {
+                        maxSubstring = mountpoint;
+                        previous = endpoint.getKey();
+                    }
                 }
             }
 
-            ApiEndpoint previous = endpoints.get(maxSubstring);
             if (previous != null && !previous.equals(current)) {
                 graph.addEdge(previous, current);
             }
@@ -71,7 +74,10 @@ public class PathMap {
             root = current;
         }
 
-        endpoints.put(path, current);
+        if (!endpoints.containsKey(current)) {
+            endpoints.put(current, new ArrayList<>());
+        }
+        endpoints.get(current).add(path);
         return root;
     }
 
@@ -91,15 +97,15 @@ public class PathMap {
         }
     }
 
-    private void transformToTraitContextGraph(Graph<ApiEndpoint, DefaultEdge> endpointGraph, ApiEndpoint root) {
+    private void transformToTraitContextGraph(Graph<ApiEndpoint, DefaultEdge> endpointGraph, Map<ApiEndpoint, List<String>> endpoints, ApiEndpoint root) {
         Map<RustType, TraitContext> traits = new HashMap<>();
         this.graph = new DefaultDirectedGraph<>(DefaultEdge.class);
         AllDirectedPaths<ApiEndpoint, DefaultEdge> pathFinder = new AllDirectedPaths<>(endpointGraph);
         Iterator<ApiEndpoint> iterator = new BreadthFirstIterator<>(endpointGraph, root);
         while (iterator.hasNext()) {
             ApiEndpoint endpoint = iterator.next();
-            List<String> path = this.getPath(root, endpoint, pathFinder);
-            TraitContext trait = this.factory.makeTraitContext(path, endpoint.getPathItem());
+            List<String> path = getPath(root, endpoint, pathFinder);
+            TraitContext trait = this.factory.makeTraitContext(path, endpoint.getPathItem(), endpoints.get(endpoint));
             traits.put(trait.rustType, trait);
             this.graph.addVertex(trait);
             if (null == this.root) {
@@ -108,20 +114,23 @@ public class PathMap {
 
             Graphs.predecessorListOf(endpointGraph, endpoint).stream()
                     .map((v) -> {
-                        List<String> predecessor = this.getPath(root, v, pathFinder);
+                        List<String> predecessor = getPath(root, v, pathFinder);
                         return this.factory.getRustType(predecessor);
                     }).forEach((p) -> this.graph.addEdge(traits.get(p), trait));
         }
     }
 
-    private List<String> getPath(ApiEndpoint root, ApiEndpoint endpoint, AllDirectedPaths<ApiEndpoint, DefaultEdge> pathFinder) {
+    private static List<List<String>> getPaths(ApiEndpoint root, ApiEndpoint endpoint, AllDirectedPaths<ApiEndpoint, DefaultEdge> pathFinder) {
         List<GraphPath<ApiEndpoint, DefaultEdge>> paths = pathFinder.getAllPaths(root, endpoint, true, null);
-        List<List<String>> apiPaths = paths.stream()
+        return paths.stream()
                 .map((p) -> p.getVertexList()
                         .stream()
                         .map(ApiEndpoint::getSummary)
                         .collect(Collectors.toList()))
                 .toList();
+    }
+    private static List<String> getPath(ApiEndpoint root, ApiEndpoint endpoint, AllDirectedPaths<ApiEndpoint, DefaultEdge> pathFinder) {
+        List<List<String>> apiPaths = getPaths(root, endpoint, pathFinder);
         if (apiPaths.size() > 1) {
             throw new RuntimeException("Normalization failed. Endpoint " + endpoint + " has multiple paths from root.");
         }

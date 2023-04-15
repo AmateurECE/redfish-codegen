@@ -1,11 +1,6 @@
 package com.twardyece.dmtf.api;
 
-import com.twardyece.dmtf.text.PascalCaseName;
 import io.swagger.v3.oas.models.PathItem;
-import org.checkerframework.checker.units.qual.A;
-
-import java.util.Collection;
-import java.util.List;
 
 class ApiEndpoint implements Comparable<ApiEndpoint> {
     public ApiEndpoint(String name, String summary, PathItem pathItem) {
