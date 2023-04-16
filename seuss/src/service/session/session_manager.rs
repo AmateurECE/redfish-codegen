@@ -44,7 +44,7 @@ where
     S: SessionAuthentication + Clone,
 {
     sessions: Arc<Mutex<HashMap<String, ManagedSession>>>,
-    last_id: i64,
+    last_id: Arc<Mutex<i64>>,
     collection_odata_id: odata_v4::Id,
     timeout: Duration,
     auth_handler: S,
@@ -64,7 +64,7 @@ where
     pub fn with_duration(timeout: Duration, auth_handler: S, collection_id: odata_v4::Id) -> Self {
         Self {
             auth_handler,
-            last_id: 0,
+            last_id: Arc::new(Mutex::new(0)),
             collection_odata_id: collection_id,
             timeout,
             sessions: Arc::new(Mutex::new(HashMap::new())),
@@ -141,8 +141,9 @@ where
             .open_session(user_name.clone(), password)?;
 
         let mut sessions = self.sessions.lock().unwrap();
-        self.last_id += 1;
-        let id = self.last_id.to_string();
+        let mut last_id = self.last_id.lock().unwrap();
+        *last_id += 1;
+        let id = last_id.to_string();
         let token = self.token(&user_name);
 
         let created_session = v1_6_0::Session {
