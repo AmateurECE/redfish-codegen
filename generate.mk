@@ -50,10 +50,9 @@ $(JAR_FILE): redfish-generator/pom.xml
 # Code generation
 
 src/lib.rs: api/openapi/openapi.yaml registry/DSP8011_2022.3.pdf $(JAR_FILE)
-	(cd redfish-codegen && rm -rf src \
-		&& java $(JVM_ARGS) -jar ../$(JAR_FILE) \
-			-apiDirectory ../api/openapi \
-			-specVersion $(RELEASE_VERSION) \
-			-registryDirectory ../registry)
+	(cd redfish-codegen && java $(JVM_ARGS) -jar ../$(JAR_FILE) \
+		-specDirectory ../api \
+		-specVersion $(RELEASE_VERSION) \
+		-registryDirectory ../registry)
 
 ###############################################################################

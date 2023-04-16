@@ -21,6 +21,8 @@ use {{{path}}};
 {{/imports}}
 {{/moduleContext}}
 
+use axum::routing::{self, MethodRouter};
+
 const METADATA_DOCUMENT: &str = "\
 <?xml version=\"1.0\" encoding=\"UTF-8\"?>
 <edmx:Edmx xmlns:edmx=\"http://docs.oasis-open.org/odata/ns/edmx\" Version=\"4.0\">
@@ -39,3 +41,11 @@ const METADATA_DOCUMENT: &str = "\
   </edmx:DataServices>
 </edmx:Edmx>
 ";
+
+pub struct Metadata;
+
+impl Into<MethodRouter> for Metadata {
+    fn into(self) -> MethodRouter {
+        routing::get(|| async { METADATA_DOCUMENT.to_string() })
+    }
+}
