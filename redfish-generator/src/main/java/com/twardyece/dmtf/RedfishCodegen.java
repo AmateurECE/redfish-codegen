@@ -32,7 +32,9 @@ import org.apache.commons.lang3.tuple.ImmutablePair;
 import org.apache.commons.lang3.tuple.Pair;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.xml.sax.SAXException;
 
+import javax.xml.parsers.ParserConfigurationException;
 import java.io.IOException;
 import java.net.URISyntaxException;
 import java.nio.file.Path;
@@ -220,7 +222,7 @@ public class RedfishCodegen {
         registriesFile.generate();
     }
 
-    private void generateRoutingLayer() throws URISyntaxException, IOException {
+    private void generateRoutingLayer() throws URISyntaxException, IOException, ParserConfigurationException, SAXException {
         // Routing module
         CratePath routing = CratePath.parse("crate::" + RustConfig.ROUTING_BASE_MODULE);
         ModuleContext routingModule = new ModuleContext(routing, null);
@@ -230,7 +232,7 @@ public class RedfishCodegen {
         routingFile.generate();
 
         // Metadata router, a submodule of the routing module that handles the OData metadata document.
-        MetadataFileDiscovery fileDiscovery = new MetadataFileDiscovery(this.specDirectory + "/csdl");
+        MetadataFileDiscovery fileDiscovery = new MetadataFileDiscovery(Path.of(this.specDirectory + "/csdl"));
         CratePath path = routing.append(metadata);
         MetadataRoutingContext context = new MetadataRoutingContext(new ModuleContext(path, null),
                 fileDiscovery.getServiceRootVersion(), fileDiscovery.getReferences());
@@ -238,7 +240,7 @@ public class RedfishCodegen {
         file.generate();
     }
 
-    public void generate() throws IOException, URISyntaxException {
+    public void generate() throws IOException, URISyntaxException, ParserConfigurationException, SAXException {
         Map<String, ModuleFile<ModelContext>> models = this.generateModels();
 
         this.generateApis();
@@ -310,7 +312,7 @@ public class RedfishCodegen {
             System.out.println(e.getMessage());
             formatter.printHelp("RedfishCodegen", options);
             System.exit(1);
-        } catch (IOException | URISyntaxException e) {
+        } catch (IOException | URISyntaxException | ParserConfigurationException | SAXException e) {
             throw new RuntimeException(e);
         }
     }
