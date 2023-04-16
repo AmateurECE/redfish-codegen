@@ -24,3 +24,8 @@ pub mod computer_system_detail;
 
 mod session_service;
 pub use session_service::*;
+
+mod redfish_versions;
+pub use redfish_versions::*;
+
+pub use redfish_codegen::routing::*;

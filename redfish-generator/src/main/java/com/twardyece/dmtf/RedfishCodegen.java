@@ -5,8 +5,8 @@ import com.twardyece.dmtf.api.*;
 import com.twardyece.dmtf.api.name.DetailNameMapper;
 import com.twardyece.dmtf.api.name.INameMapper;
 import com.twardyece.dmtf.api.name.NameMapper;
-import com.twardyece.dmtf.csdl.MetadataFileDiscovery;
-import com.twardyece.dmtf.csdl.MetadataRoutingContext;
+import com.twardyece.dmtf.routing.MetadataFileDiscovery;
+import com.twardyece.dmtf.routing.MetadataRoutingContext;
 import com.twardyece.dmtf.identifiers.IdentifierParseError;
 import com.twardyece.dmtf.identifiers.VersionedSchemaIdentifier;
 import com.twardyece.dmtf.model.ModelResolver;
@@ -22,6 +22,7 @@ import com.twardyece.dmtf.registry.RegistryContext;
 import com.twardyece.dmtf.registry.RegistryFactory;
 import com.twardyece.dmtf.registry.RegistryFileDiscovery;
 import com.twardyece.dmtf.registry.Version;
+import com.twardyece.dmtf.routing.ODataContext;
 import com.twardyece.dmtf.text.CaseConversion;
 import com.twardyece.dmtf.text.PascalCaseName;
 import com.twardyece.dmtf.text.SnakeCaseName;
@@ -226,18 +227,29 @@ public class RedfishCodegen {
         // Routing module
         CratePath routing = CratePath.parse("crate::" + RustConfig.ROUTING_BASE_MODULE);
         ModuleContext routingModule = new ModuleContext(routing, null);
+
         SnakeCaseName metadata = new SnakeCaseName("metadata");
         routingModule.addAnonymousSubmodule(metadata);
+
+        SnakeCaseName odata = new SnakeCaseName("odata");
+        routingModule.addAnonymousSubmodule(odata);
+
         ModuleFile<ModuleContext> routingFile = this.fileFactory.makeModuleFile(routingModule);
         routingFile.generate();
 
         // Metadata router, a submodule of the routing module that handles the OData metadata document.
         MetadataFileDiscovery fileDiscovery = new MetadataFileDiscovery(Path.of(this.specDirectory + "/csdl"));
-        CratePath path = routing.append(metadata);
-        MetadataRoutingContext context = new MetadataRoutingContext(new ModuleContext(path, null),
+        CratePath metadataPath = routing.append(metadata);
+        MetadataRoutingContext metadataContext = new MetadataRoutingContext(new ModuleContext(metadataPath, null),
                 fileDiscovery.getServiceRootVersion(), fileDiscovery.getReferences());
-        ModuleFile<MetadataRoutingContext> file = this.fileFactory.makeMetadataRoutingFile(context);
-        file.generate();
+        ModuleFile<MetadataRoutingContext> metadataFile = this.fileFactory.makeMetadataRoutingFile(metadataContext);
+        metadataFile.generate();
+
+        // OData router, a submodule of the routing module that handles the OData service document.
+        CratePath odataPath = routing.append(odata);
+        ODataContext odataContext = new ODataContext(new ModuleContext(odataPath, null));
+        ModuleFile<ODataContext> odataFile = this.fileFactory.makeODataRoutingFile(odataContext);
+        odataFile.generate();
     }
 
     public void generate() throws IOException, URISyntaxException, ParserConfigurationException, SAXException {

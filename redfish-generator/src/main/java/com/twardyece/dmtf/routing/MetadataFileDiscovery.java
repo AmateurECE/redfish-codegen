@@ -1,4 +1,4 @@
-package com.twardyece.dmtf.csdl;
+package com.twardyece.dmtf.routing;
 
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;

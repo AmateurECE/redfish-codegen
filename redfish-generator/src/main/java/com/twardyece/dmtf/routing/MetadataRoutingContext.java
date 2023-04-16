@@ -1,7 +1,6 @@
-package com.twardyece.dmtf.csdl;
+package com.twardyece.dmtf.routing;
 
 import com.twardyece.dmtf.ModuleContext;
-import com.twardyece.dmtf.registry.Version;
 
 import java.net.URI;
 import java.util.List;
