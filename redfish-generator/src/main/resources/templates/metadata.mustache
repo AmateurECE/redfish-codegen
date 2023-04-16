@@ -46,6 +46,6 @@ pub struct Metadata;
 
 impl Into<MethodRouter> for Metadata {
     fn into(self) -> MethodRouter {
-        routing::get(|| async { METADATA_DOCUMENT.to_string() })
+        routing::get(|| async { ([("Content-Type", "application/xml;charset=utf-8")], METADATA_DOCUMENT.to_string()) })
     }
 }
