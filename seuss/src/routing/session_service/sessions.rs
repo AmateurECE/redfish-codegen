@@ -59,7 +59,10 @@ impl Sessions {
                                 session.token = None;
                                 (
                                     StatusCode::CREATED,
-                                    [("X-Auth-Token", token)],
+                                    [
+                                        ("X-Auth-Token", token),
+                                        ("Location", session.odata_id.clone().0),
+                                    ],
                                     Json(session),
                                 )
                                     .into_response()
