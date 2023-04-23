@@ -8,6 +8,7 @@ import com.twardyece.dmtf.model.context.ModelContext;
 import com.twardyece.dmtf.model.context.factory.IModelContextFactory;
 import com.twardyece.dmtf.registry.RegistryContext;
 import com.twardyece.dmtf.routing.ODataContext;
+import com.twardyece.dmtf.routing.RoutingContext;
 import io.swagger.v3.oas.models.media.Schema;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -20,6 +21,7 @@ public class FileFactory {
     private final Mustache registryTemplate;
     private final Mustache metadataTemplate;
     private final Mustache odataTemplate;
+    private final Mustache routeTemplate;
     private final IModelContextFactory[] contextFactories;
     private static final Logger LOGGER = LoggerFactory.getLogger(FileFactory.class);
 
@@ -31,6 +33,7 @@ public class FileFactory {
         this.registryTemplate = factory.compile("templates/registry.mustache");
         this.metadataTemplate = factory.compile("templates/metadata.mustache");
         this.odataTemplate = factory.compile("templates/odata.mustache");
+        this.routeTemplate = factory.compile("templates/route.mustache");
         this.contextFactories = contextFactories;
     }
 
@@ -69,5 +72,9 @@ public class FileFactory {
 
     public ModuleFile<ODataContext> makeODataRoutingFile(ODataContext odataContext) {
         return new ModuleFile<>(odataContext.module().path, odataContext, this.odataTemplate);
+    }
+
+    public ModuleFile<RoutingContext> makeRoutingFile(RoutingContext context) {
+        return new ModuleFile<>(context.moduleContext.path, context, this.odataTemplate);
     }
 }

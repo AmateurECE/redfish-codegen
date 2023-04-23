@@ -1,12 +1,13 @@
 package com.twardyece.dmtf;
 
 import com.github.mustachejava.DefaultMustacheFactory;
-import com.twardyece.dmtf.api.*;
+import com.twardyece.dmtf.api.EndpointResolver;
+import com.twardyece.dmtf.api.PathMap;
+import com.twardyece.dmtf.api.TraitContext;
+import com.twardyece.dmtf.api.TraitContextFactory;
 import com.twardyece.dmtf.api.name.DetailNameMapper;
 import com.twardyece.dmtf.api.name.INameMapper;
 import com.twardyece.dmtf.api.name.NameMapper;
-import com.twardyece.dmtf.routing.MetadataFileDiscovery;
-import com.twardyece.dmtf.routing.MetadataRoutingContext;
 import com.twardyece.dmtf.identifiers.IdentifierParseError;
 import com.twardyece.dmtf.identifiers.VersionedSchemaIdentifier;
 import com.twardyece.dmtf.model.ModelResolver;
@@ -22,7 +23,7 @@ import com.twardyece.dmtf.registry.RegistryContext;
 import com.twardyece.dmtf.registry.RegistryFactory;
 import com.twardyece.dmtf.registry.RegistryFileDiscovery;
 import com.twardyece.dmtf.registry.Version;
-import com.twardyece.dmtf.routing.ODataContext;
+import com.twardyece.dmtf.routing.*;
 import com.twardyece.dmtf.text.CaseConversion;
 import com.twardyece.dmtf.text.PascalCaseName;
 import com.twardyece.dmtf.text.SnakeCaseName;
@@ -57,9 +58,10 @@ public class RedfishCodegen {
     private final OpenAPI document;
     private final FileFactory fileFactory;
     private final RegistryFileDiscovery registryFileDiscovery;
+    private final RoutingContextFactory routingContextFactory;
     static final Logger LOGGER = LoggerFactory.getLogger(RedfishCodegen.class);
 
-    RedfishCodegen(String specDirectory, String specVersion, String registryDirectory) {
+    RedfishCodegen(String specDirectory, String specVersion, String registryDirectory) throws IOException {
         this.specDirectory = specDirectory;
         this.specVersion = specVersion;
 
@@ -116,7 +118,9 @@ public class RedfishCodegen {
         this.apiGenerationPolicies[1] = new ApiMaskPolicy(maskedTraits);
 
         // Registry generation
-        this.registryFileDiscovery = new RegistryFileDiscovery(Path.of(registryDirectory));
+        Path registryDirectoryPath = Path.of(registryDirectory);
+        this.registryFileDiscovery = new RegistryFileDiscovery(registryDirectoryPath);
+        this.routingContextFactory = new RoutingContextFactory(registryDirectoryPath);
 
         this.document = parser.parse();
     }
@@ -145,7 +149,7 @@ public class RedfishCodegen {
         // Generate all the models
         Map<String, ModuleContext> intermediateModules = new HashMap<>();
         for (ModuleFile<ModelContext> modelFile : models.values()) {
-            modelFile.getContext().moduleContext.registerModel(intermediateModules);
+            modelFile.getContext().moduleContext.registerModule(intermediateModules);
             modelFile.generate();
         }
 
@@ -158,7 +162,7 @@ public class RedfishCodegen {
         return models;
     }
 
-    private void generateApis() throws IOException {
+    private List<TraitContext> generateApis() throws IOException {
         PathMap map = new PathMap(this.document.getPaths(), this.traitContextFactory);
         for (IApiGenerationPolicy policy : this.apiGenerationPolicies) {
             policy.apply(map.borrowGraph(), map.getRoot());
@@ -170,7 +174,8 @@ public class RedfishCodegen {
         ModuleContext apiModule = new ModuleContext(apiModulePath, null);
         int pathDepth = apiModulePath.getComponents().size();
 
-        for (TraitContext trait : map.getTraits()) {
+        List<TraitContext> traits = map.getTraits();
+        for (TraitContext trait : traits) {
             if (trait.moduleContext.path.getComponents().size() == pathDepth + 1) {
                 apiModule.addNamedSubmodule(trait.moduleContext.path.getLastComponent());
             }
@@ -180,6 +185,7 @@ public class RedfishCodegen {
 
         ModuleFile<ModuleContext> apiFile = this.fileFactory.makeModuleFile(apiModule);
         apiFile.generate();
+        return traits;
     }
 
     private void generateLib() throws IOException {
@@ -223,7 +229,7 @@ public class RedfishCodegen {
         registriesFile.generate();
     }
 
-    private void generateRoutingLayer() throws URISyntaxException, IOException, ParserConfigurationException, SAXException {
+    private void generateRoutingLayer(List<TraitContext> traits) throws URISyntaxException, IOException, ParserConfigurationException, SAXException {
         // Routing module
         CratePath routing = CratePath.parse("crate::" + RustConfig.ROUTING_BASE_MODULE);
         ModuleContext routingModule = new ModuleContext(routing, null);
@@ -250,12 +256,18 @@ public class RedfishCodegen {
         ODataContext odataContext = new ODataContext(new ModuleContext(odataPath, null));
         ModuleFile<ODataContext> odataFile = this.fileFactory.makeODataRoutingFile(odataContext);
         odataFile.generate();
+
+        for (TraitContext trait : traits) {
+            RoutingContext context = this.routingContextFactory.makeRoutingContext(trait);
+            ModuleFile<RoutingContext> file = this.fileFactory.makeRoutingFile(context);
+            file.generate();
+        }
     }
 
     public void generate() throws IOException, URISyntaxException, ParserConfigurationException, SAXException {
         Map<String, ModuleFile<ModelContext>> models = this.generateModels();
 
-        this.generateApis();
+        List<TraitContext> traits = this.generateApis();
         this.generateLib();
 
         RustType messageType = this.getMessageType(models);
@@ -264,7 +276,7 @@ public class RedfishCodegen {
         RegistryFactory factory = new RegistryFactory(messageType, health);
         this.generateRegistries(factory);
 
-        this.generateRoutingLayer();
+        this.generateRoutingLayer(traits);
     }
 
     private RustType getMessageType(Map<String, ModuleFile<ModelContext>> models) {

@@ -7,7 +7,7 @@ import java.util.stream.Collectors;
 
 public class ModuleContext {
     public CratePath path;
-    private Set<Submodule> submoduleSet;
+    private final Set<Submodule> submoduleSet;
     public Set<Import> imports;
 
     public ModuleContext(CratePath path, List<RustType> dependentTypes) {
@@ -20,6 +20,12 @@ public class ModuleContext {
                 addImports(this.imports, type);
             }
         }
+    }
+
+    public ModuleContext(ModuleContext moduleContext) {
+        this.path = moduleContext.path;
+        this.submoduleSet = moduleContext.submoduleSet;
+        this.imports = moduleContext.imports;
     }
 
     private static void addImports(Set<Import> imports, RustType rustType) {
@@ -61,7 +67,7 @@ public class ModuleContext {
         this.submoduleSet.add(new ModuleContext.Submodule(RustConfig.escapeReservedKeyword(name), false, feature));
     }
 
-    public void registerModel(Map<String, ModuleContext> modules) {
+    public void registerModule(Map<String, ModuleContext> modules) {
         List<SnakeCaseName> components = this.path.getComponents();
         if (null == components || 2 > components.size()) {
             return;
