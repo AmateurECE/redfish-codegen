@@ -23,18 +23,16 @@ public class RoutingContextFactory {
     private static final SnakeCaseName BODY = new SnakeCaseName("body");
     private static final Pattern PRIVILEGE_REGISTRY_PATTERN = Pattern.compile("Redfish_(?<version>[0-9.]+)_PrivilegeRegistry.json");
     private static final CratePath PRIVILEGE_PATH = CratePath.parse("redfish_core::auth");
-    private final Map<RustType, PrivilegeMapping> privilegeMapping;
+    private final Map<PascalCaseName, PrivilegeMapping> privilegeMapping;
     public RoutingContextFactory(Path registryDirectory) throws IOException {
-        Version maxVersion = null;
+        List<Version> versions = new ArrayList<>();
         for (String file : Objects.requireNonNull(registryDirectory.toFile().list())) {
             Matcher matcher = PRIVILEGE_REGISTRY_PATTERN.matcher(file);
             if (matcher.find()) {
-                Version version = Version.parse(matcher.group("version"));
-                if (maxVersion == null || 0 < maxVersion.compareTo(version)) {
-                    maxVersion = version;
-                }
+                versions.add(Version.parse(matcher.group("version")));
             }
         }
+        Version maxVersion = versions.stream().max(Version::compareTo).get();
 
         Path privilegeRegistry = registryDirectory.resolve("Redfish_" + maxVersion + "_PrivilegeRegistry.json");
         JSONObject object = new JSONObject(Files.readString(privilegeRegistry));
@@ -44,10 +42,16 @@ public class RoutingContextFactory {
         for (int i = 0; i < mappings.length(); ++i) {
             JSONObject mapping = mappings.getJSONObject(i);
             PascalCaseName entity = new PascalCaseName(mapping.getString("Entity"));
-            for (String value : mapping.getJSONObject("OperationMap").keySet()) {
+            Map<PathItem.HttpMethod, RustType> operationMap = new HashMap<>();
+            JSONObject operationMapObject = mapping.getJSONObject("OperationMap");
+            for (String value : operationMapObject.keySet()) {
                 PathItem.HttpMethod method = parseMethod(value);
-                
+                String privilege = operationMapObject.getJSONArray(value).getJSONObject(0)
+                        .getJSONArray("Privilege").getString(0);
+                operationMap.put(method, new RustType(PRIVILEGE_PATH, new PascalCaseName(privilege)));
             }
+            // TODO: Read SubordinateOverrides
+            privilegeMapping.put(entity, new PrivilegeMapping(operationMap, null));
         }
     }
 
@@ -99,5 +103,7 @@ public class RoutingContextFactory {
         throw new RuntimeException("Unknown method " + method);
     }
 
-    private record PrivilegeMapping(PathItem.HttpMethod method, RustType privilege) {}
+    private record SubordinateOverrides(RustType entity, Map<PathItem.HttpMethod, RustType> operationMap) {}
+    private record PrivilegeMapping(Map<PathItem.HttpMethod, RustType> operationMap,
+                                    List<SubordinateOverrides> subordinateOverrides) {}
 }
