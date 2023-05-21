@@ -1,4 +1,4 @@
-FROM ubuntu:latest
+FROM docker.io/library/ubuntu:latest
 
 RUN apt update && apt upgrade -y && apt install -y openssl
 
