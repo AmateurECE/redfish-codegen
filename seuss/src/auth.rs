@@ -23,5 +23,8 @@ pub use basic::*;
 mod combination;
 pub use combination::*;
 
+mod none;
+pub use none::*;
+
 #[cfg(feature = "auth-pam")]
 pub mod pam;

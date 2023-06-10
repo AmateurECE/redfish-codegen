@@ -4,12 +4,11 @@ version = "0.1.0"
 edition = "2021"
 
 [dependencies]
-async-trait = { version = "0.1.68", optional = true }
 axum = { version = "0.6.18", default-features = false, optional = true }
 redfish-codegen = { version = "0.2.0", path = "../redfish-codegen" }
 serde = { version = "1.0.164", features = ["derive"], optional = true }
 
 [features]
 default = ["axum", "serde"]
-axum = ["dep:axum", "dep:async-trait"]
+axum = ["dep:axum"]
 serde = ["dep:serde"]

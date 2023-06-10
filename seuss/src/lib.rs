@@ -15,4 +15,6 @@
 // limitations under the License.
 
 pub mod auth;
+pub mod error;
+pub mod middleware;
 pub mod service;
