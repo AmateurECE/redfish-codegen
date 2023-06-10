@@ -89,7 +89,7 @@ where
 
         self.authenticator
             .session_is_valid(token, origin)
-            .map(|user| Some(user))
+            .map(Some)
             .map_err(|error| unauthorized_with_error(error, &self.challenge()))
     }
 

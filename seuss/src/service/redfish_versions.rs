@@ -39,8 +39,8 @@ impl Default for RedfishVersions {
     }
 }
 
-impl Into<MethodRouter> for RedfishVersions {
-    fn into(self) -> MethodRouter {
-        self.0
+impl From<RedfishVersions> for MethodRouter {
+    fn from(val: RedfishVersions) -> Self {
+        val.0
     }
 }

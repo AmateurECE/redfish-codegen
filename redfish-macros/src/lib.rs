@@ -106,7 +106,7 @@ fn field_name_for_index(number: usize) -> Ident {
 fn destructure_fields(fields: &syn::Fields) -> TokenStream {
     match fields {
         syn::Fields::Unnamed(inner_fields) => {
-            let field_names = (0..inner_fields.unnamed.len()).map(|i| field_name_for_index(i));
+            let field_names = (0..inner_fields.unnamed.len()).map(field_name_for_index);
             quote! {
                 ( #(#field_names ,)* )
             }
@@ -127,7 +127,7 @@ fn construct_format(literal: &syn::LitStr) -> TokenStream {
             let digit = &mut cap[1].to_string();
             digit.remove(0);
             // The fields in the Redfish registries are 1-indexed.
-            field_name_for_index(usize::from_str(&digit).unwrap() - 1)
+            field_name_for_index(usize::from_str(digit).unwrap() - 1)
         });
         let format_string = PATTERN.replace_all(&message, "{}");
 

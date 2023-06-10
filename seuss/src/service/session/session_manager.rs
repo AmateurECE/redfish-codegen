@@ -86,7 +86,7 @@ where
     fn token(&self, username: &str) -> String {
         let mut hasher = DefaultHasher::new();
         let noise: u64 = rand::random();
-        let value = noise.to_string() + "|" + &username;
+        let value = noise.to_string() + "|" + username;
         hasher.write(value.as_bytes());
         hasher.finish().to_string()
     }
@@ -131,7 +131,7 @@ where
         let user_name = session.user_name.clone().ok_or_else(|| {
             error::one_message(Base::PropertyMissing("UserName".to_string()).into())
         })?;
-        let password = session.password.clone().ok_or_else(|| {
+        let password = session.password.ok_or_else(|| {
             error::one_message(Base::PropertyMissing("Password".to_string()).into())
         })?;
         let user = self

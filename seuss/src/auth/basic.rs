@@ -64,12 +64,12 @@ where
             .to_string();
 
         let result = general_purpose::STANDARD
-            .decode(&authorization)
+            .decode(authorization)
             .map_err(|_| unauthorized(&self.challenge()))?;
 
         let credentials: Vec<&str> = str::from_utf8(&result)
             .map_err(|_| unauthorized(&self.challenge()))?
-            .split(":")
+            .split(':')
             .collect();
 
         if credentials.len() != 2 {
@@ -78,7 +78,7 @@ where
 
         self.authenticator
             .authenticate(credentials[0].to_string(), credentials[1].to_string())
-            .map(|user| Some(user))
+            .map(Some)
             .map_err(|_| unauthorized(&self.challenge()))
     }
 

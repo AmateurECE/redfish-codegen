@@ -14,14 +14,11 @@ use axum::{
 
 use crate::error::{redfish_map_err, redfish_map_err_no_log};
 
-async fn get_request_parameter<T>(
-    mut parts: &mut Parts,
-    parameter_name: &String,
-) -> Result<T, Response>
+async fn get_request_parameter<T>(parts: &mut Parts, parameter_name: &String) -> Result<T, Response>
 where
     T: FromStr,
 {
-    Path::<HashMap<String, String>>::from_request_parts(&mut parts, &())
+    Path::<HashMap<String, String>>::from_request_parts(parts, &())
         .await
         .map_err(|rejection| rejection.into_response())
         .and_then(|parameters| {
@@ -70,7 +67,7 @@ where
             .map_err(|rejection| rejection.into_response())?;
         let parameter = get_request_parameter::<T2>(&mut parts, &parameter_name)
             .await
-            .and_then(|value| Ok((self.f)(extractor, value)))?
+            .map(|value| (self.f)(extractor, value))?
             .await?;
 
         let mut request = Request::<Body>::from_parts(parts, body);
@@ -95,7 +92,7 @@ where
         let (mut parts, body) = request.into_parts();
         let parameter = get_request_parameter(&mut parts, &parameter_name)
             .await
-            .and_then(|value| Ok((self.f)(value)))?
+            .map(|value| (self.f)(value))?
             .await?;
 
         let mut request = Request::<Body>::from_parts(parts, body);
@@ -215,8 +212,7 @@ where
                 Ok(value) => value,
                 Err(rejection) => return Ok::<_, Infallible>(rejection),
             };
-            let response = inner.call(request).await;
-            response
+            inner.call(request).await
         };
         Box::pin(handler)
     }
