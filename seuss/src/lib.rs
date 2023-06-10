@@ -18,3 +18,6 @@ pub mod auth;
 pub mod error;
 pub mod middleware;
 pub mod service;
+
+#[cfg(feature = "service")]
+pub mod router;
