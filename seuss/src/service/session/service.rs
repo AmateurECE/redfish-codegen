@@ -19,8 +19,7 @@ use redfish_codegen::{
     models::{odata_v4, resource, session_service::v1_1_8},
     registries::base::v1_15_0::Base,
 };
-
-use crate::{auth::AuthenticateRequest, redfish_error};
+use redfish_core::{auth::AuthenticateRequest, error};
 
 #[derive(Clone)]
 pub struct SessionService<S>
@@ -80,13 +79,13 @@ where
     }
 
     fn put(&mut self, _body: v1_1_8::SessionService) -> session_service::SessionServicePutResponse {
-        session_service::SessionServicePutResponse::Default(redfish_error::one_message(
+        session_service::SessionServicePutResponse::Default(error::one_message(
             Base::QueryNotSupportedOnResource.into(),
         ))
     }
 
     fn patch(&mut self, _body: serde_json::Value) -> session_service::SessionServicePatchResponse {
-        session_service::SessionServicePatchResponse::Default(redfish_error::one_message(
+        session_service::SessionServicePatchResponse::Default(error::one_message(
             Base::QueryNotSupportedOnResource.into(),
         ))
     }

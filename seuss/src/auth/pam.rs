@@ -16,12 +16,14 @@
 
 use core::fmt;
 use redfish_codegen::models::redfish;
+use redfish_core::{
+    auth::{insufficient_privilege, AuthenticatedUser},
+    privilege::Role,
+};
 use std::{collections::HashMap, error, ffi::OsStr};
 use users::Group;
 
-use super::{
-    insufficient_privilege, AuthenticatedUser, BasicAuthentication, Role, SessionAuthentication,
-};
+use super::{BasicAuthentication, SessionAuthentication};
 
 const DEFAULT_PAM_SERVICE: &str = "redfish";
 

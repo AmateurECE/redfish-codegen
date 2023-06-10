@@ -14,7 +14,10 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-use crate::auth::{unauthorized, AsPrivilege, AuthenticateRequest, AuthenticatedUser};
+use crate::{
+    auth::{unauthorized, AuthenticateRequest, AuthenticatedUser},
+    privilege::AsPrivilege,
+};
 use axum::{async_trait, extract::FromRequestParts, http::request::Parts, response::Response};
 use std::marker::PhantomData;
 

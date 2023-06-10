@@ -19,6 +19,7 @@ use redfish_codegen::{
     models::{odata_v4, redfish, resource, session::v1_6_0},
     registries::base::v1_15_0::Base,
 };
+use redfish_core::{auth::AuthenticatedUser, error};
 use std::{
     collections::{hash_map::DefaultHasher, HashMap},
     hash::Hasher,
@@ -26,10 +27,7 @@ use std::{
     time::Duration,
 };
 
-use crate::{
-    auth::{AuthenticatedUser, SessionAuthentication, SessionManagement},
-    redfish_error,
-};
+use crate::auth::{SessionAuthentication, SessionManagement};
 
 #[derive(Clone)]
 struct ManagedSession {
@@ -102,16 +100,16 @@ where
         &self,
         token: String,
         origin: Option<String>,
-    ) -> Result<crate::auth::AuthenticatedUser, redfish_codegen::models::redfish::Error> {
+    ) -> Result<AuthenticatedUser, redfish_codegen::models::redfish::Error> {
         let sessions = self.sessions.lock().unwrap();
         let session = sessions
             .get(&token)
-            .ok_or_else(|| redfish_error::one_message(Base::NoValidSession.into()))?;
+            .ok_or_else(|| error::one_message(Base::NoValidSession.into()))?;
         if self.session_is_active()(&session) && session.session.client_origin_ip_address == origin
         {
             Ok(session.user.clone())
         } else {
-            Err(redfish_error::one_message(Base::NoValidSession.into()))
+            Err(error::one_message(Base::NoValidSession.into()))
         }
     }
 
@@ -131,10 +129,10 @@ where
         session: v1_6_0::Session,
     ) -> Result<v1_6_0::Session, redfish::Error> {
         let user_name = session.user_name.clone().ok_or_else(|| {
-            redfish_error::one_message(Base::PropertyMissing("UserName".to_string()).into())
+            error::one_message(Base::PropertyMissing("UserName".to_string()).into())
         })?;
         let password = session.password.clone().ok_or_else(|| {
-            redfish_error::one_message(Base::PropertyMissing("Password".to_string()).into())
+            error::one_message(Base::PropertyMissing("Password".to_string()).into())
         })?;
         let user = self
             .auth_handler
@@ -169,6 +167,6 @@ where
         sessions
             .remove(&token)
             .map(|_| ())
-            .ok_or_else(|| redfish_error::one_message(Base::NoValidSession.into()))
+            .ok_or_else(|| error::one_message(Base::NoValidSession.into()))
     }
 }

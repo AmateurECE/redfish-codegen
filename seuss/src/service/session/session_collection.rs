@@ -23,8 +23,9 @@ use redfish_codegen::{
         session_collection::SessionCollection as SessionCollectionModel,
     },
 };
+use redfish_core::auth::AuthenticateRequest;
 
-use crate::auth::{AuthenticateRequest, SessionManagement};
+use crate::auth::SessionManagement;
 
 #[derive(Clone)]
 pub struct SessionCollection<S, A>

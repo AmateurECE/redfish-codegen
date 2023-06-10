@@ -14,9 +14,10 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+use redfish_core::auth::{AuthenticateRequest, AuthenticatedUser};
+
 use super::{
-    AuthenticateRequest, BasicAuthentication, BasicAuthenticationProxy, SessionAuthenticationProxy,
-    SessionManagement,
+    BasicAuthentication, BasicAuthenticationProxy, SessionAuthenticationProxy, SessionManagement,
 };
 
 #[derive(Clone)]
@@ -50,7 +51,7 @@ where
     fn authenticate_request(
         &self,
         parts: &mut axum::http::request::Parts,
-    ) -> Result<Option<super::AuthenticatedUser>, axum::response::Response> {
+    ) -> Result<Option<AuthenticatedUser>, axum::response::Response> {
         // Try session authentication first, then basic authentication
         self.basic
             .authenticate_request(parts)

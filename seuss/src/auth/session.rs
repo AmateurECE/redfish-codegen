@@ -14,11 +14,11 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-use crate::auth::{AuthenticateRequest, AuthenticatedUser};
 use axum::{http::request::Parts, response::Response};
 use redfish_codegen::models::{odata_v4, redfish, session::v1_6_0};
-
-use super::{unauthorized, unauthorized_with_error};
+use redfish_core::auth::{
+    unauthorized, unauthorized_with_error, AuthenticateRequest, AuthenticatedUser,
+};
 
 pub trait SessionManagement {
     fn session_is_valid(
