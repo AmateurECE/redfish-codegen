@@ -50,7 +50,7 @@ where
     fn authenticate_request(
         &self,
         parts: &mut axum::http::request::Parts,
-    ) -> Result<super::AuthenticatedUser, axum::response::Response> {
+    ) -> Result<Option<super::AuthenticatedUser>, axum::response::Response> {
         // Try session authentication first, then basic authentication
         self.basic
             .authenticate_request(parts)

@@ -65,6 +65,9 @@ pub fn insufficient_privilege() -> redfish::Error {
 }
 
 pub trait AuthenticateRequest {
-    fn authenticate_request(&self, parts: &mut Parts) -> Result<AuthenticatedUser, Response>;
+    fn authenticate_request(
+        &self,
+        parts: &mut Parts,
+    ) -> Result<Option<AuthenticatedUser>, Response>;
     fn challenge(&self) -> Vec<&'static str>;
 }

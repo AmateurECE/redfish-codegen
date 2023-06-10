@@ -51,7 +51,10 @@ impl<B> AuthenticateRequest for BasicAuthenticationProxy<B>
 where
     B: BasicAuthentication + Clone,
 {
-    fn authenticate_request(&self, parts: &mut Parts) -> Result<AuthenticatedUser, Response> {
+    fn authenticate_request(
+        &self,
+        parts: &mut Parts,
+    ) -> Result<Option<AuthenticatedUser>, Response> {
         let authorization = parts
             .headers
             .get("Authorization")
@@ -77,6 +80,7 @@ where
 
         self.authenticator
             .authenticate(credentials[0].to_string(), credentials[1].to_string())
+            .map(|user| Some(user))
             .map_err(|_| unauthorized(&self.challenge()))
     }
 

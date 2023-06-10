@@ -64,7 +64,10 @@ impl<S> AuthenticateRequest for SessionAuthenticationProxy<S>
 where
     S: SessionManagement + Clone,
 {
-    fn authenticate_request(&self, parts: &mut Parts) -> Result<AuthenticatedUser, Response> {
+    fn authenticate_request(
+        &self,
+        parts: &mut Parts,
+    ) -> Result<Option<AuthenticatedUser>, Response> {
         let token = parts
             .headers
             .get("X-Auth-Token")
@@ -86,6 +89,7 @@ where
 
         self.authenticator
             .session_is_valid(token, origin)
+            .map(|user| Some(user))
             .map_err(|error| unauthorized_with_error(error, &self.challenge()))
     }
 

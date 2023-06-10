@@ -14,11 +14,12 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-use crate::auth::{unauthorized, AsPrivilege, AuthenticateRequest};
+use crate::auth::{unauthorized, AsPrivilege, AuthenticateRequest, AuthenticatedUser};
 use axum::{async_trait, extract::FromRequestParts, http::request::Parts, response::Response};
 use std::marker::PhantomData;
 
 pub struct RedfishAuth<T: AsPrivilege> {
+    pub user: Option<AuthenticatedUser>,
     privilege: PhantomData<T>,
 }
 
@@ -32,15 +33,20 @@ where
 
     async fn from_request_parts(parts: &mut Parts, state: &S) -> Result<Self, Self::Rejection> {
         match state.as_ref().authenticate_request(parts) {
-            Ok(user) => {
+            Ok(Some(user)) => {
                 if user.role.privileges().contains(&T::privilege()) {
                     Ok(RedfishAuth::<T> {
+                        user: Some(user),
                         privilege: Default::default(),
                     })
                 } else {
                     Err(unauthorized(&state.as_ref().challenge()))
                 }
             }
+            Ok(None) => Ok(RedfishAuth::<T> {
+                user: None,
+                privilege: Default::default(),
+            }),
             Err(error) => Err(error),
         }
     }
