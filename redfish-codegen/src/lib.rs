@@ -23,4 +23,4 @@ pub mod registries;
 pub mod routing;
 
 /// The version of the Redfish Schema Specification provided by this crate.
-pub const REDFISH_VERSION: &'static str = "2022.3";
+pub const REDFISH_VERSION: &str = "2022.3";

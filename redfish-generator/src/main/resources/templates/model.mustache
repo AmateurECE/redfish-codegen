@@ -68,6 +68,7 @@ pub enum {{name}} {
 {{/variants}}
 }
 
+#[allow(clippy::derivable_impls)]
 impl Default for {{name}} {
      fn default() -> {{name}} {
         {{name}}::{{#defaultVariant}}{{name}}{{#type}}({{type}}::default()){{/type}}{{/defaultVariant}}

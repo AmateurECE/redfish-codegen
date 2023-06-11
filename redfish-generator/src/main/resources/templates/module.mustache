@@ -17,6 +17,7 @@
 
 {{#submodules}}
 {{#isUsed}}
+#[allow(clippy::module_inception)]
 mod {{name}};
 pub use {{name}}::*;
 
