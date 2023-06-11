@@ -125,7 +125,7 @@ public class RedfishCodegen {
         this.document = parser.parse();
     }
 
-    private Map<String, ModuleFile<ModelContext>> generateModels() throws IOException {
+    private Map<String, ModuleFile<ModelContext>> buildModels() {
         // Translate each schema into a ModuleFile with associated model context
         Map<String, ModuleFile<ModelContext>> models = new HashMap<>();
         for (Map.Entry<String, Schema> schema : this.document.getComponents().getSchemas().entrySet()) {
@@ -146,6 +146,10 @@ public class RedfishCodegen {
             policy.apply(models);
         }
 
+        return models;
+    }
+
+    private void generateModels(Map<String, ModuleFile<ModelContext>> models) throws IOException {
         // Generate all the models
         Map<String, ModuleContext> intermediateModules = new HashMap<>();
         for (ModuleFile<ModelContext> modelFile : models.values()) {
@@ -159,7 +163,11 @@ public class RedfishCodegen {
             file.generate();
         }
 
-        return models;
+        ModuleFile<LibContext> file = this.fileFactory.makeLibFile(this.specVersion);
+        file.getContext().moduleContext.addNamedSubmodule(RustConfig.MODELS_BASE_MODULE);
+        file.getContext().moduleContext.addNamedSubmodule(RustConfig.REGISTRY_BASE_MODULE);
+
+        file.generate();
     }
 
     private List<TraitContext> generateApis() throws IOException {
@@ -186,16 +194,6 @@ public class RedfishCodegen {
         ModuleFile<ModuleContext> apiFile = this.fileFactory.makeModuleFile(apiModule);
         apiFile.generate();
         return traits;
-    }
-
-    private void generateLib() throws IOException {
-        ModuleFile<LibContext> file = this.fileFactory.makeLibFile(this.specVersion);
-        file.getContext().moduleContext.addNamedSubmoduleWithFeature(RustConfig.API_BASE_MODULE, "api");
-        file.getContext().moduleContext.addNamedSubmodule(RustConfig.MODELS_BASE_MODULE);
-        file.getContext().moduleContext.addNamedSubmodule(RustConfig.REGISTRY_BASE_MODULE);
-        file.getContext().moduleContext.addNamedSubmoduleWithFeature(RustConfig.ROUTING_BASE_MODULE, "routing");
-
-        file.generate();
     }
 
     private void generateRegistries(RegistryFactory factory) throws IOException {
@@ -264,19 +262,21 @@ public class RedfishCodegen {
         }
     }
 
-    public void generate() throws IOException, URISyntaxException, ParserConfigurationException, SAXException {
-        Map<String, ModuleFile<ModelContext>> models = this.generateModels();
+    public void generate(String component) throws IOException, URISyntaxException, ParserConfigurationException, SAXException {
+        Map<String, ModuleFile<ModelContext>> models = this.buildModels();
+        switch (component) {
+            case "models": {
+                this.generateModels(models);
 
-        List<TraitContext> traits = this.generateApis();
-        this.generateLib();
+                RustType messageType = this.getMessageType(models);
+                RustType health = this.modelResolver.resolvePath("#/components/schemas/Resource_Health");
+                RegistryFactory factory = new RegistryFactory(messageType, health);
+                this.generateRegistries(factory);
 
-        RustType messageType = this.getMessageType(models);
-        // TODO: Feels like this should need to be specified as a whole path: #/components/schemas/Resource_Health
-        RustType health = this.modelResolver.resolvePath("Resource_Health");
-        RegistryFactory factory = new RegistryFactory(messageType, health);
-        this.generateRegistries(factory);
-
-        this.generateRoutingLayer(traits);
+                break;
+            }
+            default: throw new RuntimeException("Unknown component " + component);
+        }
     }
 
     private RustType getMessageType(Map<String, ModuleFile<ModelContext>> models) {
@@ -314,11 +314,14 @@ public class RedfishCodegen {
         Option registryDirectoryOption = new Option("registryDirectory", true,
                 "Directory containing registry definition files");
         registryDirectoryOption.setRequired(true);
+        Option componentOption = new Option("component", true, "Data model component to generate");
+        componentOption.setRequired(true);
 
         Options options = new Options();
         options.addOption(specDirectoryOption);
         options.addOption(crateDirectoryOption);
         options.addOption(registryDirectoryOption);
+        options.addOption(componentOption);
 
         CommandLineParser parser = new DefaultParser();
         HelpFormatter formatter = new HelpFormatter();
@@ -329,9 +332,10 @@ public class RedfishCodegen {
             String specDirectory = command.getOptionValue("specDirectory");
             String specVersion = command.getOptionValue("specVersion");
             String registryDirectory = command.getOptionValue("registryDirectory");
+            String component = command.getOptionValue("component");
 
             RedfishCodegen codegen = new RedfishCodegen(specDirectory, specVersion, registryDirectory);
-            codegen.generate();
+            codegen.generate(component);
         } catch (ParseException e) {
             System.out.println(e.getMessage());
             formatter.printHelp("RedfishCodegen", options);

@@ -15,12 +15,8 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#[cfg(feature = "api")]
-pub mod api;
 pub mod models;
 pub mod registries;
-#[cfg(feature = "routing")]
-pub mod routing;
 
 /// The version of the Redfish Schema Specification provided by this crate.
 pub const REDFISH_VERSION: &str = "2022.3";
