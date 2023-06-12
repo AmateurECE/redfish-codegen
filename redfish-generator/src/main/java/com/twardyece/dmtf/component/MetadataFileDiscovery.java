@@ -1,4 +1,4 @@
-package com.twardyece.dmtf.routing;
+package com.twardyece.dmtf.component;
 
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;

@@ -1,4 +1,4 @@
-package com.twardyece.dmtf.routing;
+package com.twardyece.dmtf.component;
 
 import com.twardyece.dmtf.CratePath;
 import com.twardyece.dmtf.RustConfig;

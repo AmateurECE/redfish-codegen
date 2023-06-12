@@ -1,4 +1,4 @@
-package com.twardyece.dmtf.routing;
+package com.twardyece.dmtf.component;
 
 import io.swagger.v3.oas.models.PathItem;
 

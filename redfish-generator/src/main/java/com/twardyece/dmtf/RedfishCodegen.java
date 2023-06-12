@@ -1,10 +1,10 @@
 package com.twardyece.dmtf;
 
 import com.github.mustachejava.DefaultMustacheFactory;
-import com.twardyece.dmtf.routing.*;
-import com.twardyece.dmtf.routing.name.DetailNameMapper;
-import com.twardyece.dmtf.routing.name.INameMapper;
-import com.twardyece.dmtf.routing.name.NameMapper;
+import com.twardyece.dmtf.component.*;
+import com.twardyece.dmtf.component.name.DetailNameMapper;
+import com.twardyece.dmtf.component.name.INameMapper;
+import com.twardyece.dmtf.component.name.NameMapper;
 import com.twardyece.dmtf.identifiers.IdentifierParseError;
 import com.twardyece.dmtf.identifiers.VersionedSchemaIdentifier;
 import com.twardyece.dmtf.model.ModelResolver;

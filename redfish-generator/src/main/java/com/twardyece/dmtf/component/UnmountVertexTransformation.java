@@ -1,4 +1,4 @@
-package com.twardyece.dmtf.routing;
+package com.twardyece.dmtf.component;
 
 import org.jgrapht.Graph;
 import org.jgrapht.graph.DefaultEdge;

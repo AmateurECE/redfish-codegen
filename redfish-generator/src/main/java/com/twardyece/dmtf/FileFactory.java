@@ -2,12 +2,12 @@ package com.twardyece.dmtf;
 
 import com.github.mustachejava.Mustache;
 import com.github.mustachejava.MustacheFactory;
-import com.twardyece.dmtf.routing.TraitContext;
-import com.twardyece.dmtf.routing.MetadataRoutingContext;
+import com.twardyece.dmtf.component.TraitContext;
+import com.twardyece.dmtf.component.MetadataRoutingContext;
 import com.twardyece.dmtf.model.context.ModelContext;
 import com.twardyece.dmtf.model.context.factory.IModelContextFactory;
 import com.twardyece.dmtf.registry.RegistryContext;
-import com.twardyece.dmtf.routing.ODataContext;
+import com.twardyece.dmtf.component.ODataContext;
 import io.swagger.v3.oas.models.media.Schema;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -26,7 +26,7 @@ public class FileFactory {
     public FileFactory(MustacheFactory factory, IModelContextFactory[] contextFactories) {
         this.modelTemplate = factory.compile("templates/model.mustache");
         this.moduleTemplate = factory.compile("templates/module.mustache");
-        this.traitTemplate = factory.compile("templates/api.mustache");
+        this.traitTemplate = factory.compile("templates/component.mustache");
         this.libTemplate = factory.compile("templates/lib.mustache");
         this.registryTemplate = factory.compile("templates/registry.mustache");
         this.metadataTemplate = factory.compile("templates/metadata.mustache");

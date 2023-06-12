@@ -1,7 +1,7 @@
-package com.twardyece.dmtf.routing;
+package com.twardyece.dmtf.component;
 
 import com.twardyece.dmtf.CratePath;
-import com.twardyece.dmtf.routing.name.INameMapper;
+import com.twardyece.dmtf.component.name.INameMapper;
 import com.twardyece.dmtf.text.PascalCaseName;
 import com.twardyece.dmtf.text.SnakeCaseName;
 

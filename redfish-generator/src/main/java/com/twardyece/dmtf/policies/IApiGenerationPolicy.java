@@ -1,6 +1,6 @@
 package com.twardyece.dmtf.policies;
 
-import com.twardyece.dmtf.routing.TraitContext;
+import com.twardyece.dmtf.component.TraitContext;
 import org.jgrapht.Graph;
 import org.jgrapht.graph.DefaultEdge;
 
