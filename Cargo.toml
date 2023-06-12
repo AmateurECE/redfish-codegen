@@ -1,5 +1,6 @@
 [workspace]
 members = [
+        "redfish-axum",
         "redfish-core",
         "redfish-codegen",
         "redfish-macros",

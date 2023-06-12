@@ -8,7 +8,7 @@
 #
 # CREATED:          01/29/2023
 #
-# LAST EDITED:	    06/10/2023
+# LAST EDITED:	    06/11/2023
 #
 ####
 
@@ -35,6 +35,9 @@ models: redfish-codegen/src/lib.rs
 
 redfish-codegen/src/lib.rs: $(CODEGEN_DEPENDENCIES)
 	$(call redfish_codegen,redfish-codegen,models)
+
+redfish-axum/src/lib.rs: $(CODEGEN_DEPENDENCIES)
+	$(call redfish_codegen,redfish-axum,routers)
 
 # Schema
 

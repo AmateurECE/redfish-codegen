@@ -170,7 +170,7 @@ public class RedfishCodegen {
         file.generate();
     }
 
-    private List<TraitContext> generateApis() throws IOException {
+    private List<TraitContext> generateRouting() throws IOException {
         PathMap map = new PathMap(this.document.getPaths(), this.traitContextFactory);
         for (IApiGenerationPolicy policy : this.apiGenerationPolicies) {
             policy.apply(map.borrowGraph(), map.getRoot());
@@ -227,41 +227,6 @@ public class RedfishCodegen {
         registriesFile.generate();
     }
 
-    private void generateRoutingLayer(List<TraitContext> traits) throws URISyntaxException, IOException, ParserConfigurationException, SAXException {
-        // Routing module
-        CratePath routing = CratePath.parse("crate::" + RustConfig.ROUTING_BASE_MODULE);
-        ModuleContext routingModule = new ModuleContext(routing, null);
-
-        SnakeCaseName metadata = new SnakeCaseName("metadata");
-        routingModule.addAnonymousSubmodule(metadata);
-
-        SnakeCaseName odata = new SnakeCaseName("odata");
-        routingModule.addAnonymousSubmodule(odata);
-
-        ModuleFile<ModuleContext> routingFile = this.fileFactory.makeModuleFile(routingModule);
-        routingFile.generate();
-
-        // Metadata router, a submodule of the routing module that handles the OData metadata document.
-        MetadataFileDiscovery fileDiscovery = new MetadataFileDiscovery(Path.of(this.specDirectory + "/csdl"));
-        CratePath metadataPath = routing.append(metadata);
-        MetadataRoutingContext metadataContext = new MetadataRoutingContext(new ModuleContext(metadataPath, null),
-                fileDiscovery.getServiceRootVersion(), fileDiscovery.getReferences());
-        ModuleFile<MetadataRoutingContext> metadataFile = this.fileFactory.makeMetadataRoutingFile(metadataContext);
-        metadataFile.generate();
-
-        // OData router, a submodule of the routing module that handles the OData service document.
-        CratePath odataPath = routing.append(odata);
-        ODataContext odataContext = new ODataContext(new ModuleContext(odataPath, null));
-        ModuleFile<ODataContext> odataFile = this.fileFactory.makeODataRoutingFile(odataContext);
-        odataFile.generate();
-
-        for (TraitContext trait : traits) {
-            RoutingContext context = this.routingContextFactory.makeRoutingContext(trait);
-            ModuleFile<RoutingContext> file = this.fileFactory.makeRoutingFile(context);
-            file.generate();
-        }
-    }
-
     public void generate(String component) throws IOException, URISyntaxException, ParserConfigurationException, SAXException {
         Map<String, ModuleFile<ModelContext>> models = this.buildModels();
         switch (component) {
@@ -273,6 +238,10 @@ public class RedfishCodegen {
                 RegistryFactory factory = new RegistryFactory(messageType, health);
                 this.generateRegistries(factory);
 
+                break;
+            }
+            case "routing": {
+                this.generateRouting();
                 break;
             }
             default: throw new RuntimeException("Unknown component " + component);
