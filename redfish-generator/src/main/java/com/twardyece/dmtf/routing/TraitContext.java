@@ -1,4 +1,4 @@
-package com.twardyece.dmtf.api;
+package com.twardyece.dmtf.routing;
 
 import com.twardyece.dmtf.ModuleContext;
 import com.twardyece.dmtf.RustType;

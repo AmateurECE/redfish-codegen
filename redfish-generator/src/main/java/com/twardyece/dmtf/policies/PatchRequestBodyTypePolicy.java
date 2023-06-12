@@ -1,16 +1,14 @@
 package com.twardyece.dmtf.policies;
 
 import com.twardyece.dmtf.CratePath;
-import com.twardyece.dmtf.ModuleFile;
 import com.twardyece.dmtf.RustType;
-import com.twardyece.dmtf.api.TraitContext;
+import com.twardyece.dmtf.routing.TraitContext;
 import com.twardyece.dmtf.text.PascalCaseName;
 import org.jgrapht.Graph;
 import org.jgrapht.graph.DefaultEdge;
 import org.jgrapht.traverse.DepthFirstIterator;
 
 import java.util.Iterator;
-import java.util.List;
 import java.util.Optional;
 
 public class PatchRequestBodyTypePolicy implements IApiGenerationPolicy {

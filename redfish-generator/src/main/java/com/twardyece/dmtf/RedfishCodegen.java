@@ -1,13 +1,10 @@
 package com.twardyece.dmtf;
 
 import com.github.mustachejava.DefaultMustacheFactory;
-import com.twardyece.dmtf.api.EndpointResolver;
-import com.twardyece.dmtf.api.PathMap;
-import com.twardyece.dmtf.api.TraitContext;
-import com.twardyece.dmtf.api.TraitContextFactory;
-import com.twardyece.dmtf.api.name.DetailNameMapper;
-import com.twardyece.dmtf.api.name.INameMapper;
-import com.twardyece.dmtf.api.name.NameMapper;
+import com.twardyece.dmtf.routing.*;
+import com.twardyece.dmtf.routing.name.DetailNameMapper;
+import com.twardyece.dmtf.routing.name.INameMapper;
+import com.twardyece.dmtf.routing.name.NameMapper;
 import com.twardyece.dmtf.identifiers.IdentifierParseError;
 import com.twardyece.dmtf.identifiers.VersionedSchemaIdentifier;
 import com.twardyece.dmtf.model.ModelResolver;
@@ -23,7 +20,6 @@ import com.twardyece.dmtf.registry.RegistryContext;
 import com.twardyece.dmtf.registry.RegistryFactory;
 import com.twardyece.dmtf.registry.RegistryFileDiscovery;
 import com.twardyece.dmtf.registry.Version;
-import com.twardyece.dmtf.routing.*;
 import com.twardyece.dmtf.text.CaseConversion;
 import com.twardyece.dmtf.text.PascalCaseName;
 import com.twardyece.dmtf.text.SnakeCaseName;

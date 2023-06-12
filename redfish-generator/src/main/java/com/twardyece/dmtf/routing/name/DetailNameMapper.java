@@ -1,4 +1,4 @@
-package com.twardyece.dmtf.api.name;
+package com.twardyece.dmtf.routing.name;
 
 import com.twardyece.dmtf.text.CaseConversion;
 import com.twardyece.dmtf.text.SnakeCaseName;
