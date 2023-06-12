@@ -58,7 +58,6 @@ public class RedfishCodegen {
     private final OpenAPI document;
     private final FileFactory fileFactory;
     private final RegistryFileDiscovery registryFileDiscovery;
-    private final RoutingContextFactory routingContextFactory;
     static final Logger LOGGER = LoggerFactory.getLogger(RedfishCodegen.class);
 
     RedfishCodegen(String specDirectory, String specVersion, String registryDirectory) throws IOException {
@@ -120,7 +119,6 @@ public class RedfishCodegen {
         // Registry generation
         Path registryDirectoryPath = Path.of(registryDirectory);
         this.registryFileDiscovery = new RegistryFileDiscovery(registryDirectoryPath);
-        this.routingContextFactory = new RoutingContextFactory(registryDirectoryPath);
 
         this.document = parser.parse();
     }
@@ -170,29 +168,43 @@ public class RedfishCodegen {
         file.generate();
     }
 
-    private List<TraitContext> generateRouting() throws IOException {
+    private List<TraitContext> generateRouting() throws IOException, URISyntaxException, ParserConfigurationException, SAXException {
+        ModuleFile<LibContext> libFile = this.fileFactory.makeLibFile(this.specVersion);
+
+        // Metadata router, a submodule of the routing module that handles the OData metadata document.
+        MetadataFileDiscovery fileDiscovery = new MetadataFileDiscovery(Path.of(this.specDirectory + "/csdl"));
+        SnakeCaseName metadata = new SnakeCaseName("metadata");
+        CratePath metadataPath = CratePath.parse("crate::" + metadata);
+        MetadataRoutingContext metadataContext = new MetadataRoutingContext(new ModuleContext(metadataPath, null),
+        fileDiscovery.getServiceRootVersion(), fileDiscovery.getReferences());
+        ModuleFile<MetadataRoutingContext> metadataFile = this.fileFactory.makeMetadataRoutingFile(metadataContext);
+        metadataFile.generate();
+        libFile.getContext().moduleContext.addNamedSubmodule(metadata);
+
+        // OData router, a submodule of the routing module that handles the OData service document.
+        SnakeCaseName odata = new SnakeCaseName("odata");
+        CratePath odataPath = CratePath.parse("crate::" + odata);
+        ODataContext odataContext = new ODataContext(new ModuleContext(odataPath, null));
+        ModuleFile<ODataContext> odataFile = this.fileFactory.makeODataRoutingFile(odataContext);
+        odataFile.generate();
+        libFile.getContext().moduleContext.addNamedSubmodule(odata);
+
         PathMap map = new PathMap(this.document.getPaths(), this.traitContextFactory);
         for (IApiGenerationPolicy policy : this.apiGenerationPolicies) {
             policy.apply(map.borrowGraph(), map.getRoot());
         }
 
-        List<SnakeCaseName> apiModulePathComponents = new ArrayList<>();
-        apiModulePathComponents.add(RustConfig.API_BASE_MODULE);
-        CratePath apiModulePath = CratePath.crateLocal(apiModulePathComponents);
-        ModuleContext apiModule = new ModuleContext(apiModulePath, null);
-        int pathDepth = apiModulePath.getComponents().size();
-
+        int pathDepth = libFile.getContext().moduleContext.path.getComponents().size();
         List<TraitContext> traits = map.getTraits();
         for (TraitContext trait : traits) {
             if (trait.moduleContext.path.getComponents().size() == pathDepth + 1) {
-                apiModule.addNamedSubmodule(trait.moduleContext.path.getLastComponent());
+                libFile.getContext().moduleContext.addNamedSubmodule(trait.moduleContext.path.getLastComponent());
             }
-            ModuleFile<TraitContext> file = this.fileFactory.makeTraitFile(trait);
-            file.generate();
+            ModuleFile<TraitContext> traitFile = this.fileFactory.makeTraitFile(trait);
+            traitFile.generate();
         }
 
-        ModuleFile<ModuleContext> apiFile = this.fileFactory.makeModuleFile(apiModule);
-        apiFile.generate();
+        libFile.generate();
         return traits;
     }
 

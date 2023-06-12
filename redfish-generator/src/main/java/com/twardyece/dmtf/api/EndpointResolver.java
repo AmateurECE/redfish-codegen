@@ -37,7 +37,6 @@ public class EndpointResolver {
 
     class ApiMatchResult {
         public ApiMatchResult(List<SnakeCaseName> path) {
-            path.add(0, RustConfig.API_BASE_MODULE);
             this.path = CratePath.crateLocal(path);
             this.name = new PascalCaseName(path.get(path.size() - 1));
         }
