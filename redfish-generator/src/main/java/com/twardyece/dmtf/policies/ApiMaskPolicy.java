@@ -1,6 +1,6 @@
 package com.twardyece.dmtf.policies;
 
-import com.twardyece.dmtf.component.TraitContext;
+import com.twardyece.dmtf.component.ComponentContext;
 import org.jgrapht.Graph;
 import org.jgrapht.graph.DefaultEdge;
 import org.jgrapht.traverse.BreadthFirstIterator;
@@ -17,17 +17,17 @@ public class ApiMaskPolicy implements IApiGenerationPolicy {
     }
 
     @Override
-    public void apply(Graph<TraitContext, DefaultEdge> graph, TraitContext root) {
-        Iterator<TraitContext> iterator = new BreadthFirstIterator<>(graph, root);
-        List<TraitContext> maskedTraitContexts = new ArrayList<>();
+    public void apply(Graph<ComponentContext, DefaultEdge> graph, ComponentContext root) {
+        Iterator<ComponentContext> iterator = new BreadthFirstIterator<>(graph, root);
+        List<ComponentContext> maskedComponentContexts = new ArrayList<>();
         while (iterator.hasNext()) {
-            TraitContext context = iterator.next();
+            ComponentContext context = iterator.next();
             if (context.mountpoints.stream().anyMatch(this.maskedTraits::contains)) {
-                maskedTraitContexts.add(context);
+                maskedComponentContexts.add(context);
             }
         }
 
-        for (TraitContext context : maskedTraitContexts) {
+        for (ComponentContext context : maskedComponentContexts) {
             graph.removeVertex(context);
         }
     }

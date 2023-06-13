@@ -2,7 +2,7 @@ package com.twardyece.dmtf;
 
 import com.github.mustachejava.Mustache;
 import com.github.mustachejava.MustacheFactory;
-import com.twardyece.dmtf.component.TraitContext;
+import com.twardyece.dmtf.component.ComponentContext;
 import com.twardyece.dmtf.component.MetadataRoutingContext;
 import com.twardyece.dmtf.model.context.ModelContext;
 import com.twardyece.dmtf.model.context.factory.IModelContextFactory;
@@ -49,7 +49,7 @@ public class FileFactory {
         return new ModuleFile<>(context.path, context, this.moduleTemplate);
     }
 
-    public ModuleFile<TraitContext> makeTraitFile(TraitContext trait) {
+    public ModuleFile<ComponentContext> makeTraitFile(ComponentContext trait) {
         return new ModuleFile<>(trait.moduleContext.path, trait, this.traitTemplate);
     }
 

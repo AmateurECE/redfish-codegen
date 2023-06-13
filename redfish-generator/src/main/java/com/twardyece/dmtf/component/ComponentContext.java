@@ -8,14 +8,14 @@ import com.twardyece.dmtf.text.SnakeCaseName;
 import java.util.LinkedList;
 import java.util.List;
 
-public class TraitContext implements Comparable<TraitContext> {
+public class ComponentContext implements Comparable<ComponentContext> {
     public final ModuleContext moduleContext;
     public final RustType rustType;
     public final List<ModelContext> supportingTypes;
     public final List<Operation> operations;
     public final List<String> mountpoints;
 
-    public TraitContext(RustType rustType, List<ModelContext> supportingTypes, List<Operation> operations, List<String> mountpoints) {
+    public ComponentContext(RustType rustType, List<ModelContext> supportingTypes, List<Operation> operations, List<String> mountpoints) {
         List<RustType> dependentTypes = new LinkedList<>();
         for (Operation operation : operations) {
             dependentTypes.addAll(operation.getDependentTypes());
@@ -84,7 +84,7 @@ public class TraitContext implements Comparable<TraitContext> {
     public String toString() { return this.rustType.toString(); }
 
     @Override
-    public int compareTo(TraitContext o) { return this.rustType.compareTo(o.rustType); }
+    public int compareTo(ComponentContext o) { return this.rustType.compareTo(o.rustType); }
 
     @Override
     public int hashCode() {
@@ -93,8 +93,8 @@ public class TraitContext implements Comparable<TraitContext> {
 
     @Override
     public boolean equals(Object o) {
-        if (o instanceof TraitContext) {
-            return this.rustType.equals(((TraitContext) o).rustType);
+        if (o instanceof ComponentContext) {
+            return this.rustType.equals(((ComponentContext) o).rustType);
         } else {
             return false;
         }

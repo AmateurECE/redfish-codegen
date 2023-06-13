@@ -48,7 +48,7 @@ public class RedfishCodegen {
     private final String specVersion;
     private final String specDirectory;
     private final ModelResolver modelResolver;
-    private final TraitContextFactory traitContextFactory;
+    private final ComponentContextFactory componentContextFactory;
     private final IModelGenerationPolicy[] modelGenerationPolicies;
     private final IApiGenerationPolicy[] apiGenerationPolicies;
     private final OpenAPI document;
@@ -104,7 +104,7 @@ public class RedfishCodegen {
         Map<PascalCaseName, PascalCaseName> traitNameOverrides = new HashMap<>();
         traitNameOverrides.put(new PascalCaseName("V1"), new PascalCaseName("ServiceRoot"));
 
-        this.traitContextFactory = new TraitContextFactory(this.modelResolver, endpointResolver, traitNameOverrides);
+        this.componentContextFactory = new ComponentContextFactory(this.modelResolver, endpointResolver, traitNameOverrides);
 
         this.apiGenerationPolicies = new IApiGenerationPolicy[2];
         this.apiGenerationPolicies[0] = new PatchRequestBodyTypePolicy();
@@ -164,7 +164,7 @@ public class RedfishCodegen {
         file.generate();
     }
 
-    private List<TraitContext> generateRouting() throws IOException, URISyntaxException, ParserConfigurationException, SAXException {
+    private List<ComponentContext> generateRouting() throws IOException, URISyntaxException, ParserConfigurationException, SAXException {
         ModuleFile<LibContext> libFile = this.fileFactory.makeLibFile(this.specVersion);
 
         // Metadata router, a submodule of the routing module that handles the OData metadata document.
@@ -185,18 +185,18 @@ public class RedfishCodegen {
         odataFile.generate();
         libFile.getContext().moduleContext.addNamedSubmodule(odata);
 
-        PathMap map = new PathMap(this.document.getPaths(), this.traitContextFactory);
+        PathMap map = new PathMap(this.document.getPaths(), this.componentContextFactory);
         for (IApiGenerationPolicy policy : this.apiGenerationPolicies) {
             policy.apply(map.borrowGraph(), map.getRoot());
         }
 
         int pathDepth = libFile.getContext().moduleContext.path.getComponents().size();
-        List<TraitContext> traits = map.getTraits();
-        for (TraitContext trait : traits) {
+        List<ComponentContext> traits = map.getTraits();
+        for (ComponentContext trait : traits) {
             if (trait.moduleContext.path.getComponents().size() == pathDepth + 1) {
                 libFile.getContext().moduleContext.addNamedSubmodule(trait.moduleContext.path.getLastComponent());
             }
-            ModuleFile<TraitContext> traitFile = this.fileFactory.makeTraitFile(trait);
+            ModuleFile<ComponentContext> traitFile = this.fileFactory.makeTraitFile(trait);
             traitFile.generate();
         }
 

@@ -2,7 +2,7 @@ package com.twardyece.dmtf.policies;
 
 import com.twardyece.dmtf.CratePath;
 import com.twardyece.dmtf.RustType;
-import com.twardyece.dmtf.component.TraitContext;
+import com.twardyece.dmtf.component.ComponentContext;
 import com.twardyece.dmtf.text.PascalCaseName;
 import org.jgrapht.Graph;
 import org.jgrapht.graph.DefaultEdge;
@@ -17,18 +17,18 @@ public class PatchRequestBodyTypePolicy implements IApiGenerationPolicy {
     public PatchRequestBodyTypePolicy() {}
 
     @Override
-    public void apply(Graph<TraitContext, DefaultEdge> graph, TraitContext root) {
+    public void apply(Graph<ComponentContext, DefaultEdge> graph, ComponentContext root) {
         // Translate the requestBody parameter for each trait that has a patch operation to serde_json::Value.
-        Iterator<TraitContext> iterator = new DepthFirstIterator<>(graph, root);
+        Iterator<ComponentContext> iterator = new DepthFirstIterator<>(graph, root);
         while (iterator.hasNext()) {
-            TraitContext trait = iterator.next();
-            Optional<TraitContext.Operation> patch = trait.operations
+            ComponentContext trait = iterator.next();
+            Optional<ComponentContext.Operation> patch = trait.operations
                     .stream()
                     .filter((o) -> "patch".equals(o.name))
                     .findFirst();
 
             if (patch.isPresent()) {
-                TraitContext.Parameter requestBody = patch.get().parameters
+                ComponentContext.Parameter requestBody = patch.get().parameters
                         .stream()
                         .filter((p) -> "body".equals(p.name()))
                         .findFirst()

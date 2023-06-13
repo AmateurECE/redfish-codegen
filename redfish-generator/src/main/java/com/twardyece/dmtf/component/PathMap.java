@@ -15,12 +15,12 @@ import java.util.*;
 import java.util.stream.Collectors;
 
 public class PathMap {
-    private Graph<TraitContext, DefaultEdge> graph;
-    private TraitContext root;
-    private final TraitContextFactory factory;
+    private Graph<ComponentContext, DefaultEdge> graph;
+    private ComponentContext root;
+    private final ComponentContextFactory factory;
     private static final PathNameTranslator pathName = new PathNameTranslator();
 
-    public PathMap(HashMap<String, PathItem> paths, TraitContextFactory factory) {
+    public PathMap(HashMap<String, PathItem> paths, ComponentContextFactory factory) {
         this.graph = new DefaultDirectedGraph<>(DefaultEdge.class);
         this.factory = factory;
 
@@ -81,14 +81,14 @@ public class PathMap {
     }
 
     private void transformToTraitContextGraph(Graph<ApiEndpoint, DefaultEdge> endpointGraph, Map<ApiEndpoint, List<String>> endpoints, ApiEndpoint root) {
-        Map<RustType, TraitContext> traits = new HashMap<>();
+        Map<RustType, ComponentContext> traits = new HashMap<>();
         this.graph = new DefaultDirectedGraph<>(DefaultEdge.class);
         AllDirectedPaths<ApiEndpoint, DefaultEdge> pathFinder = new AllDirectedPaths<>(endpointGraph);
         Iterator<ApiEndpoint> iterator = new BreadthFirstIterator<>(endpointGraph, root);
         while (iterator.hasNext()) {
             ApiEndpoint endpoint = iterator.next();
             List<String> path = getPath(root, endpoint, pathFinder);
-            TraitContext trait = this.factory.makeTraitContext(path, endpoint.getPathItem(), endpoints.get(endpoint));
+            ComponentContext trait = this.factory.makeTraitContext(path, endpoint.getPathItem(), endpoints.get(endpoint));
             traits.put(trait.rustType, trait);
             this.graph.addVertex(trait);
             if (null == this.root) {
@@ -121,15 +121,15 @@ public class PathMap {
         return apiPaths.get(0);
     }
 
-    public Graph<TraitContext, DefaultEdge> borrowGraph() { return this.graph; }
-    public TraitContext getRoot() { return this.root; }
+    public Graph<ComponentContext, DefaultEdge> borrowGraph() { return this.graph; }
+    public ComponentContext getRoot() { return this.root; }
 
-    public List<TraitContext> getTraits() {
-        Map<String, TraitContext> traits = new HashMap<>();
+    public List<ComponentContext> getTraits() {
+        Map<String, ComponentContext> traits = new HashMap<>();
 
-        Iterator<TraitContext> iterator = new DepthFirstIterator<>(this.graph, this.root);
+        Iterator<ComponentContext> iterator = new DepthFirstIterator<>(this.graph, this.root);
         while (iterator.hasNext()) {
-            TraitContext trait = iterator.next();
+            ComponentContext trait = iterator.next();
             traits.put(trait.toString(), trait);
 
             // Add this trait as a submodule to the preceding traits

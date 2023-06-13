@@ -24,15 +24,15 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
-public class TraitContextFactory {
+public class ComponentContextFactory {
     private final ModelResolver modelResolver;
     private final EndpointResolver endpointResolver;
     private final Map<PascalCaseName, PascalCaseName> traitNameOverrides;
 
     private static final RustType httpBody = new RustType(CratePath.parse("hyper::body"), new PascalCaseName("Body"));
 
-    public TraitContextFactory(ModelResolver modelResolver, EndpointResolver endpointResolver,
-                               Map<PascalCaseName, PascalCaseName> traitNameOverrides) {
+    public ComponentContextFactory(ModelResolver modelResolver, EndpointResolver endpointResolver,
+                                   Map<PascalCaseName, PascalCaseName> traitNameOverrides) {
         this.modelResolver = modelResolver;
         this.endpointResolver = endpointResolver;
         this.traitNameOverrides = traitNameOverrides;
@@ -52,12 +52,12 @@ public class TraitContextFactory {
         return new RustType(result.path, result.name);
     }
 
-    public TraitContext makeTraitContext(List<String> path, PathItem pathItem, List<String> mountpoints) {
+    public ComponentContext makeTraitContext(List<String> path, PathItem pathItem, List<String> mountpoints) {
         EndpointResolver.ApiMatchResult result = getMatch(path);
 
         Map<PathItem.HttpMethod, io.swagger.v3.oas.models.Operation> pathOperations = pathItem.readOperationsMap();
         List<ModelContext> supportingTypes = new ArrayList<>();
-        List<TraitContext.Operation> operations = new ArrayList<>();
+        List<ComponentContext.Operation> operations = new ArrayList<>();
 
         PathItemParseContext context = new PathItemParseContext();
         context.path = result.path;
@@ -76,19 +76,19 @@ public class TraitContextFactory {
             }
         }
 
-        TraitContext traitContext = new TraitContext(new RustType(result.path, result.name), supportingTypes, operations, mountpoints);
+        ComponentContext componentContext = new ComponentContext(new RustType(result.path, result.name), supportingTypes, operations, mountpoints);
         // Supporting types will have their own imports. Make sure to include them in the top-level module context
-        for (ModelContext model : traitContext.supportingTypes) {
-            traitContext.moduleContext.imports.addAll(model.moduleContext.imports);
+        for (ModelContext model : componentContext.supportingTypes) {
+            componentContext.moduleContext.imports.addAll(model.moduleContext.imports);
         }
 
-        return traitContext;
+        return componentContext;
     }
 
     private PathItemParseResult makeOperation(PathItemParseContext context) {
         PathItemParseResult result = new PathItemParseResult();
         result.supportingTypes = new ArrayList<>();
-        List<TraitContext.Parameter> parameters = new ArrayList<>();
+        List<ComponentContext.Parameter> parameters = new ArrayList<>();
 
         // Fix up path parameters
         List<Parameter> pathParameters = context.operation.getParameters();
@@ -114,7 +114,7 @@ public class TraitContextFactory {
         }
 
         boolean mutable = methodRequiresMutable(context.method);
-        result.operation = new TraitContext.Operation(context.methodName, mutable, parameters, returnType.returnType);
+        result.operation = new ComponentContext.Operation(context.methodName, mutable, parameters, returnType.returnType);
         return result;
     }
 
@@ -158,9 +158,9 @@ public class TraitContextFactory {
                     new EnumContext(variants, 0, false), docComment);
             result.supportingTypes = new ArrayList<>();
             result.supportingTypes.add(supportingType);
-            result.parameter = new TraitContext.Parameter(new SnakeCaseName("body"), supportingType.rustType);
+            result.parameter = new ComponentContext.Parameter(new SnakeCaseName("body"), supportingType.rustType);
         } else {
-            result.parameter = new TraitContext.Parameter(new SnakeCaseName("body"),
+            result.parameter = new ComponentContext.Parameter(new SnakeCaseName("body"),
                     this.modelResolver.resolveSchema(contents.get(contentTypes.get(0)).getSchema()));
         }
 
@@ -207,7 +207,7 @@ public class TraitContextFactory {
             result.supportingTypes = new ArrayList<>();
             result.supportingTypes.add(supportingModel);
 
-            result.returnType = new TraitContext.ReturnType(supportingType);
+            result.returnType = new ComponentContext.ReturnType(supportingType);
         } else {
             List<String> codes = responses.keySet().stream().toList();
             Content firstResponse = responses.get(codes.get(0)).getContent();
@@ -217,14 +217,14 @@ public class TraitContextFactory {
                 return result;
             }
 
-            result.returnType = new TraitContext.ReturnType(this.modelResolver.resolveSchema(schema));
+            result.returnType = new ComponentContext.ReturnType(this.modelResolver.resolveSchema(schema));
         }
 
         return result;
     }
 
-    private TraitContext.Parameter makeParameter(Parameter parameter) {
-        return new TraitContext.Parameter(CaseConversion.toSnakeCase(parameter.getName()),
+    private ComponentContext.Parameter makeParameter(Parameter parameter) {
+        return new ComponentContext.Parameter(CaseConversion.toSnakeCase(parameter.getName()),
                 this.modelResolver.resolveSchema(parameter.getSchema()));
     }
 
@@ -275,9 +275,9 @@ public class TraitContextFactory {
     private static class PathItemParseResult {
         public PathItemParseResult() {}
 
-        public TraitContext.Parameter parameter;
-        public TraitContext.ReturnType returnType;
-        public TraitContext.Operation operation;
+        public ComponentContext.Parameter parameter;
+        public ComponentContext.ReturnType returnType;
+        public ComponentContext.Operation operation;
         public List<ModelContext> supportingTypes;
     }
 }
