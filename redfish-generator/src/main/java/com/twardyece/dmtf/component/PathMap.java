@@ -35,7 +35,6 @@ public class PathMap {
             }
         }
 
-        normalizeEndpoints(endpointGraph, root);
         this.transformToTraitContextGraph(endpointGraph, endpoints, root);
     }
 
@@ -79,22 +78,6 @@ public class PathMap {
         }
         endpoints.get(current).add(path);
         return root;
-    }
-
-    private static void normalizeEndpoints(Graph<ApiEndpoint, DefaultEdge> graph, ApiEndpoint root) {
-        List<ApiEndpoint> mountedEndpoints = new ArrayList<>();
-        UnmountVertexTransformation transformation = new UnmountVertexTransformation();
-        Iterator<ApiEndpoint> iterator = new DepthFirstIterator<>(graph, root);
-        while (iterator.hasNext()) {
-            ApiEndpoint endpoint = iterator.next();
-            if (transformation.check(graph, endpoint)) {
-                mountedEndpoints.add(endpoint);
-            }
-        }
-
-        for (ApiEndpoint endpoint : mountedEndpoints) {
-            transformation.perform(graph, endpoint, root);
-        }
     }
 
     private void transformToTraitContextGraph(Graph<ApiEndpoint, DefaultEdge> endpointGraph, Map<ApiEndpoint, List<String>> endpoints, ApiEndpoint root) {
