@@ -2,9 +2,7 @@ package com.twardyece.dmtf;
 
 import com.github.mustachejava.DefaultMustacheFactory;
 import com.twardyece.dmtf.component.*;
-import com.twardyece.dmtf.component.name.DetailNameMapper;
-import com.twardyece.dmtf.component.name.INameMapper;
-import com.twardyece.dmtf.component.name.NameMapper;
+import com.twardyece.dmtf.component.match.IComponentMatcher;
 import com.twardyece.dmtf.identifiers.IdentifierParseError;
 import com.twardyece.dmtf.identifiers.VersionedSchemaIdentifier;
 import com.twardyece.dmtf.model.ModelResolver;
@@ -15,7 +13,10 @@ import com.twardyece.dmtf.model.mapper.SimpleModelMapper;
 import com.twardyece.dmtf.model.mapper.UnversionedModelMapper;
 import com.twardyece.dmtf.model.mapper.VersionedModelMapper;
 import com.twardyece.dmtf.openapi.DocumentParser;
-import com.twardyece.dmtf.policies.*;
+import com.twardyece.dmtf.policies.IModelGenerationPolicy;
+import com.twardyece.dmtf.policies.ODataPropertyPolicy;
+import com.twardyece.dmtf.policies.ODataTypeIdentifier;
+import com.twardyece.dmtf.policies.PropertyDefaultValueOverridePolicy;
 import com.twardyece.dmtf.registry.RegistryContext;
 import com.twardyece.dmtf.registry.RegistryFactory;
 import com.twardyece.dmtf.registry.RegistryFileDiscovery;
@@ -49,8 +50,8 @@ public class RedfishCodegen {
     private final String specDirectory;
     private final ModelResolver modelResolver;
     private final ComponentContextFactory componentContextFactory;
+    private final IComponentMatcher[] componentMatchers;
     private final IModelGenerationPolicy[] modelGenerationPolicies;
-    private final IApiGenerationPolicy[] apiGenerationPolicies;
     private final OpenAPI document;
     private final FileFactory fileFactory;
     private final RegistryFileDiscovery registryFileDiscovery;
@@ -93,28 +94,21 @@ public class RedfishCodegen {
         overrides.put(new ImmutablePair<>("odata-v4_Service", "kind"), "\\\"Singleton\\\".to_string()");
         this.modelGenerationPolicies[1] = new PropertyDefaultValueOverridePolicy(overrides);
 
-        // API generation setup
-        List<INameMapper> nameMappers = new ArrayList<>();
-        nameMappers.add(new NameMapper(Pattern.compile("^(?<name>[A-Za-z0-9]+)$"), "name"));
-        nameMappers.add(new DetailNameMapper());
-        nameMappers.add(new NameMapper(Pattern.compile("(?<=\\.)(?<name>[A-Za-z0-9]+)$"), "name"));
-        nameMappers.add(new NameMapper(Pattern.compile("^\\$(?<name>metadata)$"), "name"));
-        EndpointResolver endpointResolver = new EndpointResolver(nameMappers);
-
-        Map<PascalCaseName, PascalCaseName> traitNameOverrides = new HashMap<>();
-        traitNameOverrides.put(new PascalCaseName("V1"), new PascalCaseName("ServiceRoot"));
-
-        this.componentContextFactory = new ComponentContextFactory(this.modelResolver, endpointResolver, traitNameOverrides);
-
-        this.apiGenerationPolicies = new IApiGenerationPolicy[2];
-        this.apiGenerationPolicies[0] = new PatchRequestBodyTypePolicy();
-        List<String> maskedTraits = new ArrayList<>();
-        maskedTraits.add("/redfish/v1/$metadata");
-        this.apiGenerationPolicies[1] = new ApiMaskPolicy(maskedTraits);
-
         // Registry generation
         Path registryDirectoryPath = Path.of(registryDirectory);
         this.registryFileDiscovery = new RegistryFileDiscovery(registryDirectoryPath);
+
+        PrivilegeRegistry privilegeRegistry = new PrivilegeRegistry(
+                this.registryFileDiscovery
+                        .getRegistries()
+                        .stream()
+                        .filter((registry) -> registry.name.contains("PrivilegeRegistry"))
+                        .findFirst()
+                        .get()
+                        .file,
+                CratePath.parse("redfish_core::privilege"));
+        this.componentContextFactory = new ComponentContextFactory(privilegeRegistry);
+        this.componentMatchers = new IComponentMatcher[0];
 
         this.document = parser.parse();
     }
@@ -164,7 +158,7 @@ public class RedfishCodegen {
         file.generate();
     }
 
-    private List<ComponentContext> generateRouting() throws IOException, URISyntaxException, ParserConfigurationException, SAXException {
+    private void generateRouting() throws IOException, URISyntaxException, ParserConfigurationException, SAXException {
         ModuleFile<LibContext> libFile = this.fileFactory.makeLibFile(this.specVersion);
 
         // Metadata router, a submodule of the routing module that handles the OData metadata document.
@@ -185,23 +179,21 @@ public class RedfishCodegen {
         odataFile.generate();
         libFile.getContext().moduleContext.addNamedSubmodule(odata);
 
-        PathMap map = new PathMap(this.document.getPaths(), this.componentContextFactory);
-        for (IApiGenerationPolicy policy : this.apiGenerationPolicies) {
-            policy.apply(map.borrowGraph(), map.getRoot());
-        }
+        // The rest of the components
+        PathMap map = new PathMap(this.document.getPaths(), this.componentContextFactory, this.modelResolver, this.componentMatchers);
 
         int pathDepth = libFile.getContext().moduleContext.path.getComponents().size();
-        List<ComponentContext> traits = map.getTraits();
-        for (ComponentContext trait : traits) {
-            if (trait.moduleContext.path.getComponents().size() == pathDepth + 1) {
-                libFile.getContext().moduleContext.addNamedSubmodule(trait.moduleContext.path.getLastComponent());
+        Iterator<ComponentContext> iterator = map.getComponentIterator();
+        while (iterator.hasNext()) {
+            ComponentContext component = iterator.next();
+            if (component.moduleContext.path.getComponents().size() == pathDepth + 1) {
+                libFile.getContext().moduleContext.addNamedSubmodule(component.moduleContext.path.getLastComponent());
             }
-            ModuleFile<ComponentContext> traitFile = this.fileFactory.makeTraitFile(trait);
+            ModuleFile<ComponentContext> traitFile = this.fileFactory.makeTraitFile(component);
             traitFile.generate();
         }
 
         libFile.generate();
-        return traits;
     }
 
     private void generateRegistries(RegistryFactory factory) throws IOException {
@@ -238,7 +230,7 @@ public class RedfishCodegen {
     public void generate(String component) throws IOException, URISyntaxException, ParserConfigurationException, SAXException {
         Map<String, ModuleFile<ModelContext>> models = this.buildModels();
         switch (component) {
-            case "models": {
+            case "models" -> {
                 this.generateModels(models);
 
                 RustType messageType = this.getMessageType(models);
@@ -246,13 +238,11 @@ public class RedfishCodegen {
                 RegistryFactory factory = new RegistryFactory(messageType, health);
                 this.generateRegistries(factory);
 
-                break;
             }
-            case "routing": {
+            case "routing" -> {
                 this.generateRouting();
-                break;
             }
-            default: throw new RuntimeException("Unknown component " + component);
+            default -> throw new RuntimeException("Unknown component " + component);
         }
     }
 
