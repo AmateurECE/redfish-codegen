@@ -1,8 +1,11 @@
 package com.twardyece.dmtf.component;
 
+import com.twardyece.dmtf.CratePath;
 import com.twardyece.dmtf.RustType;
 import com.twardyece.dmtf.component.match.IComponentMatcher;
 import com.twardyece.dmtf.model.ModelResolver;
+import com.twardyece.dmtf.text.PascalCaseName;
+import com.twardyece.dmtf.text.SnakeCaseName;
 import io.swagger.v3.oas.models.PathItem;
 import org.jgrapht.Graph;
 import org.jgrapht.Graphs;
@@ -24,7 +27,7 @@ public class PathMap {
         // Compose the graph of ApiComponents
         for (String uri : sorted) {
             String path = removeTrailingSlash(uri);
-            RustType component = getComponentType(componentMatchers, resolver, path);
+            RustType component = getComponentType(componentMatchers, resolver, path, paths.get(path));
             ApiComponent current = new ApiComponent(component, paths.get(path));
 
             // Add it to the graph, and associate it with this endpoint
@@ -54,11 +57,13 @@ public class PathMap {
         this.components = transformGraphToComponentList(graph, root, factory);
     }
 
-    private RustType getComponentType(IComponentMatcher[] componentMatchers, ModelResolver resolver, String uri) {
+    private RustType getComponentType(IComponentMatcher[] componentMatchers, ModelResolver resolver, String uri, PathItem pathItem) {
         for (IComponentMatcher componentMatcher : componentMatchers) {
-            Optional<String> component = componentMatcher.getComponent(uri);
+            Optional<String> component = componentMatcher.getComponent(uri, pathItem);
             if (component.isPresent()) {
-                return resolver.resolvePath(component.get());
+                RustType model =  resolver.resolvePath(component.get());
+                return new RustType(CratePath.parse("crate::" + new SnakeCaseName(model.getName())),
+                        new PascalCaseName(model.getName()));
             }
         }
 

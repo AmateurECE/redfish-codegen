@@ -3,6 +3,7 @@ package com.twardyece.dmtf;
 import com.github.mustachejava.DefaultMustacheFactory;
 import com.twardyece.dmtf.component.*;
 import com.twardyece.dmtf.component.match.IComponentMatcher;
+import com.twardyece.dmtf.component.match.StandardComponentMatcher;
 import com.twardyece.dmtf.identifiers.IdentifierParseError;
 import com.twardyece.dmtf.identifiers.VersionedSchemaIdentifier;
 import com.twardyece.dmtf.model.ModelResolver;
@@ -100,15 +101,13 @@ public class RedfishCodegen {
 
         PrivilegeRegistry privilegeRegistry = new PrivilegeRegistry(
                 this.registryFileDiscovery
-                        .getRegistries()
-                        .stream()
-                        .filter((registry) -> registry.name.contains("PrivilegeRegistry"))
-                        .findFirst()
+                        .getRegistry("PrivilegeMapping", Pattern.compile("Redfish_(?<version>[0-9.]+)_PrivilegeRegistry.json"))
                         .get()
                         .file,
                 CratePath.parse("redfish_core::privilege"));
         this.componentContextFactory = new ComponentContextFactory(privilegeRegistry);
-        this.componentMatchers = new IComponentMatcher[0];
+        this.componentMatchers = new IComponentMatcher[1];
+        this.componentMatchers[0] = new StandardComponentMatcher();
 
         this.document = parser.parse();
     }

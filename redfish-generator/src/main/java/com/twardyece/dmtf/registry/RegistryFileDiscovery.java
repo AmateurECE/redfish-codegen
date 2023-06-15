@@ -5,6 +5,7 @@ import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
+import java.util.Optional;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -43,6 +44,23 @@ public class RegistryFileDiscovery {
         }
 
         return registries;
+    }
+
+    public Optional<Registry> getRegistry(String name, Pattern pattern) {
+        List<Registry> registryVersions = new ArrayList<>();
+        for (String file : Objects.requireNonNull(this.registryDirectory.toFile().list())) {
+            Matcher matcher = pattern.matcher(file);
+            if (!matcher.find()) {
+                continue;
+            }
+
+            registryVersions.add(new Registry(name, matcher.group("version"),
+                    Paths.get(this.registryDirectory.toString(), file)));
+        }
+
+        List<String> versions = registryVersions.stream().map((registry) -> registry.version).toList();
+        String highestVersion = getHighestVersion(versions);
+        return registryVersions.stream().filter((registry) -> registry.version.equals(highestVersion)).findFirst();
     }
 
     private static String getHighestVersion(List<String> versionStrings) {
