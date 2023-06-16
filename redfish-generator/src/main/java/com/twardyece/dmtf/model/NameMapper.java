@@ -1,4 +1,4 @@
-package com.twardyece.dmtf.model.name;
+package com.twardyece.dmtf.model;
 
 import com.twardyece.dmtf.text.CaseConversion;
 import com.twardyece.dmtf.text.SnakeCaseName;
@@ -6,7 +6,7 @@ import com.twardyece.dmtf.text.SnakeCaseName;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-public class NameMapper implements INameMapper {
+public class NameMapper {
     private final Pattern pattern;
     private final String groupName;
 
@@ -15,7 +15,6 @@ public class NameMapper implements INameMapper {
         this.groupName = groupName;
     }
 
-    @Override
     public SnakeCaseName matchComponent(String name) {
         Matcher matcher = this.pattern.matcher(name);
         if (!matcher.find()) {
