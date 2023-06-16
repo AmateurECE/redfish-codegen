@@ -1,4 +1,4 @@
-package com.twardyece.dmtf.component.name;
+package com.twardyece.dmtf.model.name;
 
 import com.twardyece.dmtf.text.CaseConversion;
 import com.twardyece.dmtf.text.SnakeCaseName;

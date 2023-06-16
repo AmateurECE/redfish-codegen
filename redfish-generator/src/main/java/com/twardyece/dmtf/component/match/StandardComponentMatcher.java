@@ -1,13 +1,12 @@
 package com.twardyece.dmtf.component.match;
 
+import com.twardyece.dmtf.component.ComponentContext;
+import com.twardyece.dmtf.component.ComponentRepository;
 import io.swagger.v3.oas.models.Operation;
 import io.swagger.v3.oas.models.PathItem;
-import io.swagger.v3.oas.models.media.Content;
 import io.swagger.v3.oas.models.media.MediaType;
 import io.swagger.v3.oas.models.media.Schema;
-import io.swagger.v3.oas.models.responses.ApiResponse;
 
-import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 
@@ -16,7 +15,7 @@ public class StandardComponentMatcher implements IComponentMatcher {
     }
 
     @Override
-    public Optional<String> getComponent(String uri, PathItem pathItem) {
+    public Optional<ComponentContext> matchUri(ComponentRepository repository, String uri, PathItem pathItem) {
         Map<PathItem.HttpMethod, Operation> operations = pathItem.readOperationsMap();
         if (!operations.containsKey(PathItem.HttpMethod.GET)) {
             return Optional.empty();
@@ -37,8 +36,10 @@ public class StandardComponentMatcher implements IComponentMatcher {
         Schema schema = mediaType.getSchema();
         if (null == schema) {
             return Optional.empty();
-        } else {
-            return Optional.of(schema.get$ref());
         }
+
+        ComponentContext context = repository.getOrCreateComponent(schema.get$ref());
+        // TODO: Fill in stuff from PathItem here?
+        return Optional.of(context);
     }
 }

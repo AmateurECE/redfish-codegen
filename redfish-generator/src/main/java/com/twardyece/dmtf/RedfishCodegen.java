@@ -26,6 +26,7 @@ import com.twardyece.dmtf.text.CaseConversion;
 import com.twardyece.dmtf.text.PascalCaseName;
 import com.twardyece.dmtf.text.SnakeCaseName;
 import io.swagger.v3.oas.models.OpenAPI;
+import io.swagger.v3.oas.models.PathItem;
 import io.swagger.v3.oas.models.media.Schema;
 import org.apache.commons.cli.*;
 import org.apache.commons.lang3.tuple.ImmutablePair;
@@ -50,8 +51,8 @@ public class RedfishCodegen {
     private final String specVersion;
     private final String specDirectory;
     private final ModelResolver modelResolver;
-    private final ComponentContextFactory componentContextFactory;
-    private final IComponentMatcher[] componentMatchers;
+    private final PathService pathService;
+    private final ComponentTypeTranslationService componentTypeTranslationService;
     private final IModelGenerationPolicy[] modelGenerationPolicies;
     private final OpenAPI document;
     private final FileFactory fileFactory;
@@ -105,9 +106,10 @@ public class RedfishCodegen {
                         .get()
                         .file,
                 CratePath.parse("redfish_core::privilege"));
-        this.componentContextFactory = new ComponentContextFactory(privilegeRegistry);
-        this.componentMatchers = new IComponentMatcher[1];
-        this.componentMatchers[0] = new StandardComponentMatcher();
+        IComponentMatcher[] componentMatchers = new IComponentMatcher[1];
+        componentMatchers[0] = new StandardComponentMatcher();
+        this.pathService = new PathService(componentMatchers, privilegeRegistry);
+        this.componentTypeTranslationService = new ComponentTypeTranslationService(this.modelResolver);
 
         this.document = parser.parse();
     }
@@ -159,6 +161,7 @@ public class RedfishCodegen {
 
     private void generateRouting() throws IOException, URISyntaxException, ParserConfigurationException, SAXException {
         ModuleFile<LibContext> libFile = this.fileFactory.makeLibFile(this.specVersion);
+        Map<String, PathItem> paths = this.document.getPaths();
 
         // Metadata router, a submodule of the routing module that handles the OData metadata document.
         MetadataFileDiscovery fileDiscovery = new MetadataFileDiscovery(Path.of(this.specDirectory + "/csdl"));
@@ -169,6 +172,7 @@ public class RedfishCodegen {
         ModuleFile<MetadataRoutingContext> metadataFile = this.fileFactory.makeMetadataRoutingFile(metadataContext);
         metadataFile.generate();
         libFile.getContext().moduleContext.addNamedSubmodule(metadata);
+        paths.remove("/redfish/v1/$metadata");
 
         // OData router, a submodule of the routing module that handles the OData service document.
         SnakeCaseName odata = new SnakeCaseName("odata");
@@ -177,12 +181,11 @@ public class RedfishCodegen {
         ModuleFile<ODataContext> odataFile = this.fileFactory.makeODataRoutingFile(odataContext);
         odataFile.generate();
         libFile.getContext().moduleContext.addNamedSubmodule(odata);
+        paths.remove("/redfish/v1/odata");
 
         // The rest of the components
-        PathMap map = new PathMap(this.document.getPaths(), this.componentContextFactory, this.modelResolver, this.componentMatchers);
-
         int pathDepth = libFile.getContext().moduleContext.path.getComponents().size();
-        Iterator<ComponentContext> iterator = map.getComponentIterator();
+        Iterator<ComponentContext> iterator = this.pathService.getComponents(paths, this.componentTypeTranslationService);
         while (iterator.hasNext()) {
             ComponentContext component = iterator.next();
             if (component.moduleContext.path.getComponents().size() == pathDepth + 1) {

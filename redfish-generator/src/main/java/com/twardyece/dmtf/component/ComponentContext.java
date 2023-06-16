@@ -5,22 +5,23 @@ import com.twardyece.dmtf.RustType;
 import com.twardyece.dmtf.model.context.ModelContext;
 import com.twardyece.dmtf.text.SnakeCaseName;
 
+import java.util.ArrayList;
 import java.util.LinkedList;
 import java.util.List;
 
 public class ComponentContext implements Comparable<ComponentContext> {
-    public final ModuleContext moduleContext;
-    public final RustType rustType;
-    public final List<Operation> operations;
-    public final List<Subcomponent> subcomponents;
-    public final List<RustType> owningComponents;
+    public ModuleContext moduleContext;
+    public RustType rustType;
+    public List<Operation> operations;
+    public List<Subcomponent> subcomponents;
+    public List<RustType> owningComponents;
 
-    public ComponentContext(RustType rustType, List<Operation> operations, List<Subcomponent> subcomponents, List<RustType> owningComponents) {
+    public ComponentContext(RustType rustType) {
         this.moduleContext = new ModuleContext(rustType.getPath(), null);
         this.rustType = rustType;
-        this.operations = operations;
-        this.subcomponents = subcomponents;
-        this.owningComponents = owningComponents;
+        this.operations = new ArrayList<>();
+        this.subcomponents = new ArrayList<>();
+        this.owningComponents = new ArrayList<>();
     }
 
     public String componentName() { return this.rustType.getName().toString().toLowerCase(); }
