@@ -108,7 +108,7 @@ public class RedfishCodegen {
                 CratePath.parse("redfish_core::privilege"));
         IComponentMatcher[] componentMatchers = new IComponentMatcher[1];
         componentMatchers[0] = new StandardComponentMatcher();
-        this.pathService = new PathService(componentMatchers, privilegeRegistry);
+        this.pathService = new PathService(componentMatchers);
         this.componentTypeTranslationService = new ComponentTypeTranslationService(this.modelResolver);
 
         this.document = parser.parse();

@@ -8,11 +8,9 @@ import java.util.*;
 public class PathService {
 
     private final IComponentMatcher[] componentMatchers;
-    private final PrivilegeRegistry privilegeRegistry;
 
-    public PathService(IComponentMatcher[] componentMatchers, PrivilegeRegistry privilegeRegistry) {
+    public PathService(IComponentMatcher[] componentMatchers) {
         this.componentMatchers = componentMatchers;
-        this.privilegeRegistry = privilegeRegistry;
     }
 
     public Iterator<ComponentContext> getComponents(Map<String, PathItem> paths, ComponentTypeTranslationService service) {
@@ -40,7 +38,6 @@ public class PathService {
         }
 
         establishRelationships(components, repository);
-        // TODO: Establish required privileges here
         return repository.iterator();
     }
 
