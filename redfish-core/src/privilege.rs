@@ -14,6 +14,8 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+use std::marker::PhantomData;
+
 #[derive(Clone, PartialEq, Eq)]
 #[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
 pub enum Privilege {
@@ -24,42 +26,77 @@ pub enum Privilege {
     ConfigureUsers,
 }
 
-pub trait AsPrivilege {
-    fn privilege() -> Privilege;
+pub trait SatisfiesPrivilege {
+    fn is_satisfied(privileges: &[Privilege]) -> bool;
 }
 
+#[derive(Clone, Default)]
 pub struct Login;
-impl AsPrivilege for Login {
-    fn privilege() -> Privilege {
-        Privilege::Login
+impl SatisfiesPrivilege for Login {
+    fn is_satisfied(privileges: &[Privilege]) -> bool {
+        privileges.contains(&Privilege::Login)
     }
 }
 
+#[derive(Clone, Default)]
 pub struct ConfigureManager;
-impl AsPrivilege for ConfigureManager {
-    fn privilege() -> Privilege {
-        Privilege::ConfigureManager
+impl SatisfiesPrivilege for ConfigureManager {
+    fn is_satisfied(privileges: &[Privilege]) -> bool {
+        privileges.contains(&Privilege::ConfigureManager)
     }
 }
 
+#[derive(Clone, Default)]
 pub struct ConfigureUsers;
-impl AsPrivilege for ConfigureUsers {
-    fn privilege() -> Privilege {
-        Privilege::ConfigureUsers
+impl SatisfiesPrivilege for ConfigureUsers {
+    fn is_satisfied(privileges: &[Privilege]) -> bool {
+        privileges.contains(&Privilege::ConfigureUsers)
     }
 }
 
+#[derive(Clone, Default)]
 pub struct ConfigureComponents;
-impl AsPrivilege for ConfigureComponents {
-    fn privilege() -> Privilege {
-        Privilege::ConfigureComponents
+impl SatisfiesPrivilege for ConfigureComponents {
+    fn is_satisfied(privileges: &[Privilege]) -> bool {
+        privileges.contains(&Privilege::ConfigureComponents)
     }
 }
 
+#[derive(Clone, Default)]
 pub struct ConfigureSelf;
-impl AsPrivilege for ConfigureSelf {
-    fn privilege() -> Privilege {
-        Privilege::ConfigureSelf
+impl SatisfiesPrivilege for ConfigureSelf {
+    fn is_satisfied(privileges: &[Privilege]) -> bool {
+        privileges.contains(&Privilege::ConfigureSelf)
+    }
+}
+
+#[derive(Clone)]
+pub struct And<P, R>(PhantomData<fn() -> (P, R)>)
+where
+    P: SatisfiesPrivilege + Clone,
+    R: SatisfiesPrivilege + Clone;
+impl<P, R> SatisfiesPrivilege for And<P, R>
+where
+    P: SatisfiesPrivilege + Clone,
+    R: SatisfiesPrivilege + Clone,
+{
+    fn is_satisfied(privileges: &[Privilege]) -> bool {
+        P::is_satisfied(privileges) && R::is_satisfied(privileges)
+    }
+}
+
+#[derive(Clone)]
+pub struct Or<P, R>(PhantomData<fn() -> (P, R)>)
+where
+    P: SatisfiesPrivilege + Clone,
+    R: SatisfiesPrivilege + Clone;
+impl<P, R> SatisfiesPrivilege for Or<P, R>
+where
+    P: SatisfiesPrivilege + Clone,
+    R: SatisfiesPrivilege + Clone,
+{
+    fn is_satisfied(privileges: &[Privilege]) -> bool {
+        P::is_satisfied(privileges) || R::is_satisfied(privileges)
     }
 }
 
