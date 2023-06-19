@@ -127,3 +127,12 @@ impl Role {
         }
     }
 }
+
+pub trait OperationPrivilegeMapping {
+    type Get: SatisfiesPrivilege;
+    type Head: SatisfiesPrivilege;
+    type Post: SatisfiesPrivilege;
+    type Put: SatisfiesPrivilege;
+    type Patch: SatisfiesPrivilege;
+    type Delete: SatisfiesPrivilege;
+}
