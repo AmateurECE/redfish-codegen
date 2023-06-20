@@ -4,6 +4,10 @@ import com.twardyece.dmtf.text.ICaseConvertible;
 import com.twardyece.dmtf.text.PascalCaseName;
 import com.twardyece.dmtf.text.SnakeCaseName;
 
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.List;
+
 public class RustType implements Comparable<RustType> {
     // The absolute path of the type (i.e., where its definition lives)
     private CratePath path;
@@ -11,23 +15,25 @@ public class RustType implements Comparable<RustType> {
     // TODO: Removing importPath will make this class much simpler.
     private CratePath importPath;
     private ICaseConvertible name;
-    private RustType innerType;
+    private List<RustType> innerTypes;
 
     public RustType(SnakeCaseName name) {
         this.name = name;
+        this.innerTypes = new ArrayList<>();
     }
 
     public RustType(CratePath path, PascalCaseName name) {
         this.path = path;
         this.importPath = path;
         this.name = name;
+        this.innerTypes = new ArrayList<>();
     }
 
-    public RustType(CratePath path, PascalCaseName name, RustType innerType) {
+    public RustType(CratePath path, PascalCaseName name, RustType[] innerTypes) {
         this.path = path;
         this.importPath = path;
         this.name = name;
-        this.innerType = innerType;
+        this.innerTypes = Arrays.stream(innerTypes).toList();
     }
 
     @Override
@@ -38,8 +44,8 @@ public class RustType implements Comparable<RustType> {
         } else {
             value = this.name.toString();
         }
-        if (null != this.innerType) {
-                value += "<" + this.innerType + ">";
+        if (!this.innerTypes.isEmpty()) {
+                value += "<" + String.join(",", this.innerTypes.stream().map(RustType::toString).toList()) + ">";
         }
 
         return value;
@@ -53,7 +59,7 @@ public class RustType implements Comparable<RustType> {
 
     public void setImportPath(CratePath path) { this.importPath = path; }
 
-    public RustType getInnerType() { return this.innerType; }
+    public List<RustType> getInnerTypes() { return this.innerTypes; }
 
     public ICaseConvertible getName() { return this.name; }
     public void setName(ICaseConvertible name) { this.name = name; }

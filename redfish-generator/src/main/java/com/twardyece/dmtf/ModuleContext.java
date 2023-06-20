@@ -22,15 +22,11 @@ public class ModuleContext {
         }
     }
 
-    public ModuleContext(ModuleContext moduleContext) {
-        this.path = moduleContext.path;
-        this.submoduleSet = moduleContext.submoduleSet;
-        this.imports = moduleContext.imports;
-    }
-
     private static void addImports(Set<Import> imports, RustType rustType) {
-        if (null != rustType.getInnerType()) {
-            addImports(imports, rustType.getInnerType());
+        if (!rustType.getInnerTypes().isEmpty()) {
+            for (RustType innerType : rustType.getInnerTypes()) {
+                addImports(imports, innerType);
+            }
         }
 
         if (!rustType.isPrimitive() && rustType.getPath().isCrateLocal()) {

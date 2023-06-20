@@ -3,6 +3,7 @@ package com.twardyece.dmtf.component;
 import com.twardyece.dmtf.ModuleContext;
 import com.twardyece.dmtf.RustType;
 import com.twardyece.dmtf.model.context.ModelContext;
+import com.twardyece.dmtf.text.PascalCaseName;
 import com.twardyece.dmtf.text.SnakeCaseName;
 
 import java.util.ArrayList;
@@ -26,7 +27,17 @@ public class ComponentContext implements Comparable<ComponentContext> {
 
     public String componentName() { return this.rustType.getName().toString().toLowerCase(); }
 
-    public record Operation(String operationName, RustType requiredPrivilege) {}
+    public static class Operation {
+        public PascalCaseName pascalCaseName;
+        public RustType requiredPrivilege;
+
+        public Operation(PascalCaseName pascalCaseName, RustType requiredPrivilege) {
+            this.pascalCaseName = pascalCaseName;
+            this.requiredPrivilege = requiredPrivilege;
+        }
+
+        public SnakeCaseName snakeCaseName() { return new SnakeCaseName(this.pascalCaseName); }
+    }
     public record Subcomponent(String componentName, RustType component) {}
 
     @Override

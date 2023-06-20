@@ -61,7 +61,7 @@ public class ModelResolver {
             return this.resolvePath(this.getSchemaIdentifier(schema));
         } else if ("array".equals(schema.getType())) {
             // It's an array type
-            return new RustType(null, VEC_NAME, this.resolveSchema(schema.getItems()));
+            return new RustType(null, VEC_NAME, new RustType[]{this.resolveSchema(schema.getItems())});
         } else {
             if (!RUST_TYPE_MAP.containsKey(type)) {
                 LOGGER.warn("No mapping for type " + type);

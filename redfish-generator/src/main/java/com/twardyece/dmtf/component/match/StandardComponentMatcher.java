@@ -2,16 +2,34 @@ package com.twardyece.dmtf.component.match;
 
 import com.twardyece.dmtf.component.ComponentContext;
 import com.twardyece.dmtf.component.ComponentRepository;
+import com.twardyece.dmtf.component.PrivilegeRegistry;
+import com.twardyece.dmtf.text.PascalCaseName;
 import io.swagger.v3.oas.models.Operation;
 import io.swagger.v3.oas.models.PathItem;
 import io.swagger.v3.oas.models.media.MediaType;
 import io.swagger.v3.oas.models.media.Schema;
 
+import java.util.ArrayList;
 import java.util.Map;
 import java.util.Optional;
 
 public class StandardComponentMatcher implements IComponentMatcher {
-    public StandardComponentMatcher() {
+
+    private final PrivilegeRegistry privilegeRegistry;
+    private static final ArrayList<PathItem.HttpMethod> METHODS = new ArrayList<>();
+
+    static {
+        METHODS.add(PathItem.HttpMethod.GET);
+        METHODS.add(PathItem.HttpMethod.HEAD);
+        METHODS.add(PathItem.HttpMethod.POST);
+        METHODS.add(PathItem.HttpMethod.PUT);
+        METHODS.add(PathItem.HttpMethod.PATCH);
+        METHODS.add(PathItem.HttpMethod.DELETE);
+    }
+
+
+    public StandardComponentMatcher(PrivilegeRegistry privilegeRegistry) {
+        this.privilegeRegistry = privilegeRegistry;
     }
 
     @Override
@@ -39,7 +57,32 @@ public class StandardComponentMatcher implements IComponentMatcher {
         }
 
         ComponentContext context = repository.getOrCreateComponent(schema.get$ref());
-        // TODO: Fill in stuff from PathItem here?
+        this.updateContext(context, pathItem);
         return Optional.of(context);
+    }
+
+    private void updateContext(ComponentContext context, PathItem pathItem) {
+        pathItem.readOperationsMap()
+                .keySet()
+                .stream()
+                .filter(METHODS::contains)
+                .forEach((method) -> context.operations.add(new ComponentContext.Operation(
+                        operationNameForMethod(method),
+                        this.privilegeRegistry.getPrivilegeForComponent(context.componentName(), method)
+                )));
+    }
+
+    private static PascalCaseName operationNameForMethod(PathItem.HttpMethod method) {
+        PascalCaseName name = null;
+        switch (method) {
+            case GET -> name = new PascalCaseName("Get");
+            case HEAD -> name = new PascalCaseName("Head");
+            case POST -> name = new PascalCaseName("Post");
+            case PUT -> name = new PascalCaseName("Put");
+            case PATCH -> name = new PascalCaseName("Patch");
+            case DELETE -> name = new PascalCaseName("Delete");
+        }
+
+        return name;
     }
 }
