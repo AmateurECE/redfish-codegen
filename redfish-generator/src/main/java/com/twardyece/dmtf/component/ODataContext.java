@@ -11,6 +11,8 @@ import java.util.List;
 
 // Context for the OData Service Document routes.
 public class ODataContext {
+    // TODO: This module depends on a few models in redfish_codegen. Should inject their paths here instead of including
+    // them in the template.
     public static final List<Service> services;
     public static final String odataContext = "/redfish/v1/$metadata";
     private final ModuleContext moduleContext;

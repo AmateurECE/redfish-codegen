@@ -66,10 +66,13 @@ public class StandardComponentMatcher implements IComponentMatcher {
                 .keySet()
                 .stream()
                 .filter(METHODS::contains)
-                .forEach((method) -> context.operations.add(new ComponentContext.Operation(
-                        operationNameForMethod(method),
-                        this.privilegeRegistry.getPrivilegeForComponent(context.componentName(), method)
-                )));
+                .filter((method) -> !context.operationMap.containsKey(method))
+                .forEach((method) -> context.operationMap.put(
+                        method,
+                        new ComponentContext.Operation(
+                                operationNameForMethod(method),
+                                this.privilegeRegistry.getPrivilegeForComponent(context.componentName(), method)
+                        )));
     }
 
     private static PascalCaseName operationNameForMethod(PathItem.HttpMethod method) {

@@ -15,7 +15,7 @@ public class PrivilegeRegistry {
         this.privilegePath = privilegePath;
     }
 
-    public RustType getPrivilegeForComponent(String componentName, PathItem.HttpMethod method) {
+    public RustType getPrivilegeForComponent(PascalCaseName componentName, PathItem.HttpMethod method) {
         // TODO: Fill in this implementation
         return new RustType(this.privilegePath, new PascalCaseName("Login"));
     }

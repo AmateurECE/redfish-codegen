@@ -14,3 +14,7 @@ include = [
     "src/**/*.rs",
     "Cargo.toml",
 ]
+
+[dependencies]
+axum = { version = "0.6.18", default-features = false }
+redfish-core = { version = "0.1.0", path = "../redfish-core" }
