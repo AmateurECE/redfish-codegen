@@ -8,7 +8,8 @@ import io.swagger.v3.oas.models.media.Schema;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.util.*;
+import java.util.HashMap;
+import java.util.Map;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -58,7 +59,7 @@ public class ModelResolver {
     public RustType resolveSchema(Schema schema) {
         String type = schema.getType();
         if (null == type) {
-            return this.resolvePath(this.getSchemaIdentifier(schema));
+            return this.resolvePath(getSchemaIdentifier(schema));
         } else if ("array".equals(schema.getType())) {
             // It's an array type
             return new RustType(null, VEC_NAME, new RustType[]{this.resolveSchema(schema.getItems())});

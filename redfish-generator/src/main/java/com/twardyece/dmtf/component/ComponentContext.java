@@ -2,12 +2,10 @@ package com.twardyece.dmtf.component;
 
 import com.twardyece.dmtf.ModuleContext;
 import com.twardyece.dmtf.RustType;
-import com.twardyece.dmtf.model.context.ModelContext;
 import com.twardyece.dmtf.text.PascalCaseName;
 import com.twardyece.dmtf.text.SnakeCaseName;
 
 import java.util.ArrayList;
-import java.util.LinkedList;
 import java.util.List;
 
 public class ComponentContext implements Comparable<ComponentContext> {
