@@ -2,6 +2,7 @@ package com.twardyece.dmtf;
 
 import com.github.mustachejava.DefaultMustacheFactory;
 import com.twardyece.dmtf.component.*;
+import com.twardyece.dmtf.component.match.ActionComponentMatcher;
 import com.twardyece.dmtf.component.match.IComponentMatcher;
 import com.twardyece.dmtf.component.match.StandardComponentMatcher;
 import com.twardyece.dmtf.identifiers.IdentifierParseError;
@@ -51,8 +52,8 @@ public class RedfishCodegen {
     private final String specVersion;
     private final String specDirectory;
     private final ModelResolver modelResolver;
-    private final PathService pathService;
-    private final ComponentTypeTranslationService componentTypeTranslationService;
+    private final ComponentMatchService componentMatchService;
+    private final ComponentRepository componentRepository;
     private final IModelGenerationPolicy[] modelGenerationPolicies;
     private final OpenAPI document;
     private final FileFactory fileFactory;
@@ -106,10 +107,11 @@ public class RedfishCodegen {
                         .get()
                         .file,
                 CratePath.parse("redfish_core::privilege"));
-        IComponentMatcher[] componentMatchers = new IComponentMatcher[1];
+        IComponentMatcher[] componentMatchers = new IComponentMatcher[2];
         componentMatchers[0] = new StandardComponentMatcher(privilegeRegistry);
-        this.pathService = new PathService(componentMatchers);
-        this.componentTypeTranslationService = new ComponentTypeTranslationService(this.modelResolver);
+        componentMatchers[1] = new ActionComponentMatcher();
+        this.componentMatchService = new ComponentMatchService(componentMatchers);
+        this.componentRepository = new ComponentRepository(new ComponentTypeTranslationService(this.modelResolver), new PathService());
 
         this.document = parser.parse();
     }
@@ -185,7 +187,7 @@ public class RedfishCodegen {
 
         // The rest of the components
         int pathDepth = libFile.getContext().moduleContext.path.getComponents().size();
-        Iterator<ComponentContext> iterator = this.pathService.getComponents(paths, this.componentTypeTranslationService);
+        Iterator<ComponentContext> iterator = this.componentMatchService.getComponents(paths, this.componentRepository);
         while (iterator.hasNext()) {
             ComponentContext component = iterator.next();
             if (component.moduleContext.path.getComponents().size() == pathDepth + 1) {

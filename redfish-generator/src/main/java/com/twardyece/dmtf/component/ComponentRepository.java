@@ -6,42 +6,52 @@ import org.jgrapht.graph.DefaultDirectedGraph;
 import org.jgrapht.graph.DefaultEdge;
 import org.jgrapht.traverse.DepthFirstIterator;
 
+import java.awt.*;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.Map;
+import java.util.Optional;
 
 public class ComponentRepository {
     private final Graph<ComponentContext, DefaultEdge> graph;
     private ComponentContext root;
-    private final Map<String, ComponentContext> components;
-    private final ComponentTypeTranslationService service;
+    private final Map<String, ComponentContext> componentsByRef;
+    private final Map<String, ComponentContext> componentsByPath;
+    private final ComponentTypeTranslationService componentTypeTranslationService;
+    private final PathService pathService;
 
-    public ComponentRepository(ComponentTypeTranslationService service) {
+    public ComponentRepository(ComponentTypeTranslationService componentTypeTranslationService, PathService pathService) {
+        this.componentTypeTranslationService = componentTypeTranslationService;
+        this.pathService = pathService;
         this.graph = new DefaultDirectedGraph<>(DefaultEdge.class);
-        this.components = new HashMap<>();
-        this.service = service;
+        this.componentsByRef = new HashMap<>();
+        this.componentsByPath = new HashMap<>();
     }
 
-    public ComponentContext getOrCreateComponent(String componentRef) {
-        if (this.components.containsKey(componentRef)) {
-            return this.components.get(componentRef);
+    public ComponentContext getOrCreateComponent(String componentRef, String path) {
+        if (this.componentsByRef.containsKey(componentRef)) {
+            return this.componentsByRef.get(componentRef);
         }
 
-        RustType rustType = this.service.getRustTypeForComponentName(componentRef);
+        RustType rustType = this.componentTypeTranslationService.getRustTypeForComponentName(componentRef);
         ComponentContext component = new ComponentContext(rustType);
 
         this.graph.addVertex(component);
-        this.components.put(componentRef, component);
+        this.componentsByRef.put(componentRef, component);
+        this.componentsByPath.put(path, component);
 
         if (null == this.root) {
             this.root = component;
+        } else {
+            this.graph.addEdge(this.getComponentParentOfPath(path), component);
         }
 
         return component;
     }
 
-    public void owns(ComponentContext owner, ComponentContext subordinate) {
-        this.graph.addEdge(owner, subordinate);
+    public ComponentContext getComponentParentOfPath(String path) {
+        String mountpoint = this.pathService.getMountpoint(this.componentsByPath.keySet(), path);
+        return this.componentsByPath.get(mountpoint);
     }
 
     public Iterator<ComponentContext> iterator() {

@@ -56,7 +56,7 @@ public class StandardComponentMatcher implements IComponentMatcher {
             return Optional.empty();
         }
 
-        ComponentContext context = repository.getOrCreateComponent(schema.get$ref());
+        ComponentContext context = repository.getOrCreateComponent(schema.get$ref(), uri);
         this.updateContext(context, pathItem);
         return Optional.of(context);
     }
