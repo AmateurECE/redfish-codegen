@@ -200,31 +200,48 @@ public class RedfishCodegen {
         libFile.generate();
     }
 
-    private void generateRegistries(RegistryFactory factory) throws IOException {
-        List<SnakeCaseName> components = new ArrayList<>();
-        components.add(RustConfig.REGISTRY_BASE_MODULE);
-        CratePath registryModulePath = CratePath.crateLocal(components);
+    private Map<PascalCaseName, RegistryContext> buildRegistries(RegistryFactory factory) throws IOException {
+        CratePath registryModulePath = CratePath.parse("crate::" + RustConfig.REGISTRY_BASE_MODULE);
+        Map<PascalCaseName, RegistryContext> registryContextMap = new HashMap<>();
+        for (RegistryFileDiscovery.Registry registry : this.registryFileDiscovery.getRegistries()) {
+            CratePath path = registryModulePath
+                    .append(CaseConversion.toSnakeCase(registry.name))
+                    .append(new SnakeCaseName("v" + registry.version));
+            PascalCaseName name = new PascalCaseName(registry.name);
+            RegistryContext registryContext = factory.makeRegistry(new RustType(path, name), registry.file);
+            registryContextMap.put(name, registryContext);
+        }
+
+        return registryContextMap;
+    }
+
+    private void generateRegistries(Map<PascalCaseName, RegistryContext> registries) throws IOException {
+        CratePath registryModulePath = CratePath.parse("crate::" + RustConfig.REGISTRY_BASE_MODULE);
         ModuleContext registriesModule = new ModuleContext(registryModulePath, null);
 
-        List<RegistryFileDiscovery.Registry> registries = this.registryFileDiscovery.getRegistries();
-        for (RegistryFileDiscovery.Registry registry : registries) {
-            registriesModule.addNamedSubmodule(CaseConversion.toSnakeCase(registry.name));
+        for (RegistryContext registry : registries.values()) {
+            registriesModule.addNamedSubmodule(CaseConversion.toSnakeCase(registry.name()));
+            CratePath path = registryModulePath;
+            List<SnakeCaseName> components = registry.rustType.getPath().getComponents();
+            List<ModuleContext> moduleContexts = new ArrayList<>();
+            ModuleContext previous = null;
+            for (SnakeCaseName component : components.subList(registryModulePath.getComponents().size(), components.size() - 1)) {
+                path = path.append(component);
+                ModuleContext current = new ModuleContext(path, null);
+                moduleContexts.add(current);
+                Objects.requireNonNullElse(previous, registriesModule).addNamedSubmodule(component);
+                previous = current;
+            }
 
-            CratePath parentPath = registryModulePath.append(CaseConversion.toSnakeCase(registry.name));
-            ModuleContext registryContext = new ModuleContext(parentPath, null);
+            previous.addNamedSubmodule(registry.rustType.getPath().getLastComponent());
+            ModuleFile<RegistryContext> registryFile = this.fileFactory.makeRegistryFile(registry);
 
-            SnakeCaseName version = new SnakeCaseName("v" + registry.version);
-            CratePath registryPath = parentPath.append(version);
-            RegistryContext context = factory.makeRegistry(
-                    new RustType(registryPath, new PascalCaseName(registry.name)), registry.file);
+            for (ModuleContext context : moduleContexts) {
+                ModuleFile<ModuleContext> file = this.fileFactory.makeModuleFile(context);
+                file.generate();
+            }
 
-            registryContext.addNamedSubmodule(version);
-
-            ModuleFile<ModuleContext> registryFile = this.fileFactory.makeModuleFile(registryContext);
             registryFile.generate();
-
-            ModuleFile<RegistryContext> file = this.fileFactory.makeRegistryFile(context);
-            file.generate();
         }
 
         ModuleFile<ModuleContext> registriesFile = this.fileFactory.makeModuleFile(registriesModule);
@@ -233,19 +250,17 @@ public class RedfishCodegen {
 
     public void generate(String component) throws IOException, URISyntaxException, ParserConfigurationException, SAXException {
         Map<String, ModuleFile<ModelContext>> models = this.buildModels();
+
+        RustType messageType = this.getMessageType(models);
+        RustType health = this.modelResolver.resolvePath("#/components/schemas/Resource_Health");
+        RegistryFactory factory = new RegistryFactory(messageType, health);
+        Map<PascalCaseName, RegistryContext> registries = this.buildRegistries(factory);
         switch (component) {
             case "models" -> {
                 this.generateModels(models);
-
-                RustType messageType = this.getMessageType(models);
-                RustType health = this.modelResolver.resolvePath("#/components/schemas/Resource_Health");
-                RegistryFactory factory = new RegistryFactory(messageType, health);
-                this.generateRegistries(factory);
-
+                this.generateRegistries(registries);
             }
-            case "routing" -> {
-                this.generateRouting();
-            }
+            case "routing" -> this.generateRouting();
             default -> throw new RuntimeException("Unknown component " + component);
         }
     }
