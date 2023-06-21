@@ -75,6 +75,8 @@ public class CratePath implements Comparable<CratePath> {
     }
 
     public Path toPath() {
+        ArrayList<SnakeCaseName> path = new ArrayList<>();
+        path.addAll(this.path);
         if (path.isEmpty()) {
             return null;
         } else if (1 == path.size() && path.get(0).equals(RustConfig.CRATE_ROOT_MODULE)) {
@@ -83,9 +85,9 @@ public class CratePath implements Comparable<CratePath> {
             path.set(0, RustConfig.CRATE_SOURCE_DIRECTORY);
         }
 
-        String path = String.join("/", this.path.stream().map((name) -> name.toString()).collect(Collectors.toList()))
+        String location = String.join("/", path.stream().map((name) -> name.toString()).collect(Collectors.toList()))
                 + RustConfig.FILE_EXTENSION;
-        return Paths.get(path);
+        return Paths.get(location);
     }
 
     public static CratePath parse(String value) {

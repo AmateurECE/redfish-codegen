@@ -4,7 +4,7 @@ version = "0.1.0"
 edition = "2021"
 
 [dependencies]
-axum = { version = "0.6.18", default-features = false, optional = true }
+axum = { version = "0.6.18", features = ["json"], default-features = false, optional = true }
 redfish-codegen = { version = "0.2.0", path = "../redfish-codegen" }
 serde = { version = "1.0.164", features = ["derive"], optional = true }
 

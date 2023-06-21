@@ -2,12 +2,14 @@ package com.twardyece.dmtf.component;
 
 import com.twardyece.dmtf.RustType;
 import org.jgrapht.Graph;
+import org.jgrapht.Graphs;
 import org.jgrapht.graph.DefaultDirectedGraph;
 import org.jgrapht.graph.DefaultEdge;
 import org.jgrapht.traverse.DepthFirstIterator;
 
 import java.util.HashMap;
 import java.util.Iterator;
+import java.util.List;
 import java.util.Map;
 
 public class ComponentRepository {
@@ -28,9 +30,15 @@ public class ComponentRepository {
         this.componentsByPath = new HashMap<>();
     }
 
-    public ComponentContext getOrCreateComponent(String componentRef, String path) {
+    public ComponentContext getOrCreateComponent(String componentRef, String uri) {
+        String path = PathService.removeTrailingSlash(uri);
         if (this.componentsByRef.containsKey(componentRef)) {
-            return this.componentsByRef.get(componentRef);
+            ComponentContext component = this.componentsByRef.get(componentRef);
+            if (!this.componentsByPath.containsKey(path)) {
+                this.componentsByPath.put(path, component);
+                this.graph.addEdge(this.getComponentParentOfPath(path), component);
+            }
+            return component;
         }
 
         RustType rustType = this.componentTypeTranslationService.getRustTypeForComponentName(componentRef);
@@ -56,5 +64,13 @@ public class ComponentRepository {
 
     public Iterator<ComponentContext> iterator() {
         return new DepthFirstIterator<>(this.graph, this.root);
+    }
+
+    public List<ComponentContext> getOwningComponents(ComponentContext context) {
+        return Graphs.predecessorListOf(this.graph, context);
+    }
+
+    public List<ComponentContext> getSubcomponents(ComponentContext context) {
+        return Graphs.successorListOf(this.graph, context);
     }
 }

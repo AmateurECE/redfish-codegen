@@ -16,6 +16,13 @@
 // limitations under the License.
 
 /// This endpoint implements the {{componentName}} component.
+{{#hasOwningComponents}}
+///
+/// It can be mounted on the following components:
+{{/hasOwningComponents}}
+{{#owningComponents}}
+/// * [{{componentName}}][{{componentType}}]
+{{/owningComponents}}
 #[derive(Default)]
 pub struct {{componentName}}<S>
 where
