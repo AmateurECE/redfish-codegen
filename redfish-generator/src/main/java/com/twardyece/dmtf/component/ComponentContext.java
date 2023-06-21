@@ -11,13 +11,15 @@ import java.util.*;
 public class ComponentContext implements Comparable<ComponentContext> {
     public ModuleContext moduleContext;
     public RustType rustType;
+    public final RustType baseRegistry;
     public Map<PathItem.HttpMethod, Operation> operationMap;
     public List<Subcomponent> subcomponents;
     public List<RustType> owningComponents;
 
-    public ComponentContext(RustType rustType) {
+    public ComponentContext(RustType rustType, RustType baseRegistry) {
         this.moduleContext = new ModuleContext(rustType.getPath(), null);
         this.rustType = rustType;
+        this.baseRegistry = baseRegistry;
         this.operationMap = new HashMap<>();
         this.subcomponents = new ArrayList<>();
         this.owningComponents = new ArrayList<>();

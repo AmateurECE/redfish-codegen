@@ -53,7 +53,6 @@ public class RedfishCodegen {
     private final String specDirectory;
     private final ModelResolver modelResolver;
     private final ComponentMatchService componentMatchService;
-    private final ComponentRepository componentRepository;
     private final IModelGenerationPolicy[] modelGenerationPolicies;
     private final OpenAPI document;
     private final FileFactory fileFactory;
@@ -111,7 +110,6 @@ public class RedfishCodegen {
         componentMatchers[0] = new StandardComponentMatcher(privilegeRegistry);
         componentMatchers[1] = new ActionComponentMatcher();
         this.componentMatchService = new ComponentMatchService(componentMatchers);
-        this.componentRepository = new ComponentRepository(new ComponentTypeTranslationService(this.modelResolver), new PathService());
 
         this.document = parser.parse();
     }
@@ -161,7 +159,7 @@ public class RedfishCodegen {
         file.generate();
     }
 
-    private void generateRouting() throws IOException, URISyntaxException, ParserConfigurationException, SAXException {
+    private void generateRouting(Map<PascalCaseName, RegistryContext> registries) throws IOException, URISyntaxException, ParserConfigurationException, SAXException {
         ModuleFile<LibContext> libFile = this.fileFactory.makeLibFile(this.specVersion);
         Map<String, PathItem> paths = this.document.getPaths();
 
@@ -186,8 +184,14 @@ public class RedfishCodegen {
         paths.remove("/redfish/v1/odata");
 
         // The rest of the components
+        RegistryContext baseRegistry = registries.get(new PascalCaseName("Base"));
+        baseRegistry.rustType.getPath().getComponents().set(0, new SnakeCaseName("redfish_codegen"));
         int pathDepth = libFile.getContext().moduleContext.path.getComponents().size();
-        Iterator<ComponentContext> iterator = this.componentMatchService.getComponents(paths, this.componentRepository);
+        ComponentRepository componentRepository = new ComponentRepository(
+                new ComponentTypeTranslationService(this.modelResolver),
+                new PathService(),
+                baseRegistry.rustType);
+        Iterator<ComponentContext> iterator = this.componentMatchService.getComponents(paths, componentRepository);
         while (iterator.hasNext()) {
             ComponentContext component = iterator.next();
             if (component.moduleContext.path.getComponents().size() == pathDepth + 1) {
@@ -260,7 +264,7 @@ public class RedfishCodegen {
                 this.generateModels(models);
                 this.generateRegistries(registries);
             }
-            case "routing" -> this.generateRouting();
+            case "routing" -> this.generateRouting(registries);
             default -> throw new RuntimeException("Unknown component " + component);
         }
     }

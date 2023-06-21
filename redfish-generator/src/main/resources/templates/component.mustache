@@ -75,7 +75,7 @@ where
             router.fallback(|| async {
                 (
                     axum::http::StatusCode::METHOD_NOT_ALLOWED,
-                    axum::Json(redfish_core::error::one_message({{baseRegistryCratePath}}::OperationNotAllowed.into())),
+                    axum::Json(redfish_core::error::one_message({{baseRegistry}}::OperationNotAllowed.into())),
                 )
             }),
         )

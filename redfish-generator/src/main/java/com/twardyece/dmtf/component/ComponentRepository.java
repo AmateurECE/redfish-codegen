@@ -6,23 +6,23 @@ import org.jgrapht.graph.DefaultDirectedGraph;
 import org.jgrapht.graph.DefaultEdge;
 import org.jgrapht.traverse.DepthFirstIterator;
 
-import java.awt.*;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.Map;
-import java.util.Optional;
 
 public class ComponentRepository {
+    private final ComponentTypeTranslationService componentTypeTranslationService;
+    private final PathService pathService;
+    private final RustType baseRegistry;
     private final Graph<ComponentContext, DefaultEdge> graph;
     private ComponentContext root;
     private final Map<String, ComponentContext> componentsByRef;
     private final Map<String, ComponentContext> componentsByPath;
-    private final ComponentTypeTranslationService componentTypeTranslationService;
-    private final PathService pathService;
 
-    public ComponentRepository(ComponentTypeTranslationService componentTypeTranslationService, PathService pathService) {
+    public ComponentRepository(ComponentTypeTranslationService componentTypeTranslationService, PathService pathService, RustType baseRegistry) {
         this.componentTypeTranslationService = componentTypeTranslationService;
         this.pathService = pathService;
+        this.baseRegistry = baseRegistry;
         this.graph = new DefaultDirectedGraph<>(DefaultEdge.class);
         this.componentsByRef = new HashMap<>();
         this.componentsByPath = new HashMap<>();
@@ -34,7 +34,7 @@ public class ComponentRepository {
         }
 
         RustType rustType = this.componentTypeTranslationService.getRustTypeForComponentName(componentRef);
-        ComponentContext component = new ComponentContext(rustType);
+        ComponentContext component = new ComponentContext(rustType, this.baseRegistry);
 
         this.graph.addVertex(component);
         this.componentsByRef.put(componentRef, component);
