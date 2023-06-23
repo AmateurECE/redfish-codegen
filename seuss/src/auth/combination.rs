@@ -30,6 +30,16 @@ where
     session: SessionAuthenticationProxy<S>,
 }
 
+impl<'a, B, S> AsRef<dyn AuthenticateRequest + 'a> for CombinedAuthenticationProxy<B, S>
+where
+    B: BasicAuthentication + Clone + 'a,
+    S: SessionManagement + Clone + 'a,
+{
+    fn as_ref(&self) -> &(dyn AuthenticateRequest + 'a) {
+        self
+    }
+}
+
 impl<B, S> CombinedAuthenticationProxy<B, S>
 where
     B: BasicAuthentication + Clone,

@@ -36,6 +36,15 @@ where
     authenticator: B,
 }
 
+impl<'a, B> AsRef<dyn AuthenticateRequest + 'a> for BasicAuthenticationProxy<B>
+where
+    B: BasicAuthentication + Clone + 'a,
+{
+    fn as_ref(&self) -> &(dyn AuthenticateRequest + 'a) {
+        self
+    }
+}
+
 impl<B> BasicAuthenticationProxy<B>
 where
     B: BasicAuthentication + Clone,

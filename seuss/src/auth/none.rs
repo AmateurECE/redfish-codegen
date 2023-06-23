@@ -4,6 +4,12 @@ use redfish_core::auth::{AuthenticateRequest, AuthenticatedUser};
 #[derive(Clone, Default)]
 pub struct NoAuth;
 
+impl<'a> AsRef<dyn AuthenticateRequest + 'a> for NoAuth {
+    fn as_ref(&self) -> &(dyn AuthenticateRequest + 'a) {
+        self
+    }
+}
+
 impl AuthenticateRequest for NoAuth {
     fn authenticate_request(
         &self,
@@ -15,11 +21,5 @@ impl AuthenticateRequest for NoAuth {
     fn challenge(&self) -> Vec<&'static str> {
         // Should never be called, because authenticate_request always returns Ok
         unimplemented!()
-    }
-}
-
-impl<'a> AsRef<dyn AuthenticateRequest + 'a> for NoAuth {
-    fn as_ref(&self) -> &(dyn AuthenticateRequest + 'a) {
-        self
     }
 }

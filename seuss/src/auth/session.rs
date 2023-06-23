@@ -51,6 +51,15 @@ where
     authenticator: S,
 }
 
+impl<'a, S> AsRef<dyn AuthenticateRequest + 'a> for SessionAuthenticationProxy<S>
+where
+    S: SessionManagement + Clone + 'a,
+{
+    fn as_ref(&self) -> &(dyn AuthenticateRequest + 'a) {
+        self
+    }
+}
+
 impl<S> SessionAuthenticationProxy<S>
 where
     S: SessionManagement + Clone,

@@ -19,5 +19,5 @@ pub mod error;
 pub mod middleware;
 pub mod service;
 
-#[cfg(feature = "service")]
+#[cfg(feature = "router")]
 pub mod router;

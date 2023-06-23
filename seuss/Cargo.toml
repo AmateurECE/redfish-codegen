@@ -28,4 +28,4 @@ redfish-codegen = { version = "0.2.0", path = "../redfish-codegen" }
 [features]
 serde = ['dep:serde']
 auth-pam = ['dep:pam', 'dep:users']
-service = ['dep:axum-server', 'dep:futures', 'dep:signal-hook', 'dep:signal-hook-tokio', 'dep:anyhow', 'dep:tokio']
+router = ['dep:axum-server', 'dep:futures', 'dep:signal-hook', 'dep:signal-hook-tokio', 'dep:anyhow', 'dep:tokio']
