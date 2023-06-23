@@ -90,12 +90,9 @@ impl<S, P> {{componentName}}<S, P>
 where
     S: AsRef<dyn redfish_core::auth::AuthenticateRequest> + Clone + Send + Sync + 'static,
     P: redfish_core::privilege::OperationPrivilegeMapping + 'static,
-{{#operations}}
-    <P as redfish_core::privilege::OperationPrivilegeMapping>::{{pascalCaseName}}: Send,
-{{/operations}}
-{{#missingPostOperation}}
-    <P as redfish_core::privilege::OperationPrivilegeMapping>::Post: Send,
-{{/missingPostOperation}}
+{{#privilegedOperations}}
+    <P as redfish_core::privilege::OperationPrivilegeMapping>::{{privilege}}: Send,
+{{/privilegedOperations}}
 {
 {{#operations}}
     pub fn {{snakeCaseName}}<H, T>(mut self, handler: H) -> Self

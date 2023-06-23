@@ -75,7 +75,7 @@ public class StandardComponentMatcher implements IComponentMatcher {
                 .filter((method) -> !context.operationMap.containsKey(method))
                 .forEach((method) -> context.operationMap.put(
                         method,
-                        new ComponentContext.Operation(operationNameForMethod(method))
+                        new ComponentContext.Operation(ComponentContext.operationNameForMethod(method))
                 ));
 
         PascalCaseName componentName = new PascalCaseName(context.rustType.getName());
@@ -99,19 +99,5 @@ public class StandardComponentMatcher implements IComponentMatcher {
                 );
             }
         }
-    }
-
-    private static PascalCaseName operationNameForMethod(PathItem.HttpMethod method) {
-        PascalCaseName name = null;
-        switch (method) {
-            case GET -> name = new PascalCaseName("Get");
-            case HEAD -> name = new PascalCaseName("Head");
-            case POST -> name = new PascalCaseName("Post");
-            case PUT -> name = new PascalCaseName("Put");
-            case PATCH -> name = new PascalCaseName("Patch");
-            case DELETE -> name = new PascalCaseName("Delete");
-        }
-
-        return name;
     }
 }

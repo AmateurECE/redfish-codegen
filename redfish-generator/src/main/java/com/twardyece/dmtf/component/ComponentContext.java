@@ -38,8 +38,18 @@ public class ComponentContext implements Comparable<ComponentContext> {
     }
     public Collection<Operation> operations() { return this.operationMap.values(); }
     public boolean hasOwningComponents() { return !this.owningComponents.isEmpty(); }
-    public boolean missingPostOperation() {
-        return !this.actions.isEmpty() && !this.operationMap.containsKey(PathItem.HttpMethod.POST);
+    public List<PrivilegedOperation> privilegedOperations() {
+        List<PrivilegedOperation> privilegedOperations = new ArrayList<>();
+        this.operationMap
+                .keySet()
+                .stream()
+                .map((method) -> new PrivilegedOperation(operationNameForMethod(method)))
+                .forEach(privilegedOperations::add);
+        if (!this.operationMap.containsKey(PathItem.HttpMethod.POST) && !this.actions.isEmpty()) {
+            privilegedOperations.add(new PrivilegedOperation(operationNameForMethod(PathItem.HttpMethod.POST)));
+        }
+
+        return privilegedOperations;
     }
 
     public static class Operation {
@@ -58,6 +68,7 @@ public class ComponentContext implements Comparable<ComponentContext> {
     public record SubordinatePrivilegeOverride(RustType owningComponent,
                                                PascalCaseName owningComponentName,
                                                PrivilegeRegistry.OperationPrivilegeMapping privileges) {}
+    public record PrivilegedOperation(PascalCaseName privilege) {}
 
     @Override
     public String toString() { return this.rustType.toString(); }
@@ -77,5 +88,19 @@ public class ComponentContext implements Comparable<ComponentContext> {
         } else {
             return false;
         }
+    }
+
+    public static PascalCaseName operationNameForMethod(PathItem.HttpMethod method) {
+        PascalCaseName name = null;
+        switch (method) {
+            case GET -> name = new PascalCaseName("Get");
+            case HEAD -> name = new PascalCaseName("Head");
+            case POST -> name = new PascalCaseName("Post");
+            case PUT -> name = new PascalCaseName("Put");
+            case PATCH -> name = new PascalCaseName("Patch");
+            case DELETE -> name = new PascalCaseName("Delete");
+        }
+
+        return name;
     }
 }
