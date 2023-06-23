@@ -19,7 +19,10 @@ use clap::Parser;
 use redfish_axum::{
     computer_system_collection::ComputerSystemCollection, service_root::ServiceRoot,
 };
-use redfish_codegen::models::computer_system_collection::ComputerSystemCollection as ComputerSystemCollectionModel;
+use redfish_codegen::models::{
+    computer_system_collection::ComputerSystemCollection as ComputerSystemCollectionModel,
+    service_root::v1_15_0::ServiceRoot as ServiceRootModel,
+};
 use redfish_core::privilege::Role;
 use seuss::{auth::NoAuth, service::redfish_versions::RedfishVersions};
 use std::{collections::HashMap, fs::File};
@@ -57,13 +60,10 @@ async fn main() -> anyhow::Result<()> {
         .nest(
             "/redfish/v1/",
             ServiceRoot::default()
+                .get(|| async { Json(ServiceRootModel::default()) })
                 .systems(
                     ComputerSystemCollection::default()
-                        .get(|| async {
-                            Json(ComputerSystemCollectionModel {
-                                ..Default::default()
-                            })
-                        })
+                        .get(|| async { Json(ComputerSystemCollectionModel::default()) })
                         .into_router(),
                 )
                 .into_router()

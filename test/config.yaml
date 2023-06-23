@@ -1,0 +1,11 @@
+role-map:
+  Administrator: administrators
+  Operator: operators
+  ReadOnly: readonly
+server:
+  address: 0.0.0.0
+  ports:
+    https: 3001
+    http: 3000
+  certificate-file: /etc/redfish/twardyece-manager-cert.pem
+  key-file: /etc/redfish/twardyece-manager-key.pem
