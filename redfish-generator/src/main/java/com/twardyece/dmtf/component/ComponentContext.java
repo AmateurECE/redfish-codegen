@@ -15,6 +15,7 @@ public class ComponentContext implements Comparable<ComponentContext> {
     public Map<PathItem.HttpMethod, Operation> operationMap;
     public List<Subcomponent> subcomponents;
     public List<Supercomponent> owningComponents;
+    public final List<Action> actions;
     public final List<String> paths;
 
     public ComponentContext(RustType rustType, RustType baseRegistry) {
@@ -24,6 +25,7 @@ public class ComponentContext implements Comparable<ComponentContext> {
         this.operationMap = new HashMap<>();
         this.subcomponents = new ArrayList<>();
         this.owningComponents = new ArrayList<>();
+        this.actions = new ArrayList<>();
         this.paths = new ArrayList<>();
     }
 
@@ -49,6 +51,8 @@ public class ComponentContext implements Comparable<ComponentContext> {
     public record Supercomponent(PascalCaseName componentName, RustType componentType) {}
     public record Subcomponent(SnakeCaseName snakeCaseName, PascalCaseName pascalCaseName, RustType componentType,
                                String componentPath) {}
+
+    public record Action(SnakeCaseName snakeCaseName, PascalCaseName pascalCaseName) {}
 
     @Override
     public String toString() { return this.rustType.toString(); }

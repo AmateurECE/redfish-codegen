@@ -32,6 +32,9 @@ where
 {{#subcomponents}}
     {{snakeCaseName}}: Option<axum::Router<S>>,
 {{/subcomponents}}
+{{#actions}}
+    {{snakeCaseName}}: Option<axum::routing::MethodRouter<S>>,
+{{/actions}}
 }
 
 impl<S> {{componentName}}<S>
@@ -64,12 +67,34 @@ where
     }
 
 {{/subcomponents}}
+{{#actions}}
+    /// Perform the {{pascalCaseName}} operation on this {{componentName}} instance.
+    pub fn {{snakeCaseName}}<H, T>(mut self, handler: H) -> Self
+    where
+        H: axum::handler::Handler<T, S, axum::body::Body>,
+        T: 'static,
+    {
+        self.{{snakeCaseName}} = Some(axum::routing::post(
+            |auth: redfish_core::extract::RedfishAuth<{{requiredPrivilege}}>,
+             axum::extract::State(state): axum::extract::State<S>,
+             mut request: axum::http::Request<axum::body::Body>| async {
+                request.extensions_mut().insert(auth.user);
+                handler.call(request, state).await
+            },
+        ));
+        self
+    }
+
+{{/actions}}
     pub fn into_router(self) -> axum::Router<S> {
         let Self {
             router,
 {{#subcomponents}}
             {{snakeCaseName}},
 {{/subcomponents}}
+{{#actions}}
+            {{snakeCaseName}},
+{{/actions}}
         } = self;
         let result = axum::Router::default();
 {{#subcomponents}}
@@ -78,6 +103,12 @@ where
             None => result,
         };
 {{/subcomponents}}
+{{#actions}}
+        let result = match {{snakeCaseName}} {
+            Some(router) => result.route("/Actions/{{componentName}}.{{pascalCaseName}}", {{snakeCaseName}}),
+            None => result,
+        };
+{{/actions}}
         result.route(
             "/",
             router.fallback(|| async {

@@ -2,6 +2,8 @@ package com.twardyece.dmtf.component.match;
 
 import com.twardyece.dmtf.component.ComponentContext;
 import com.twardyece.dmtf.component.ComponentRepository;
+import com.twardyece.dmtf.text.PascalCaseName;
+import com.twardyece.dmtf.text.SnakeCaseName;
 import io.swagger.v3.oas.models.PathItem;
 
 import java.util.Optional;
@@ -20,7 +22,14 @@ public class ActionComponentMatcher implements IComponentMatcher {
         }
 
         ComponentContext context = repository.getComponentParentOfPath(uri);
-        // TODO: Add actions here
+        PascalCaseName pascalCaseName = new PascalCaseName(matcher.group("action"));
+        Optional<ComponentContext.Action> action = context.actions
+                .stream()
+                .filter((a) -> a.pascalCaseName().equals(pascalCaseName))
+                .findFirst();
+        if (action.isEmpty()) {
+            context.actions.add(new ComponentContext.Action(new SnakeCaseName(pascalCaseName), pascalCaseName));
+        }
         return Optional.of(context);
     }
 }
