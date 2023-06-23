@@ -15,6 +15,35 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+{{#defaultPrivileges}}
+/// The default privileges required for accessing {{componentName}} instances.
+pub struct DefaultPrivileges;
+impl redfish_core::privilege::OperationPrivilegeMapping for DefaultPrivileges {
+    type Get = {{{get}}};
+    type Head = {{{head}}};
+    type Post = {{{post}}};
+    type Put = {{{put}}};
+    type Patch = {{{patch}}};
+    type Delete = {{{delete}}};
+}
+{{/defaultPrivileges}}
+
+{{#subcomponentPrivilegeOverrides}}
+/// The privileges required for accessing {{componentName}} instances that as properties of a {{owningComponent}}
+/// instance.
+pub struct {{owningComponent}}Privileges;
+{{#privileges}}
+impl redfish_core::privilege::OperationPrivilegeMapping for {{owningComponent}}Privileges {
+    type Get = {{{get}}};
+    type Head = {{{head}}};
+    type Post = {{{post}}};
+    type Put = {{{put}}};
+    type Patch = {{{patch}}};
+    type Delete = {{{delete}}};
+}
+{{/privileges}}
+{{/subcomponentPrivilegeOverrides}}
+
 /// This endpoint implements the {{componentName}} component.
 {{#hasOwningComponents}}
 ///
@@ -37,6 +66,26 @@ where
 {{/actions}}
 }
 
+{{#defaultPrivileges}}
+impl<S> Default for {{componentName}}<S, DefaultPrivileges>
+where
+    S: Clone,
+{
+    fn default() -> Self {
+        Self {
+            router: Default::default(),
+            privilege_marker: Default::default(),
+{{#subcomponents}}
+            {{snakeCaseName}}: Default::default(),
+{{/subcomponents}}
+{{#actions}}
+            {{snakeCaseName}}: Default::default(),
+{{/actions}}
+        }
+    }
+}
+{{/defaultPrivileges}}
+
 impl<S, P> {{componentName}}<S, P>
 where
     S: AsRef<dyn redfish_core::auth::AuthenticateRequest> + Clone + Send + Sync + 'static,
@@ -44,6 +93,9 @@ where
 {{#operations}}
     <P as redfish_core::privilege::OperationPrivilegeMapping>::{{pascalCaseName}}: Send,
 {{/operations}}
+{{#missingPostOperation}}
+    <P as redfish_core::privilege::OperationPrivilegeMapping>::Post: Send,
+{{/missingPostOperation}}
 {
 {{#operations}}
     pub fn {{snakeCaseName}}<H, T>(mut self, handler: H) -> Self
@@ -79,7 +131,7 @@ where
         T: 'static,
     {
         self.{{snakeCaseName}} = Some(axum::routing::post(
-            |auth: redfish_core::extract::RedfishAuth<{{requiredPrivilege}}>,
+            |auth: redfish_core::extract::RedfishAuth<P::Post>,
              axum::extract::State(state): axum::extract::State<S>,
              mut request: axum::http::Request<axum::body::Body>| async {
                 request.extensions_mut().insert(auth.user);
@@ -99,6 +151,7 @@ where
 {{#actions}}
             {{snakeCaseName}},
 {{/actions}}
+            ..
         } = self;
         let result = axum::Router::default();
 {{#subcomponents}}
@@ -109,7 +162,7 @@ where
 {{/subcomponents}}
 {{#actions}}
         let result = match {{snakeCaseName}} {
-            Some(router) => result.route("/Actions/{{componentName}}.{{pascalCaseName}}", {{snakeCaseName}}),
+            Some(router) => result.route("/Actions/{{componentName}}.{{pascalCaseName}}", router),
             None => result,
         };
 {{/actions}}

@@ -17,6 +17,8 @@ public class ComponentContext implements Comparable<ComponentContext> {
     public List<Supercomponent> owningComponents;
     public final List<Action> actions;
     public final List<String> paths;
+    public PrivilegeRegistry.OperationPrivilegeMapping defaultPrivileges;
+    public final List<SubordinatePrivilegeOverride> subordinatePrivilegeOverrides;
 
     public ComponentContext(RustType rustType, RustType baseRegistry) {
         this.moduleContext = new ModuleContext(rustType.getPath(), null);
@@ -27,6 +29,7 @@ public class ComponentContext implements Comparable<ComponentContext> {
         this.owningComponents = new ArrayList<>();
         this.actions = new ArrayList<>();
         this.paths = new ArrayList<>();
+        this.subordinatePrivilegeOverrides = new ArrayList<>();
     }
 
     public void addPath(String path) { this.paths.add(path); }
@@ -35,14 +38,14 @@ public class ComponentContext implements Comparable<ComponentContext> {
     }
     public Collection<Operation> operations() { return this.operationMap.values(); }
     public boolean hasOwningComponents() { return !this.owningComponents.isEmpty(); }
+    public boolean missingPostOperation() {
+        return !this.actions.isEmpty() && !this.operationMap.containsKey(PathItem.HttpMethod.POST);
+    }
 
     public static class Operation {
         public PascalCaseName pascalCaseName;
-        public RustType requiredPrivilege;
-
-        public Operation(PascalCaseName pascalCaseName, RustType requiredPrivilege) {
+        public Operation(PascalCaseName pascalCaseName) {
             this.pascalCaseName = pascalCaseName;
-            this.requiredPrivilege = requiredPrivilege;
         }
 
         public SnakeCaseName snakeCaseName() { return new SnakeCaseName(this.pascalCaseName); }
@@ -51,8 +54,9 @@ public class ComponentContext implements Comparable<ComponentContext> {
     public record Supercomponent(PascalCaseName componentName, RustType componentType) {}
     public record Subcomponent(SnakeCaseName snakeCaseName, PascalCaseName pascalCaseName, RustType componentType,
                                String componentPath) {}
-
     public record Action(SnakeCaseName snakeCaseName, PascalCaseName pascalCaseName) {}
+    public record SubordinatePrivilegeOverride(RustType owningComponent,
+                                               PrivilegeRegistry.OperationPrivilegeMapping privileges) {}
 
     @Override
     public String toString() { return this.rustType.toString(); }

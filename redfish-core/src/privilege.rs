@@ -70,6 +70,14 @@ impl SatisfiesPrivilege for ConfigureSelf {
     }
 }
 
+#[derive(Clone, Default)]
+pub struct NoAuth;
+impl SatisfiesPrivilege for NoAuth {
+    fn is_satisfied(_privileges: &[Privilege]) -> bool {
+        true
+    }
+}
+
 #[derive(Clone)]
 pub struct And<P, R>(PhantomData<fn() -> (P, R)>)
 where
