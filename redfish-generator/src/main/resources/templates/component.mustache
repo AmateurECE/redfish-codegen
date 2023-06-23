@@ -30,7 +30,7 @@ where
 {
     router: axum::routing::MethodRouter<S>,
 {{#subcomponents}}
-    {{componentName}}: Option<axum::Router<S>>,
+    {{snakeCaseName}}: Option<axum::Router<S>>,
 {{/subcomponents}}
 }
 
@@ -57,8 +57,9 @@ where
 
 {{/operations}}
 {{#subcomponents}}
-    pub fn {{componentName}}(mut self, {{componentName}}: Router<S>) -> Self {
-        self.{{componentName}} = Some({{componentName}});
+    /// Serves an instance of a [{{pascalCaseName}}][{{componentType}}].
+    pub fn {{snakeCaseName}}(mut self, {{snakeCaseName}}: axum::Router<S>) -> Self {
+        self.{{snakeCaseName}} = Some({{snakeCaseName}});
         self
     }
 
@@ -67,12 +68,12 @@ where
         let Self {
             router,
 {{#subcomponents}}
-            {{componentName}},
+            {{snakeCaseName}},
 {{/subcomponents}}
         } = self;
         let result = axum::Router::default();
 {{#subcomponents}}
-        let result = match {{componentName}} {
+        let result = match {{snakeCaseName}} {
             Some(router) => result.nest("{{componentPath}}", router),
             None => result,
         };

@@ -109,7 +109,7 @@ public class RedfishCodegen {
         IComponentMatcher[] componentMatchers = new IComponentMatcher[2];
         componentMatchers[0] = new StandardComponentMatcher(privilegeRegistry);
         componentMatchers[1] = new ActionComponentMatcher();
-        this.componentMatchService = new ComponentMatchService(componentMatchers);
+        this.componentMatchService = new ComponentMatchService(componentMatchers, new PathService());
 
         this.document = parser.parse();
     }

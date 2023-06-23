@@ -36,6 +36,7 @@ public class ComponentRepository {
             ComponentContext component = this.componentsByRef.get(componentRef);
             if (!this.componentsByPath.containsKey(path)) {
                 this.componentsByPath.put(path, component);
+                component.addPath(path);
                 this.graph.addEdge(this.getComponentParentOfPath(path), component);
             }
             return component;
@@ -47,6 +48,7 @@ public class ComponentRepository {
         this.graph.addVertex(component);
         this.componentsByRef.put(componentRef, component);
         this.componentsByPath.put(path, component);
+        component.addPath(path);
 
         if (null == this.root) {
             this.root = component;
@@ -58,7 +60,7 @@ public class ComponentRepository {
     }
 
     public ComponentContext getComponentParentOfPath(String path) {
-        String mountpoint = this.pathService.getMountpoint(this.componentsByPath.keySet(), path);
+        String mountpoint = this.pathService.getClosestParent(this.componentsByPath.keySet(), path);
         return this.componentsByPath.get(mountpoint);
     }
 
