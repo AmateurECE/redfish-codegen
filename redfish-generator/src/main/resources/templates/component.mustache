@@ -23,12 +23,12 @@
 {{#owningComponents}}
 /// * [{{componentName}}][{{componentType}}]
 {{/owningComponents}}
-#[derive(Default)]
-pub struct {{componentName}}<S>
+pub struct {{componentName}}<S, P>
 where
     S: Clone,
 {
     router: axum::routing::MethodRouter<S>,
+    privilege_marker: std::marker::PhantomData<fn() -> P>,
 {{#subcomponents}}
     {{snakeCaseName}}: Option<axum::Router<S>>,
 {{/subcomponents}}
@@ -37,9 +37,13 @@ where
 {{/actions}}
 }
 
-impl<S> {{componentName}}<S>
+impl<S, P> {{componentName}}<S, P>
 where
     S: AsRef<dyn redfish_core::auth::AuthenticateRequest> + Clone + Send + Sync + 'static,
+    P: redfish_core::privilege::OperationPrivilegeMapping + 'static,
+{{#operations}}
+    <P as redfish_core::privilege::OperationPrivilegeMapping>::{{pascalCaseName}}: Send,
+{{/operations}}
 {
 {{#operations}}
     pub fn {{snakeCaseName}}<H, T>(mut self, handler: H) -> Self
@@ -48,7 +52,7 @@ where
         T: 'static,
     {
         self.router = self.router.{{snakeCaseName}}(
-            |auth: redfish_core::extract::RedfishAuth<{{requiredPrivilege}}>,
+            |auth: redfish_core::extract::RedfishAuth<P::{{pascalCaseName}}>,
              axum::extract::State(state): axum::extract::State<S>,
              mut request: axum::http::Request<axum::body::Body>| async {
                 request.extensions_mut().insert(auth.user);
