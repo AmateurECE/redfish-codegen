@@ -101,10 +101,15 @@ where
         T: 'static,
     {
         self.router = self.router.{{snakeCaseName}}(
-            |auth: redfish_core::extract::RedfishAuth<P::{{pascalCaseName}}>,
+            |{{#requiresAuth}}auth: redfish_core::extract::RedfishAuth<P::{{pascalCaseName}}>,{{/requiresAuth}}
              axum::extract::State(state): axum::extract::State<S>,
              mut request: axum::http::Request<axum::body::Body>| async {
+{{#requiresAuth}}
                 request.extensions_mut().insert(auth.user);
+{{/requiresAuth}}
+{{^requiresAuth}}
+                request.extensions_mut().insert(Option::<redfish_core::auth::AuthenticatedUser>::None);
+{{/requiresAuth}}
                 handler.call(request, state).await
             },
         );

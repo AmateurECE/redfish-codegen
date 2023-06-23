@@ -107,8 +107,13 @@ public class RedfishCodegen {
                         .file,
                 CratePath.parse("redfish_core::privilege"));
         IComponentMatcher[] componentMatchers = new IComponentMatcher[2];
+        List<Pair<PathItem.HttpMethod, String>> unprotectedOperations = new ArrayList<>();
+        unprotectedOperations.add(new ImmutablePair<>(PathItem.HttpMethod.GET, "/redfish/v1"));
+        unprotectedOperations.add(new ImmutablePair<>(PathItem.HttpMethod.POST, "/redfish/v1/SessionService/Sessions"));
         componentMatchers[0] = new StandardComponentMatcher(
-                privilegeRegistry, new ComponentTypeTranslationService(this.modelResolver));
+                privilegeRegistry,
+                new ComponentTypeTranslationService(this.modelResolver),
+                unprotectedOperations);
         componentMatchers[1] = new ActionComponentMatcher();
         this.componentMatchService = new ComponentMatchService(componentMatchers, new PathService());
 

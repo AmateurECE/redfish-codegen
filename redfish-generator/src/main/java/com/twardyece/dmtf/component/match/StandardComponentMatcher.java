@@ -21,6 +21,7 @@ public class StandardComponentMatcher implements IComponentMatcher {
 
     private final PrivilegeRegistry privilegeRegistry;
     private final ComponentTypeTranslationService componentTypeTranslationService;
+    private final List<Pair<PathItem.HttpMethod, String>> unprotectedOperations;
     private static final ArrayList<PathItem.HttpMethod> METHODS = new ArrayList<>();
 
     static {
@@ -33,9 +34,12 @@ public class StandardComponentMatcher implements IComponentMatcher {
     }
 
 
-    public StandardComponentMatcher(PrivilegeRegistry privilegeRegistry, ComponentTypeTranslationService componentTypeTranslationService) {
+    public StandardComponentMatcher(PrivilegeRegistry privilegeRegistry,
+                                    ComponentTypeTranslationService componentTypeTranslationService,
+                                    List<Pair<PathItem.HttpMethod, String>> unprotectedOperations) {
         this.privilegeRegistry = privilegeRegistry;
         this.componentTypeTranslationService = componentTypeTranslationService;
+        this.unprotectedOperations = unprotectedOperations;
     }
 
     @Override
@@ -63,20 +67,30 @@ public class StandardComponentMatcher implements IComponentMatcher {
         }
 
         ComponentContext context = repository.getOrCreateComponent(schema.get$ref(), uri);
-        this.updateContext(context, pathItem);
+        this.updateContext(context, uri, pathItem);
         return Optional.of(context);
     }
 
-    private void updateContext(ComponentContext context, PathItem pathItem) {
+    private void updateContext(ComponentContext context, String uri, PathItem pathItem) {
         pathItem.readOperationsMap()
                 .keySet()
                 .stream()
                 .filter(METHODS::contains)
                 .filter((method) -> !context.operationMap.containsKey(method))
-                .forEach((method) -> context.operationMap.put(
-                        method,
-                        new ComponentContext.Operation(ComponentContext.operationNameForMethod(method))
-                ));
+                .forEach((method) -> {
+                    boolean requiresAuth = this.unprotectedOperations
+                            .stream()
+                            .filter((op) -> op.getLeft().equals(method) && op.getRight().equals(uri))
+                            .findAny()
+                            .isEmpty();
+                    context.operationMap.put(
+                            method,
+                            new ComponentContext.Operation(
+                                    ComponentContext.operationNameForMethod(method),
+                                    requiresAuth
+                            )
+                    );
+                });
 
         PascalCaseName componentName = new PascalCaseName(context.rustType.getName());
         context.defaultPrivileges = privilegeRegistry.getPrivilegesForComponent(

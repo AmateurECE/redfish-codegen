@@ -41,9 +41,10 @@ public class ComponentContext implements Comparable<ComponentContext> {
     public List<PrivilegedOperation> privilegedOperations() {
         List<PrivilegedOperation> privilegedOperations = new ArrayList<>();
         this.operationMap
-                .keySet()
+                .entrySet()
                 .stream()
-                .map((method) -> new PrivilegedOperation(operationNameForMethod(method)))
+                .filter((entry) -> entry.getValue().requiresAuth)
+                .map((entry) -> new PrivilegedOperation(operationNameForMethod(entry.getKey())))
                 .forEach(privilegedOperations::add);
         if (!this.operationMap.containsKey(PathItem.HttpMethod.POST) && !this.actions.isEmpty()) {
             privilegedOperations.add(new PrivilegedOperation(operationNameForMethod(PathItem.HttpMethod.POST)));
@@ -54,8 +55,10 @@ public class ComponentContext implements Comparable<ComponentContext> {
 
     public static class Operation {
         public PascalCaseName pascalCaseName;
-        public Operation(PascalCaseName pascalCaseName) {
+        public boolean requiresAuth;
+        public Operation(PascalCaseName pascalCaseName, boolean requiresAuth) {
             this.pascalCaseName = pascalCaseName;
+            this.requiresAuth = requiresAuth;
         }
 
         public SnakeCaseName snakeCaseName() { return new SnakeCaseName(this.pascalCaseName); }
