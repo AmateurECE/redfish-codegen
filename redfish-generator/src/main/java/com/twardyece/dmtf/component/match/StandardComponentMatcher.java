@@ -1,21 +1,26 @@
 package com.twardyece.dmtf.component.match;
 
+import com.twardyece.dmtf.RustType;
 import com.twardyece.dmtf.component.ComponentContext;
 import com.twardyece.dmtf.component.ComponentRepository;
+import com.twardyece.dmtf.component.ComponentTypeTranslationService;
 import com.twardyece.dmtf.component.PrivilegeRegistry;
 import com.twardyece.dmtf.text.PascalCaseName;
 import io.swagger.v3.oas.models.Operation;
 import io.swagger.v3.oas.models.PathItem;
 import io.swagger.v3.oas.models.media.MediaType;
 import io.swagger.v3.oas.models.media.Schema;
+import org.apache.commons.lang3.tuple.Pair;
 
 import java.util.ArrayList;
+import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 
 public class StandardComponentMatcher implements IComponentMatcher {
 
     private final PrivilegeRegistry privilegeRegistry;
+    private final ComponentTypeTranslationService componentTypeTranslationService;
     private static final ArrayList<PathItem.HttpMethod> METHODS = new ArrayList<>();
 
     static {
@@ -28,8 +33,9 @@ public class StandardComponentMatcher implements IComponentMatcher {
     }
 
 
-    public StandardComponentMatcher(PrivilegeRegistry privilegeRegistry) {
+    public StandardComponentMatcher(PrivilegeRegistry privilegeRegistry, ComponentTypeTranslationService componentTypeTranslationService) {
         this.privilegeRegistry = privilegeRegistry;
+        this.componentTypeTranslationService = componentTypeTranslationService;
     }
 
     @Override
@@ -72,8 +78,27 @@ public class StandardComponentMatcher implements IComponentMatcher {
                         new ComponentContext.Operation(operationNameForMethod(method))
                 ));
 
+        PascalCaseName componentName = new PascalCaseName(context.rustType.getName());
         context.defaultPrivileges = privilegeRegistry.getPrivilegesForComponent(
-                new PascalCaseName(context.rustType.getName()));
+                componentName);
+        List<Pair<String, PrivilegeRegistry.OperationPrivilegeMapping>> overrides = privilegeRegistry
+                .getSubordinatePrivilegeOverridesForComponent(componentName);
+        for (Pair<String, PrivilegeRegistry.OperationPrivilegeMapping> override : overrides) {
+            Optional<ComponentContext.SubordinatePrivilegeOverride> existing = context.subordinatePrivilegeOverrides
+                    .stream()
+                    .filter((o) -> o.owningComponent().getName().toString().equals(override.getLeft()))
+                    .findFirst();
+            if (existing.isEmpty()) {
+                RustType rustType = this.componentTypeTranslationService
+                        .getRustTypeForComponentName(override.getLeft());
+                context.subordinatePrivilegeOverrides.add(
+                        new ComponentContext.SubordinatePrivilegeOverride(
+                                rustType,
+                                new PascalCaseName(rustType.getName()),
+                                override.getRight())
+                );
+            }
+        }
     }
 
     private static PascalCaseName operationNameForMethod(PathItem.HttpMethod method) {

@@ -56,6 +56,7 @@ public class ComponentContext implements Comparable<ComponentContext> {
                                String componentPath) {}
     public record Action(SnakeCaseName snakeCaseName, PascalCaseName pascalCaseName) {}
     public record SubordinatePrivilegeOverride(RustType owningComponent,
+                                               PascalCaseName owningComponentName,
                                                PrivilegeRegistry.OperationPrivilegeMapping privileges) {}
 
     @Override

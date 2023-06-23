@@ -6,6 +6,8 @@ import com.twardyece.dmtf.RustType;
 import com.twardyece.dmtf.registry.RegistryContext;
 import com.twardyece.dmtf.text.PascalCaseName;
 import io.swagger.v3.oas.models.PathItem;
+import org.apache.commons.lang3.tuple.ImmutablePair;
+import org.apache.commons.lang3.tuple.Pair;
 import org.json.JSONArray;
 import org.json.JSONObject;
 
@@ -46,6 +48,48 @@ public class PrivilegeRegistry {
         return null;
     }
 
+    public List<Pair<String, OperationPrivilegeMapping>> getSubordinatePrivilegeOverridesForComponent(PascalCaseName componentName) {
+        List<Pair<String, OperationPrivilegeMapping>> overrides = new ArrayList<>();
+        String name = componentName.toString();
+        for (int i = 0; i < this.mappings.length(); ++i) {
+            JSONObject mapping = this.mappings.getJSONObject(i);
+            if (!mapping.has("SubordinateOverrides")) {
+                continue;
+            }
+            JSONObject defaultMapping = mapping.getJSONObject("OperationMap");
+            JSONArray subordinateOverrides = mapping.getJSONArray("SubordinateOverrides");
+            for (int j = 0; j < subordinateOverrides.length(); ++j) {
+                JSONObject subordinateOverride = subordinateOverrides.getJSONObject(j);
+                JSONArray targets = subordinateOverride.getJSONArray("Targets");
+                for (int k = 0; k < targets.length(); ++k) {
+                    if (targets.getString(k).equals(name)) {
+                        JSONObject overriddenOperationMap = subordinateOverride.getJSONObject("OperationMap");
+                        OperationPrivilegeMapping operationPrivilegeMapping = new OperationPrivilegeMapping(
+                                parseOperationMap(getMappingOrOverride(defaultMapping, overriddenOperationMap, "GET")),
+                                parseOperationMap(getMappingOrOverride(defaultMapping, overriddenOperationMap, "HEAD")),
+                                parseOperationMap(getMappingOrOverride(defaultMapping, overriddenOperationMap, "POST")),
+                                parseOperationMap(getMappingOrOverride(defaultMapping, overriddenOperationMap, "PUT")),
+                                parseOperationMap(getMappingOrOverride(defaultMapping, overriddenOperationMap, "PATCH")),
+                                parseOperationMap(getMappingOrOverride(defaultMapping, overriddenOperationMap, "DELETE"))
+                        );
+
+                        overrides.add(new ImmutablePair<>(mapping.getString("Entity"), operationPrivilegeMapping));
+                    }
+                }
+            }
+        }
+
+        return overrides;
+    }
+
+    private JSONArray getMappingOrOverride(JSONObject mapping, JSONObject overrides, String key) {
+        if (overrides.has(key)) {
+            return overrides.getJSONArray(key);
+        } else {
+            return mapping.getJSONArray(key);
+        }
+    }
+
     private RustType parseOperationMap(JSONArray conjunctivePrivileges) {
         List<List<RustType>> privileges = new ArrayList<>();
         for (int i = 0; i < conjunctivePrivileges.length(); ++i) {
@@ -71,4 +115,6 @@ public class PrivilegeRegistry {
 
     public record OperationPrivilegeMapping(RustType get, RustType head, RustType post, RustType put, RustType patch,
                                             RustType delete) {}
+    public record SubordinatePrivilegeOverride(PascalCaseName owningComponent,
+                                               PrivilegeRegistry.OperationPrivilegeMapping privileges) {}
 }

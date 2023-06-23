@@ -3,6 +3,7 @@ package com.twardyece.dmtf.component;
 import com.twardyece.dmtf.CratePath;
 import com.twardyece.dmtf.RustType;
 import com.twardyece.dmtf.model.ModelResolver;
+import com.twardyece.dmtf.text.ICaseConvertible;
 import com.twardyece.dmtf.text.PascalCaseName;
 import com.twardyece.dmtf.text.SnakeCaseName;
 
@@ -14,9 +15,17 @@ public class ComponentTypeTranslationService {
         this.modelResolver = modelResolver;
     }
 
-    public RustType getRustTypeForComponentName(String componentName) {
+    public RustType getRustTypeForComponentRef(String componentName) {
         RustType model =  this.modelResolver.resolvePath(componentName);
-        return new RustType(CratePath.parse("crate::" + new SnakeCaseName(model.getName())),
-                new PascalCaseName(model.getName()));
+        return getRustType(model.getName());
+    }
+
+    public RustType getRustTypeForComponentName(String name) {
+        return getRustType(new PascalCaseName(name));
+    }
+
+    private static RustType getRustType(ICaseConvertible name) {
+        return new RustType(CratePath.parse("crate::" + new SnakeCaseName(name)),
+                new PascalCaseName(name));
     }
 }

@@ -26,14 +26,14 @@ impl redfish_core::privilege::OperationPrivilegeMapping for DefaultPrivileges {
     type Patch = {{{patch}}};
     type Delete = {{{delete}}};
 }
-{{/defaultPrivileges}}
 
-{{#subcomponentPrivilegeOverrides}}
-/// The privileges required for accessing {{componentName}} instances that as properties of a {{owningComponent}}
-/// instance.
-pub struct {{owningComponent}}Privileges;
+{{/defaultPrivileges}}
+{{#subordinatePrivilegeOverrides}}
+/// The privileges required for accessing [{{owningComponentName}}][{{owningComponent}}] instances as properties of
+/// a {{componentName}} instance.
+pub struct {{owningComponentName}}Privileges;
 {{#privileges}}
-impl redfish_core::privilege::OperationPrivilegeMapping for {{owningComponent}}Privileges {
+impl redfish_core::privilege::OperationPrivilegeMapping for {{owningComponentName}}Privileges {
     type Get = {{{get}}};
     type Head = {{{head}}};
     type Post = {{{post}}};
@@ -42,8 +42,8 @@ impl redfish_core::privilege::OperationPrivilegeMapping for {{owningComponent}}P
     type Delete = {{{delete}}};
 }
 {{/privileges}}
-{{/subcomponentPrivilegeOverrides}}
 
+{{/subordinatePrivilegeOverrides}}
 /// This endpoint implements the {{componentName}} component.
 {{#hasOwningComponents}}
 ///

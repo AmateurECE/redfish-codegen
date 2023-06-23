@@ -42,7 +42,7 @@ public class ComponentRepository {
             return component;
         }
 
-        RustType rustType = this.componentTypeTranslationService.getRustTypeForComponentName(componentRef);
+        RustType rustType = this.componentTypeTranslationService.getRustTypeForComponentRef(componentRef);
         ComponentContext component = new ComponentContext(rustType, this.baseRegistry);
 
         this.graph.addVertex(component);
