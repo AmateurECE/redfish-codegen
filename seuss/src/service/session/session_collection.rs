@@ -14,14 +14,10 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-use redfish_codegen::{
-    api::v1::session_service::sessions::{
-        self, SessionsGetResponse as GetResponse, SessionsPostResponse as PostResponse,
-    },
-    models::{
-        odata_v4, resource, session::v1_6_0,
-        session_collection::SessionCollection as SessionCollectionModel,
-    },
+use axum::{extract::State, http::StatusCode, Json, Router};
+use redfish_codegen::models::{
+    odata_v4, resource, session::v1_6_0::Session,
+    session_collection::SessionCollection as SessionCollectionModel,
 };
 use redfish_core::auth::AuthenticateRequest;
 
@@ -51,8 +47,8 @@ where
 
 impl<S, A> SessionCollection<S, A>
 where
-    S: Clone + SessionManagement,
-    A: Clone + AuthenticateRequest + 'static,
+    S: Clone + SessionManagement + Send + Sync + 'static,
+    A: Clone + AuthenticateRequest + Send + Sync + 'static,
 {
     pub fn new(
         odata_id: odata_v4::Id,
@@ -67,30 +63,30 @@ where
             session_manager,
         }
     }
-}
 
-impl<S, A> sessions::Sessions for SessionCollection<S, A>
-where
-    S: Clone + SessionManagement,
-    A: Clone + AuthenticateRequest + 'static,
-{
-    fn get(&self) -> GetResponse {
-        match self.session_manager.sessions() {
-            Ok(members) => GetResponse::Ok(SessionCollectionModel {
-                name: self.name.clone(),
-                odata_id: self.odata_id.clone(),
-                members_odata_count: odata_v4::Count(members.len().try_into().unwrap()),
-                members,
-                ..Default::default()
-            }),
-            Err(error) => GetResponse::Default(error),
-        }
-    }
-
-    fn post(&mut self, session: v1_6_0::Session) -> PostResponse {
-        match self.session_manager.create_session(session) {
-            Ok(session) => PostResponse::Created(session),
-            Err(error) => PostResponse::Default(error),
-        }
+    pub fn into_router(self) -> Router {
+        redfish_axum::session_collection::SessionCollection::default()
+            .get(|State(state): State<Self>| async move {
+                match state.session_manager.sessions() {
+                    Ok(members) => Ok(Json(SessionCollectionModel {
+                        name: state.name.clone(),
+                        odata_id: state.odata_id.clone(),
+                        members_odata_count: odata_v4::Count(members.len().try_into().unwrap()),
+                        members,
+                        ..Default::default()
+                    })),
+                    Err(error) => Err(Json(error)),
+                }
+            })
+            .post(
+                |State(mut state): State<Self>, Json(session): Json<Session>| async move {
+                    match state.session_manager.create_session(session) {
+                        Ok(session) => Ok((StatusCode::CREATED, Json(session))),
+                        Err(error) => Err(Json(error)),
+                    }
+                },
+            )
+            .into_router()
+            .with_state(self)
     }
 }

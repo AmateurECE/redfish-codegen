@@ -14,12 +14,9 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-use redfish_codegen::{
-    api::v1::session_service,
-    models::{odata_v4, resource, session_service::v1_1_8},
-    registries::base::v1_15_0::Base,
-};
-use redfish_core::{auth::AuthenticateRequest, error};
+use axum::{extract::State, Json, Router};
+use redfish_codegen::models::{odata_v4, resource, session_service::v1_1_8};
+use redfish_core::auth::AuthenticateRequest;
 
 #[derive(Clone)]
 pub struct SessionService<S>
@@ -35,7 +32,7 @@ where
 
 impl<S> AsRef<dyn AuthenticateRequest> for SessionService<S>
 where
-    S: Clone + AuthenticateRequest + 'static,
+    S: AuthenticateRequest + Clone + 'static,
 {
     fn as_ref(&self) -> &(dyn AuthenticateRequest + 'static) {
         &self.auth_handler
@@ -44,7 +41,7 @@ where
 
 impl<S> SessionService<S>
 where
-    S: Clone + AuthenticateRequest,
+    S: AuthenticateRequest + Clone + Send + Sync + 'static,
 {
     pub fn new(
         odata_id: odata_v4::Id,
@@ -60,33 +57,21 @@ where
             auth_handler,
         }
     }
-}
 
-impl<S> session_service::SessionService for SessionService<S>
-where
-    S: Clone + AuthenticateRequest,
-{
-    fn get(&self) -> session_service::SessionServiceGetResponse {
-        session_service::SessionServiceGetResponse::Ok(v1_1_8::SessionService {
-            id: self.id.clone(),
-            name: self.name.clone(),
-            odata_id: self.odata_id.clone(),
-            sessions: Some(odata_v4::IdRef {
-                odata_id: Some(self.sessions.clone()),
-            }),
-            ..Default::default()
-        })
-    }
-
-    fn put(&mut self, _body: v1_1_8::SessionService) -> session_service::SessionServicePutResponse {
-        session_service::SessionServicePutResponse::Default(error::one_message(
-            Base::QueryNotSupportedOnResource.into(),
-        ))
-    }
-
-    fn patch(&mut self, _body: serde_json::Value) -> session_service::SessionServicePatchResponse {
-        session_service::SessionServicePatchResponse::Default(error::one_message(
-            Base::QueryNotSupportedOnResource.into(),
-        ))
+    pub fn into_router(self) -> Router {
+        redfish_axum::session_service::SessionService::default()
+            .get(|State(state): State<Self>| async move {
+                Json(v1_1_8::SessionService {
+                    id: state.id.clone(),
+                    name: state.name.clone(),
+                    odata_id: state.odata_id.clone(),
+                    sessions: Some(odata_v4::IdRef {
+                        odata_id: Some(state.sessions.clone()),
+                    }),
+                    ..Default::default()
+                })
+            })
+            .into_router()
+            .with_state(self)
     }
 }
