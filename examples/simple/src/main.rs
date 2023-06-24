@@ -27,7 +27,9 @@ use redfish_axum::{
 };
 use redfish_codegen::{
     models::{
-        computer_system::v1_20_0::{ComputerSystem as ComputerSystemModel, ResetRequestBody},
+        computer_system::v1_20_0::{
+            Actions, ComputerSystem as ComputerSystemModel, Reset, ResetRequestBody,
+        },
         computer_system_collection::ComputerSystemCollection as ComputerSystemCollectionModel,
         odata_v4,
         resource::{self, ResetType},
@@ -92,6 +94,9 @@ async fn main() -> anyhow::Result<()> {
                         odata_id: odata_v4::Id(uri.path().to_string()),
                         id: resource::Id("simple".to_string()),
                         name: resource::Name("Simple Redfish Service".to_string()),
+                        systems: Some(odata_v4::IdRef {
+                            odata_id: Some(odata_v4::Id(uri.path().to_string() + "/Systems")),
+                        }),
                         ..Default::default()
                     })
                 })
@@ -114,6 +119,7 @@ async fn main() -> anyhow::Result<()> {
                                             ))),
                                         })
                                         .collect(),
+                                    name: resource::Name("Computer System Collection".to_string()),
                                     ..Default::default()
                                 })
                             }
@@ -136,6 +142,13 @@ async fn main() -> anyhow::Result<()> {
                                                 .0
                                                 .clone(),
                                         ),
+                                        actions: Some(Actions {
+                                            computer_system_reset: Some(Reset {
+                                                target: Some(uri.path().to_string() + "/Actions/ComputerSystem.Reset"),
+                                                ..Default::default()
+                                            }),
+                                            ..Default::default()
+                                        }),
                                         ..Default::default()
                                     })
                                 }})
@@ -143,7 +156,11 @@ async fn main() -> anyhow::Result<()> {
                                     let power_state = match request.reset_type.unwrap() {
                                         ResetType::On | ResetType::GracefulRestart => resource::PowerState::On,
                                         ResetType::ForceOff | ResetType::GracefulShutdown => resource::PowerState::Off,
-                                        _ => return Err(Json(error::one_message(Base::ActionParameterNotSupported("ResetType".to_string(), "Reset".to_string()).into()))),
+                                        _ => return Err(Json(error::one_message(
+                                            Base::ActionParameterNotSupported(
+                                                "ResetType".to_string(),
+                                                "Reset".to_string()
+                                            ).into()))),
                                     };
                                     systems.lock().unwrap().get_mut(id - 1).unwrap().0 = power_state;
                                     Ok(StatusCode::NO_CONTENT)
