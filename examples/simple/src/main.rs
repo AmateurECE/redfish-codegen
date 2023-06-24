@@ -33,13 +33,17 @@ use redfish_codegen::{
         computer_system_collection::ComputerSystemCollection as ComputerSystemCollectionModel,
         odata_v4,
         resource::{self, ResetType},
-        service_root::v1_15_0::ServiceRoot as ServiceRootModel,
+        service_root::v1_15_0::{Links, ServiceRoot as ServiceRootModel},
     },
     registries::base::v1_15_0::Base,
 };
 use redfish_core::{error, privilege::Role};
 use seuss::{
-    auth::NoAuth, middleware::ResourceLocator, service::redfish_versions::RedfishVersions,
+    auth::{pam::LinuxPamAuthenticator, CombinedAuthenticationProxy},
+    middleware::ResourceLocator,
+    service::{
+        redfish_versions::RedfishVersions, session::session_manager::InMemorySessionManager,
+    },
 };
 use std::{
     collections::HashMap,
@@ -71,11 +75,11 @@ async fn main() -> anyhow::Result<()> {
     let args = Args::parse();
     let config: Configuration = serde_yaml::from_reader(File::open(&args.config)?)?;
 
-    // let sessions: &'static str = "/redfish/v1/SessionService/Sessions";
-    // let authenticator = LinuxPamAuthenticator::new(config.role_map)?;
-    // let session_collection =
-    //     InMemorySessionManager::new(authenticator.clone(), odata_v4::Id(sessions.to_string()));
-    // let proxy = CombinedAuthenticationProxy::new(session_collection.clone(), authenticator);
+    let sessions: &'static str = "/redfish/v1/SessionService/Sessions";
+    let authenticator = LinuxPamAuthenticator::new(config.role_map)?;
+    let session_collection =
+        InMemorySessionManager::new(authenticator.clone(), odata_v4::Id(sessions.to_string()));
+    let proxy = CombinedAuthenticationProxy::new(session_collection.clone(), authenticator);
 
     let systems: Vec<SimpleSystem> = vec![SimpleSystem(resource::PowerState::Off)];
     let systems = Arc::new(Mutex::new(systems));
@@ -89,14 +93,20 @@ async fn main() -> anyhow::Result<()> {
         .nest(
             "/redfish/v1/",
             ServiceRoot::default()
-                .get(|OriginalUri(uri): OriginalUri| async move {
+                .get(move |OriginalUri(uri): OriginalUri| async move {
                     Json(ServiceRootModel {
                         odata_id: odata_v4::Id(uri.path().to_string()),
                         id: resource::Id("simple".to_string()),
                         name: resource::Name("Simple Redfish Service".to_string()),
                         systems: Some(odata_v4::IdRef {
-                            odata_id: Some(odata_v4::Id(uri.path().to_string() + "/Systems")),
+                            odata_id: Some(odata_v4::Id(uri.path().to_string() + "Systems")),
                         }),
+                        links: Links {
+                            sessions: odata_v4::IdRef {
+                                odata_id: Some(odata_v4::Id(sessions.to_string())),
+                            },
+                            ..Default::default()
+                        },
                         ..Default::default()
                     })
                 })
@@ -174,7 +184,7 @@ async fn main() -> anyhow::Result<()> {
                         .into_router(),
                 )
                 .into_router()
-                .with_state(NoAuth),
+                .with_state(proxy),
         )
         .layer(TraceLayer::new_for_http());
 
