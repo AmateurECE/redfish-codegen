@@ -78,7 +78,14 @@ where
             .post(
                 |State(mut state): State<Self>, Json(session): Json<Session>| async move {
                     match state.session_manager.create_session(session) {
-                        Ok(session) => Ok((StatusCode::CREATED, Json(session))),
+                        Ok(session) => Ok((
+                            StatusCode::CREATED,
+                            [
+                                ("X-Auth-Token", session.token.clone().unwrap()),
+                                ("Location", session.odata_id.0.clone()),
+                            ],
+                            Json(session),
+                        )),
                         Err(error) => Err(Json(error)),
                     }
                 },
