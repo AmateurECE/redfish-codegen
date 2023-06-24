@@ -14,18 +14,36 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-use axum::{Json, Router};
+use axum::{
+    extract::OriginalUri,
+    http::StatusCode,
+    response::{Redirect, Response},
+    Extension, Json, Router,
+};
 use clap::Parser;
 use redfish_axum::{
-    computer_system_collection::ComputerSystemCollection, service_root::ServiceRoot,
+    computer_system::ComputerSystem, computer_system_collection::ComputerSystemCollection,
+    service_root::ServiceRoot,
 };
-use redfish_codegen::models::{
-    computer_system_collection::ComputerSystemCollection as ComputerSystemCollectionModel,
-    service_root::v1_15_0::ServiceRoot as ServiceRootModel,
+use redfish_codegen::{
+    models::{
+        computer_system::v1_20_0::{ComputerSystem as ComputerSystemModel, ResetRequestBody},
+        computer_system_collection::ComputerSystemCollection as ComputerSystemCollectionModel,
+        odata_v4,
+        resource::{self, ResetType},
+        service_root::v1_15_0::ServiceRoot as ServiceRootModel,
+    },
+    registries::base::v1_15_0::Base,
 };
-use redfish_core::privilege::Role;
-use seuss::{auth::NoAuth, service::redfish_versions::RedfishVersions};
-use std::{collections::HashMap, fs::File};
+use redfish_core::{error, privilege::Role};
+use seuss::{
+    auth::NoAuth, middleware::ResourceLocator, service::redfish_versions::RedfishVersions,
+};
+use std::{
+    collections::HashMap,
+    fs::File,
+    sync::{Arc, Mutex},
+};
 use tower_http::trace::TraceLayer;
 
 #[derive(Parser)]
@@ -43,6 +61,8 @@ struct Configuration {
     server: seuss::router::Configuration,
 }
 
+struct SimpleSystem(resource::PowerState);
+
 #[tokio::main]
 async fn main() -> anyhow::Result<()> {
     tracing_subscriber::fmt::init();
@@ -55,15 +75,85 @@ async fn main() -> anyhow::Result<()> {
     //     InMemorySessionManager::new(authenticator.clone(), odata_v4::Id(sessions.to_string()));
     // let proxy = CombinedAuthenticationProxy::new(session_collection.clone(), authenticator);
 
+    let systems: Vec<SimpleSystem> = vec![SimpleSystem(resource::PowerState::Off)];
+    let systems = Arc::new(Mutex::new(systems));
+
     let app = Router::new()
         .route("/redfish", RedfishVersions::default().into())
+        .route(
+            "/redfish/v1",
+            axum::routing::get(|| async { Redirect::permanent("/redfish/v1/") }),
+        )
         .nest(
             "/redfish/v1/",
             ServiceRoot::default()
-                .get(|| async { Json(ServiceRootModel::default()) })
+                .get(|OriginalUri(uri): OriginalUri| async move {
+                    Json(ServiceRootModel {
+                        odata_id: odata_v4::Id(uri.path().to_string()),
+                        id: resource::Id("simple".to_string()),
+                        name: resource::Name("Simple Redfish Service".to_string()),
+                        ..Default::default()
+                    })
+                })
                 .systems(
                     ComputerSystemCollection::default()
-                        .get(|| async { Json(ComputerSystemCollectionModel::default()) })
+                        .get({
+                            let systems = Arc::clone(&systems);
+                            |OriginalUri(uri): OriginalUri| async move {
+                                let length = systems.lock().unwrap().len();
+                                Json(ComputerSystemCollectionModel {
+                                    odata_id: odata_v4::Id(uri.path().to_string()),
+                                    members_odata_count: odata_v4::Count(length.try_into().unwrap()),
+                                    members: (0..length)
+                                        .into_iter()
+                                        .map(|id| odata_v4::IdRef {
+                                            odata_id: Some(odata_v4::Id(format!(
+                                                "{}/{}",
+                                                uri.path(),
+                                                id + 1
+                                            ))),
+                                        })
+                                        .collect(),
+                                    ..Default::default()
+                                })
+                            }
+                        })
+                        .computer_system(
+                            ComputerSystem::default()
+                                .get({
+                                    let systems = Arc::clone(&systems);
+                                    |OriginalUri(uri): OriginalUri, Extension(id): Extension<usize>| async move {
+                                    Json(ComputerSystemModel {
+                                        odata_id: odata_v4::Id(uri.path().to_string()),
+                                        id: resource::Id(id.to_string()),
+                                        name: resource::Name(format!("SimpleSystem-{}", id)),
+                                        power_state: Some(
+                                            systems
+                                                .lock()
+                                                .unwrap()
+                                                .get(id - 1)
+                                                .unwrap()
+                                                .0
+                                                .clone(),
+                                        ),
+                                        ..Default::default()
+                                    })
+                                }})
+                                .reset(|Extension(id): Extension<usize>, Json(request): Json<ResetRequestBody>| async move {
+                                    let power_state = match request.reset_type.unwrap() {
+                                        ResetType::On | ResetType::GracefulRestart => resource::PowerState::On,
+                                        ResetType::ForceOff | ResetType::GracefulShutdown => resource::PowerState::Off,
+                                        _ => return Err(Json(error::one_message(Base::ActionParameterNotSupported("ResetType".to_string(), "Reset".to_string()).into()))),
+                                    };
+                                    systems.lock().unwrap().get_mut(id - 1).unwrap().0 = power_state;
+                                    Ok(StatusCode::NO_CONTENT)
+                                })
+                                .into_router()
+                                .route_layer(ResourceLocator::new(
+                                    "computer_system_id".to_string(),
+                                    |id: usize| async move { Ok::<_, Response>(id) },
+                                )),
+                        )
                         .into_router(),
                 )
                 .into_router()
