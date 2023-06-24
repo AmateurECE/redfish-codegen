@@ -23,7 +23,7 @@ use axum::{
 use clap::Parser;
 use redfish_axum::{
     computer_system::ComputerSystem, computer_system_collection::ComputerSystemCollection,
-    service_root::ServiceRoot,
+    metadata::Metadata, odata::OData, service_root::ServiceRoot, session_service::SessionService,
 };
 use redfish_codegen::{
     models::{
@@ -34,6 +34,7 @@ use redfish_codegen::{
         odata_v4,
         resource::{self, ResetType},
         service_root::v1_15_0::{Links, ServiceRoot as ServiceRootModel},
+        session_service::v1_1_8::SessionService as SessionServiceModel,
     },
     registries::base::v1_15_0::Base,
 };
@@ -42,7 +43,8 @@ use seuss::{
     auth::{pam::LinuxPamAuthenticator, CombinedAuthenticationProxy},
     middleware::ResourceLocator,
     service::{
-        redfish_versions::RedfishVersions, session::session_manager::InMemorySessionManager,
+        redfish_versions::RedfishVersions,
+        session::{session_manager::InMemorySessionManager, SessionCollection},
     },
 };
 use std::{
@@ -75,11 +77,9 @@ async fn main() -> anyhow::Result<()> {
     let args = Args::parse();
     let config: Configuration = serde_yaml::from_reader(File::open(&args.config)?)?;
 
-    let sessions: &'static str = "/redfish/v1/SessionService/Sessions";
     let authenticator = LinuxPamAuthenticator::new(config.role_map)?;
-    let session_collection =
-        InMemorySessionManager::new(authenticator.clone(), odata_v4::Id(sessions.to_string()));
-    let proxy = CombinedAuthenticationProxy::new(session_collection.clone(), authenticator);
+    let session_manager = InMemorySessionManager::new(authenticator.clone());
+    let proxy = CombinedAuthenticationProxy::new(session_manager.clone(), authenticator);
 
     let systems: Vec<SimpleSystem> = vec![SimpleSystem(resource::PowerState::Off)];
     let systems = Arc::new(Mutex::new(systems));
@@ -90,10 +90,17 @@ async fn main() -> anyhow::Result<()> {
             "/redfish/v1",
             axum::routing::get(|| async { Redirect::permanent("/redfish/v1/") }),
         )
+        .route("/redfish/v1/odata", OData::new()
+            .enable_systems()
+            .enable_session_service()
+            .into()
+        )
+        .route("/redfish/v1/$metadata", Metadata.into())
         .nest(
             "/redfish/v1/",
             ServiceRoot::default()
                 .get(move |OriginalUri(uri): OriginalUri| async move {
+                    let session_service_path = uri.path().to_string() + "SessionService";
                     Json(ServiceRootModel {
                         odata_id: odata_v4::Id(uri.path().to_string()),
                         id: resource::Id("simple".to_string()),
@@ -101,9 +108,12 @@ async fn main() -> anyhow::Result<()> {
                         systems: Some(odata_v4::IdRef {
                             odata_id: Some(odata_v4::Id(uri.path().to_string() + "Systems")),
                         }),
+                        session_service: Some(odata_v4::IdRef {
+                            odata_id: Some(odata_v4::Id(session_service_path.clone())),
+                        }),
                         links: Links {
                             sessions: odata_v4::IdRef {
-                                odata_id: Some(odata_v4::Id(sessions.to_string())),
+                                odata_id: Some(odata_v4::Id(session_service_path + "/Sessions")),
                             },
                             ..Default::default()
                         },
@@ -182,6 +192,22 @@ async fn main() -> anyhow::Result<()> {
                                 )),
                         )
                         .into_router(),
+                )
+                .session_service(
+                    SessionService::default()
+                        .get(|OriginalUri(uri): OriginalUri| async move {
+                            Json(SessionServiceModel {
+                                id: resource::Id("sessions".to_string()),
+                                name: resource::Name("SessionService".to_string()),
+                                odata_id: odata_v4::Id(uri.path().to_string()),
+                                sessions: Some(odata_v4::IdRef {
+                                    odata_id: Some(odata_v4::Id(uri.path().to_string() + "/Sessions")),
+                                }),
+                                ..Default::default()
+                            })
+                        })
+                        .sessions(SessionCollection::new(session_manager, proxy.clone()).into_router())
+                        .into_router()
                 )
                 .into_router()
                 .with_state(proxy),

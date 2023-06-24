@@ -43,7 +43,6 @@ where
 {
     sessions: Arc<Mutex<HashMap<String, ManagedSession>>>,
     last_id: Arc<Mutex<i64>>,
-    collection_odata_id: odata_v4::Id,
     timeout: Duration,
     auth_handler: S,
 }
@@ -55,15 +54,14 @@ where
     /// Default duration is 30 minutes.
     const DEFAULT_DURATION: Duration = Duration::from_secs(1800);
 
-    pub fn new(auth_handler: S, collection_id: odata_v4::Id) -> Self {
-        Self::with_duration(Self::DEFAULT_DURATION, auth_handler, collection_id)
+    pub fn new(auth_handler: S) -> Self {
+        Self::with_duration(Self::DEFAULT_DURATION, auth_handler)
     }
 
-    pub fn with_duration(timeout: Duration, auth_handler: S, collection_id: odata_v4::Id) -> Self {
+    pub fn with_duration(timeout: Duration, auth_handler: S) -> Self {
         Self {
             auth_handler,
             last_id: Arc::new(Mutex::new(0)),
-            collection_odata_id: collection_id,
             timeout,
             sessions: Arc::new(Mutex::new(HashMap::new())),
         }
@@ -146,7 +144,7 @@ where
 
         let created_session = v1_6_0::Session {
             user_name: Some(user_name),
-            odata_id: odata_v4::Id(self.collection_odata_id.0.clone() + "/" + &id),
+            odata_id: odata_v4::Id("/redfish/v1/SessionService/Sessions/".to_string() + &id),
             id: resource::Id(id.clone()),
             name: resource::Name("User Session".to_string()),
             description: Some(resource::Description("User Session".to_string())),

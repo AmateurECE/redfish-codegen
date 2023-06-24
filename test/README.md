@@ -7,6 +7,13 @@ with seuss inside of an OCI container. The steps are as follows:
 2. Build the OCI image
 3. Run using the convenience script provided
 
+To test using the [Redfish Protocol Validator][1], these additional steps are
+required:
+
+1. Create a Python virtual environment and install the tools from the
+   requirements.txt
+2. Run the Redfish Protocol Validator
+
 ## Generating a certificate/key pair for testing
 
 ```bash
@@ -38,3 +45,19 @@ container. For example, if my compiled service binary is at
 ```bash
 $ ./test/run-container.sh simple
 ```
+
+## Create a Python virtual environment
+
+```bash-session
+$ python3 -m venv ./test/venv
+$ . ./test/venv/bin/activate
+$ pip install -r test/requirements.txt
+```
+
+## Run the Redfish Protocol Validator
+
+```
+rf_protocol_validator -r https://localhost:3001 --no-cert-check -u administrator -p administrator
+```
+
+[1]: https://github.com/DMTF/Redfish-Protocol-Validator

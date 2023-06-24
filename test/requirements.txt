@@ -1,0 +1,11 @@
+aenum==3.1.14
+certifi==2023.5.7
+charset-normalizer==3.1.0
+colorama==0.4.6
+idna==3.4
+pyasn1==0.5.0
+pyasn1-modules==0.3.0
+redfish-protocol-validator==1.1.8
+requests==2.31.0
+sseclient-py==1.7.2
+urllib3==1.26.16
