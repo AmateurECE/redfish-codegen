@@ -82,10 +82,10 @@ async fn redirect_http_to_https(address: String, ports: Ports) {
 
 pub async fn serve(config: Configuration, app: Router) -> anyhow::Result<()> {
     let server_handle = Handle::new();
-    let signals = Signals::new(&[SIGINT, SIGTERM])?;
+    let signals = Signals::new([SIGINT, SIGTERM])?;
     let signals_handle = signals.handle();
     let signal_handler = |mut signals: Signals| async move {
-        if let Some(_) = signals.next().await {
+        if signals.next().await.is_some() {
             println!("Gracefully shutting down");
             server_handle.shutdown();
         }

@@ -172,7 +172,7 @@ async fn main() -> anyhow::Result<()> {
                                                     role
                                                         .privileges()
                                                         .into_iter()
-                                                        .map(|privilege| PrivilegeType::from(privilege))
+                                                        .map(PrivilegeType::from)
                                                         .collect::<Vec<_>>()
                                                 ),
                                                 ..Default::default()
@@ -197,7 +197,6 @@ async fn main() -> anyhow::Result<()> {
                                     odata_id: odata_v4::Id(uri.path().to_string()),
                                     members_odata_count: odata_v4::Count(length.try_into().unwrap()),
                                     members: (0..length)
-                                        .into_iter()
                                         .map(|id| odata_v4::IdRef {
                                             odata_id: Some(odata_v4::Id(format!(
                                                 "{}/{}",

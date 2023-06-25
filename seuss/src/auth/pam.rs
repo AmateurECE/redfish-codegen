@@ -64,10 +64,9 @@ impl LinuxPamAuthenticator {
 
     fn get_user_role(&self, username: &str) -> Result<Role, redfish::Error> {
         let gid = users::get_user_by_name(username)
-            .ok_or_else(|| insufficient_privilege())?
+            .ok_or_else(insufficient_privilege)?
             .primary_group_id();
-        let groups =
-            users::get_user_groups(&username, gid).ok_or_else(|| insufficient_privilege())?;
+        let groups = users::get_user_groups(&username, gid).ok_or_else(insufficient_privilege)?;
         let group_names = groups
             .iter()
             .map(|group| group.name())
@@ -77,7 +76,7 @@ impl LinuxPamAuthenticator {
             .role_map
             .iter()
             .find(|(_, group)| group_names.contains(&group.name()))
-            .ok_or_else(|| insufficient_privilege())?;
+            .ok_or_else(insufficient_privilege)?;
 
         Ok(*role)
     }
