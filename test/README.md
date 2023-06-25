@@ -27,7 +27,7 @@ openssl rsa -in test/manager.key -text > test/manager-key.pem
 openssl req -key test/manager.key -new -out test/manager.csr
 
 # Sign the certificate
-openssl x509 -signkey test/manager.key -in test/manager.csr -req -days 365 -out test/manager-cert.pem
+openssl x509 -signkey test/manager.key -in test/manager.csr -req -extfile test/v3.ext -days 365 -out test/manager-cert.pem
 ```
 
 ## Build the OCI image
