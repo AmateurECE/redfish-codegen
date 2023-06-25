@@ -1,20 +1,16 @@
 package com.twardyece.dmtf.component;
 
 import com.twardyece.dmtf.component.match.IComponentMatcher;
-import com.twardyece.dmtf.openapi.ModelUtils;
 import com.twardyece.dmtf.text.CaseConversion;
 import com.twardyece.dmtf.text.PascalCaseName;
 import com.twardyece.dmtf.text.SnakeCaseName;
 import io.swagger.v3.oas.models.PathItem;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import java.util.*;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 public class ComponentMatchService {
-    private static final Logger LOGGER = LoggerFactory.getLogger(ModelUtils.class);
     private static final Pattern PARAMETER_PATTERN = Pattern.compile("/\\{[A-Za-z0-9_]+}");
     private final IComponentMatcher[] componentMatchers;
     private final PathService pathService;
@@ -79,10 +75,6 @@ public class ComponentMatchService {
                     } catch (PathService.NoCloseParentException ignored) {
                     }
                 }
-            }
-
-            if (subcomponentMap.size() != subcomponents.size()) {
-                LOGGER.warn("Component " + next.rustType.getName() + " has multiple mount points for one of its subcomponents");
             }
 
             next.subcomponents = subcomponentMap.entrySet()

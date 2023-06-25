@@ -22,7 +22,7 @@ fn main() -> io::Result<()> {
     println!("cargo:rerun-if-changed=../generate.mk");
     println!("cargo:rerun-if-changed=../redfish-generator");
     Command::new("make")
-        .args(["-C", "..", "-f", "generate.mk", "models"])
+        .args(["-C", "..", "-f", "generate.mk", "routing"])
         .status()
         .map(|_| ())
 }
