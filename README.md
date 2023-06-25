@@ -17,7 +17,8 @@ depends on the following utilities to be available in $PATH:
  * `curl(1)`
  * `unzip(1)`
  * `quilt(1)`
- * `java(1)`
+ * `java(1)` (JDK 17 or greater)
  * `mvn`
+ * `sed(1)`
 
 [1]: https://docs.rs/redfish-codegen
