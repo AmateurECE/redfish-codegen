@@ -37,12 +37,17 @@ import org.slf4j.LoggerFactory;
 import org.xml.sax.SAXException;
 
 import javax.xml.parsers.ParserConfigurationException;
+import java.io.BufferedReader;
 import java.io.IOException;
+import java.io.InputStream;
+import java.io.InputStreamReader;
 import java.net.URISyntaxException;
+import java.nio.charset.StandardCharsets;
 import java.nio.file.Path;
 import java.util.*;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
+import java.util.stream.Collectors;
 
 /**
  * Redfish Code Generator for the Rust language
@@ -157,16 +162,39 @@ public class RedfishCodegen {
             ModuleFile<ModuleContext> file = this.fileFactory.makeModuleFile(module);
             file.generate();
         }
+    }
 
-        ModuleFile<LibContext> file = this.fileFactory.makeLibFile(this.specVersion);
+    public void generateModelsLib() throws IOException {
+        ModuleContext module = new ModuleContext(CratePath.crateRoot(), null);
+        LibContext context = new LibContext(module, specVersion, getResourceFileAsString("codegen.rs"));
+        ModuleFile<LibContext> file = this.fileFactory.makeLibFile(context);
         file.getContext().moduleContext.addNamedSubmodule(RustConfig.MODELS_BASE_MODULE);
         file.getContext().moduleContext.addNamedSubmodule(RustConfig.REGISTRY_BASE_MODULE);
-
         file.generate();
     }
 
+    /**
+     * Reads given resource file as a string.
+     *
+     * @param fileName path to the resource file
+     * @return the file's contents
+     * @throws IOException if read fails for any reason
+     */
+    static String getResourceFileAsString(String fileName) throws IOException {
+        ClassLoader classLoader = ClassLoader.getSystemClassLoader();
+        try (InputStream is = classLoader.getResourceAsStream(fileName)) {
+            if (is == null) return null;
+            try (InputStreamReader isr = new InputStreamReader(is, StandardCharsets.UTF_8);
+                 BufferedReader reader = new BufferedReader(isr)) {
+                return reader.lines().collect(Collectors.joining(System.lineSeparator()));
+            }
+        }
+    }
+
     private void generateRouting(Map<PascalCaseName, RegistryContext> registries) throws IOException, URISyntaxException, ParserConfigurationException, SAXException {
-        ModuleFile<LibContext> libFile = this.fileFactory.makeLibFile(this.specVersion);
+        ModuleContext moduleContext = new ModuleContext(CratePath.crateRoot(), null);
+        LibContext libContext = new LibContext(moduleContext, this.specVersion);
+        ModuleFile<LibContext> libFile = this.fileFactory.makeLibFile(libContext);
         Map<String, PathItem> paths = this.document.getPaths();
 
         // Metadata router, a submodule of the routing module that handles the OData metadata document.
@@ -269,6 +297,7 @@ public class RedfishCodegen {
             case "models" -> {
                 this.generateModels(models);
                 this.generateRegistries(registries);
+                this.generateModelsLib();
             }
             case "routing" -> this.generateRouting(registries);
             default -> throw new RuntimeException("Unknown component " + component);

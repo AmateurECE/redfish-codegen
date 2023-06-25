@@ -20,3 +20,7 @@ pub mod registries;
 
 /// The version of the Redfish Schema Specification provided by this crate.
 pub const REDFISH_VERSION: &str = "2022.3";
+
+pub trait Metadata<'a> {
+    const JSON_SCHEMA: &'a str;
+}

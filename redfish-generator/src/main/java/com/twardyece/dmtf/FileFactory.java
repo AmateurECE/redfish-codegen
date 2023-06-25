@@ -53,9 +53,7 @@ public class FileFactory {
         return new ModuleFile<>(trait.moduleContext.path, trait, this.traitTemplate);
     }
 
-    public ModuleFile<LibContext> makeLibFile(String specVersion) {
-        ModuleContext module = new ModuleContext(CratePath.crateRoot(), null);
-        LibContext context = new LibContext(module, specVersion);
+    public ModuleFile<LibContext> makeLibFile(LibContext context) {
         return new ModuleFile<>(context.moduleContext.path, context, this.libTemplate);
     }
 
