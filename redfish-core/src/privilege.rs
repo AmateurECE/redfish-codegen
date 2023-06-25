@@ -14,9 +14,10 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+use redfish_codegen::models::privileges::PrivilegeType;
 use std::marker::PhantomData;
 
-#[derive(Clone, PartialEq, Eq)]
+#[derive(Clone, Copy, PartialEq, Eq, Hash, strum::EnumIter, strum::Display, strum::EnumString)]
 #[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
 pub enum Privilege {
     Login,
@@ -24,6 +25,18 @@ pub enum Privilege {
     ConfigureManager,
     ConfigureSelf,
     ConfigureUsers,
+}
+
+impl From<Privilege> for PrivilegeType {
+    fn from(value: Privilege) -> Self {
+        match value {
+            Privilege::Login => PrivilegeType::Login,
+            Privilege::ConfigureComponents => PrivilegeType::ConfigureComponents,
+            Privilege::ConfigureManager => PrivilegeType::ConfigureManager,
+            Privilege::ConfigureSelf => PrivilegeType::ConfigureSelf,
+            Privilege::ConfigureUsers => PrivilegeType::ConfigureUsers,
+        }
+    }
 }
 
 pub trait SatisfiesPrivilege {
@@ -108,7 +121,7 @@ where
     }
 }
 
-#[derive(Clone, Copy, PartialEq, Eq, Hash)]
+#[derive(Clone, Copy, PartialEq, Eq, Hash, strum::EnumIter, strum::Display, strum::EnumString)]
 #[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
 pub enum Role {
     Administrator,

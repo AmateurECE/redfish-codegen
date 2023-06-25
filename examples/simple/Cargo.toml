@@ -20,3 +20,4 @@ redfish-axum = { version = "0.2.0", path = "../../redfish-axum" }
 redfish-codegen = { version = "0.2.0", path = "../../redfish-codegen" }
 redfish-core = { version = "0.1.0", path = "../../redfish-core" }
 seuss = { version = "0.1.0", path = "../../seuss", features = ["router", "serde", "auth-pam"] }
+strum = "0.25.0"

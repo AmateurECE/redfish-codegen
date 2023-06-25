@@ -22,23 +22,29 @@ use axum::{
 };
 use clap::Parser;
 use redfish_axum::{
-    computer_system::ComputerSystem, computer_system_collection::ComputerSystemCollection,
-    metadata::Metadata, odata::OData, service_root::ServiceRoot, session_service::SessionService,
+    account_service::AccountService, computer_system::ComputerSystem,
+    computer_system_collection::ComputerSystemCollection, metadata::Metadata, odata::OData,
+    role::Role, role_collection::RoleCollection, service_root::ServiceRoot,
+    session_service::SessionService,
 };
 use redfish_codegen::{
     models::{
+        account_service::v1_12_0::AccountService as AccountServiceModel,
         computer_system::v1_20_0::{
             Actions, ComputerSystem as ComputerSystemModel, Reset, ResetRequestBody,
         },
         computer_system_collection::ComputerSystemCollection as ComputerSystemCollectionModel,
         odata_v4,
+        privileges::PrivilegeType,
         resource::{self, ResetType},
+        role::v1_3_1::Role as RoleModel,
+        role_collection::RoleCollection as RoleCollectionModel,
         service_root::v1_15_0::{Links, ServiceRoot as ServiceRootModel},
         session_service::v1_1_8::SessionService as SessionServiceModel,
     },
     registries::base::v1_15_0::Base,
 };
-use redfish_core::{error, privilege::Role};
+use redfish_core::{error, privilege};
 use seuss::{
     auth::{pam::LinuxPamAuthenticator, CombinedAuthenticationProxy},
     middleware::ResourceLocator,
@@ -50,8 +56,10 @@ use seuss::{
 use std::{
     collections::HashMap,
     fs::File,
+    str::FromStr,
     sync::{Arc, Mutex},
 };
+use strum::IntoEnumIterator;
 use tower_http::trace::TraceLayer;
 
 #[derive(Parser)]
@@ -65,7 +73,7 @@ struct Args {
 #[allow(dead_code)]
 struct Configuration {
     #[serde(rename = "role-map")]
-    role_map: HashMap<Role, String>,
+    role_map: HashMap<privilege::Role, String>,
     server: seuss::router::Configuration,
 }
 
@@ -93,6 +101,8 @@ async fn main() -> anyhow::Result<()> {
         .route("/redfish/v1/odata", OData::new()
             .enable_systems()
             .enable_session_service()
+            .enable_account_service()
+            .enable_sessions()
             .into()
         )
         .route("/redfish/v1/$metadata", Metadata.into())
@@ -111,6 +121,9 @@ async fn main() -> anyhow::Result<()> {
                         session_service: Some(odata_v4::IdRef {
                             odata_id: Some(odata_v4::Id(session_service_path.clone())),
                         }),
+                        account_service: Some(odata_v4::IdRef {
+                            odata_id: Some(odata_v4::Id(uri.path().to_string() + "AccountService")),
+                        }),
                         links: Links {
                             sessions: odata_v4::IdRef {
                                 odata_id: Some(odata_v4::Id(session_service_path + "/Sessions")),
@@ -120,6 +133,60 @@ async fn main() -> anyhow::Result<()> {
                         ..Default::default()
                     })
                 })
+                .account_service(
+                    AccountService::default()
+                        .get(|OriginalUri(uri): OriginalUri| async move {
+                            Json(AccountServiceModel {
+                                odata_id: odata_v4::Id(uri.path().to_string()),
+                                id: resource::Id("AccountService".to_string()),
+                                name: resource::Name("Account Service".to_string()),
+                                roles: Some(odata_v4::IdRef {
+                                    odata_id: Some(odata_v4::Id(uri.path().to_string() + "/Roles")),
+                                }),
+                                ..Default::default()
+                            })
+                        })
+                        .roles(
+                            RoleCollection::default()
+                                .get(|OriginalUri(uri): OriginalUri| async move {
+                                    Json(RoleCollectionModel {
+                                        odata_id: odata_v4::Id(uri.path().to_string()),
+                                        name: resource::Name("Roles".to_string()),
+                                        members: privilege::Role::iter()
+                                            .map(|role| odata_v4::IdRef {
+                                                odata_id: Some(odata_v4::Id(uri.path().to_string() + "/" + &role.to_string())),
+                                            })
+                                            .collect::<Vec<_>>(),
+                                        members_odata_count: odata_v4::Count(privilege::Role::iter().count().try_into().unwrap()),
+                                        ..Default::default()
+                                    })
+                                })
+                                .role(
+                                    Role::default()
+                                        .get(|OriginalUri(uri): OriginalUri, Extension(role): Extension<privilege::Role>| async move {
+                                            Json(RoleModel {
+                                                odata_id: odata_v4::Id(uri.path().to_string()),
+                                                id: resource::Id(role.to_string()),
+                                                name: resource::Name(role.to_string() + " User Role"),
+                                                assigned_privileges: Some(
+                                                    role
+                                                        .privileges()
+                                                        .into_iter()
+                                                        .map(|privilege| PrivilegeType::from(privilege))
+                                                        .collect::<Vec<_>>()
+                                                ),
+                                                ..Default::default()
+                                            })
+                                        })
+                                        .into_router()
+                                        .route_layer(ResourceLocator::new("role_id".to_string(), |id: String| async move {
+                                            Ok::<_, Response>(privilege::Role::from_str(&id).unwrap())
+                                        }))
+                                )
+                                .into_router()
+                        )
+                        .into_router()
+                )
                 .systems(
                     ComputerSystemCollection::default()
                         .get({
