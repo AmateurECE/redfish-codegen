@@ -14,18 +14,22 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+use std::str::FromStr;
+
 use axum::{
     extract::{OriginalUri, State},
     http::StatusCode,
-    Json, Router,
+    response::Response,
+    Extension, Json, Router,
 };
+use redfish_axum::session::Session;
 use redfish_codegen::models::{
-    odata_v4, resource, session::v1_6_0::Session,
+    odata_v4, resource, session::v1_6_0::Session as SessionModel,
     session_collection::SessionCollection as SessionCollectionModel,
 };
 use redfish_core::auth::AuthenticateRequest;
 
-use crate::auth::SessionManagement;
+use crate::{auth::SessionManagement, middleware::ResourceLocator};
 
 #[derive(Clone)]
 pub struct SessionCollection<M, A>
@@ -50,6 +54,7 @@ where
 impl<M, A> SessionCollection<M, A>
 where
     M: Clone + SessionManagement + Send + Sync + 'static,
+    <M as SessionManagement>::Id: FromStr + Clone + Send + Sync,
     A: Clone + AuthenticateRequest + Send + Sync + 'static,
 {
     pub fn new(session_manager: M, auth_handler: A) -> Self {
@@ -76,8 +81,8 @@ where
                 },
             )
             .post(
-                |State(mut state): State<Self>, Json(session): Json<Session>| async move {
-                    match state.session_manager.create_session(session) {
+                |State(mut state): State<Self>, OriginalUri(uri): OriginalUri, Json(session): Json<SessionModel>| async move {
+                    match state.session_manager.create_session(session, uri.path().to_string()) {
                         Ok(session) => Ok((
                             StatusCode::CREATED,
                             [
@@ -89,6 +94,26 @@ where
                         Err(error) => Err(Json(error)),
                     }
                 },
+            )
+            .session(
+                Session::default()
+                    .get(|Extension(id): Extension<M::Id>, State(state): State<Self>| async move {
+                        match state.session_manager.get_session(id) {
+                            Ok(session) => Ok(Json(session)),
+                            Err(error) => Err(Json(error)),
+                        }
+                    })
+                    .delete(|Extension(id): Extension<M::Id>, State(mut state): State<Self>| async move {
+                        match state.session_manager.delete_session(id) {
+                            Ok(()) => Ok(StatusCode::NO_CONTENT),
+                            Err(error) => Err(Json(error)),
+                        }
+                    })
+                    .into_router()
+                    .route_layer(ResourceLocator::new(
+                        "session_id".to_string(),
+                        |id: M::Id| async move { Ok::<_, Response>(id) }
+                    ))
             )
             .into_router()
             .with_state(self)

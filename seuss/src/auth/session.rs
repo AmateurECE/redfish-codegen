@@ -21,6 +21,7 @@ use redfish_core::auth::{
 };
 
 pub trait SessionManagement {
+    type Id;
     fn session_is_valid(
         &self,
         token: String,
@@ -30,8 +31,10 @@ pub trait SessionManagement {
     fn create_session(
         &mut self,
         session: v1_6_0::Session,
+        base_path: String,
     ) -> Result<v1_6_0::Session, redfish::Error>;
-    fn delete_session(&mut self, token: String) -> Result<(), redfish::Error>;
+    fn get_session(&self, id: Self::Id) -> Result<v1_6_0::Session, redfish::Error>;
+    fn delete_session(&mut self, id: Self::Id) -> Result<(), redfish::Error>;
 }
 
 pub trait SessionAuthentication {

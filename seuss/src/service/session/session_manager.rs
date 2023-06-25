@@ -94,6 +94,7 @@ impl<S> SessionManagement for InMemorySessionManager<S>
 where
     S: SessionAuthentication + Clone,
 {
+    type Id = usize;
     fn session_is_valid(
         &self,
         token: String,
@@ -125,6 +126,7 @@ where
     fn create_session(
         &mut self,
         session: v1_6_0::Session,
+        base_path: String,
     ) -> Result<v1_6_0::Session, redfish::Error> {
         let user_name = session.user_name.clone().ok_or_else(|| {
             error::one_message(Base::PropertyMissing("UserName".to_string()).into())
@@ -144,7 +146,7 @@ where
 
         let created_session = v1_6_0::Session {
             user_name: Some(user_name),
-            odata_id: odata_v4::Id("/redfish/v1/SessionService/Sessions/".to_string() + &id),
+            odata_id: odata_v4::Id(base_path + "/" + &id),
             id: resource::Id(id.clone()),
             name: resource::Name("User Session".to_string()),
             description: Some(resource::Description("User Session".to_string())),
@@ -160,11 +162,33 @@ where
         Ok(created_session)
     }
 
-    fn delete_session(&mut self, token: String) -> Result<(), redfish::Error> {
+    fn delete_session(&mut self, id: Self::Id) -> Result<(), redfish::Error> {
         let mut sessions = self.sessions.lock().unwrap();
         sessions
-            .remove(&token)
+            .iter()
+            .find_map(|pair| {
+                if pair.1.session.id.0 == id.to_string() {
+                    Some(pair.0.clone())
+                } else {
+                    None
+                }
+            })
+            .and_then(|id| sessions.remove(&id))
             .map(|_| ())
+            .ok_or_else(|| error::one_message(Base::NoValidSession.into()))
+    }
+
+    fn get_session(&self, id: Self::Id) -> Result<v1_6_0::Session, redfish::Error> {
+        let sessions = self.sessions.lock().unwrap();
+        sessions
+            .iter()
+            .find_map(|pair| {
+                if pair.1.session.id.0 == id.to_string() {
+                    Some(pair.1.session.clone())
+                } else {
+                    None
+                }
+            })
             .ok_or_else(|| error::one_message(Base::NoValidSession.into()))
     }
 }
