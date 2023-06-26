@@ -47,7 +47,7 @@ use redfish_codegen::{
 use redfish_core::{error, privilege};
 use seuss::{
     auth::{pam::LinuxPamAuthenticator, CombinedAuthenticationProxy, InMemorySessionManager},
-    middleware::ResourceLocator,
+    middleware::{ODataLayer, ResourceLocator},
     service::{redfish_versions::RedfishVersions, session_collection::SessionCollection},
 };
 use std::{
@@ -273,7 +273,8 @@ async fn main() -> anyhow::Result<()> {
                         .into_router()
                 )
                 .into_router()
-                .with_state(proxy),
+                .with_state(proxy)
+                .route_layer(ODataLayer),
         )
         .layer(TraceLayer::new_for_http());
 
