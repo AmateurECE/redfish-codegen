@@ -1,2 +1,2 @@
 pub mod redfish_versions;
-pub mod session;
+pub mod session_collection;

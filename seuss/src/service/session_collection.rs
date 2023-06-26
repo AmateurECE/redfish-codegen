@@ -69,14 +69,14 @@ where
             .get(
                 |OriginalUri(uri): OriginalUri, State(state): State<Self>| async move {
                     match state.session_manager.sessions() {
-                        Ok(members) => Ok(Json(SessionCollectionModel {
+                        Ok(members) => Ok(crate::Response(SessionCollectionModel {
                             name: resource::Name("SessionCollection".to_string()),
                             odata_id: odata_v4::Id(uri.path().to_string()),
                             members_odata_count: odata_v4::Count(members.len().try_into().unwrap()),
                             members,
                             ..Default::default()
                         })),
-                        Err(error) => Err(Json(error)),
+                        Err(error) => Err(crate::Response(error)),
                     }
                 },
             )
@@ -89,9 +89,9 @@ where
                                 ("X-Auth-Token", session.token.clone().unwrap()),
                                 ("Location", session.odata_id.0.clone()),
                             ],
-                            Json(session),
+                            crate::Response(session),
                         )),
-                        Err(error) => Err(Json(error)),
+                        Err(error) => Err(crate::Response(error)),
                     }
                 },
             )
@@ -99,14 +99,14 @@ where
                 Session::default()
                     .get(|Extension(id): Extension<M::Id>, State(state): State<Self>| async move {
                         match state.session_manager.get_session(id) {
-                            Ok(session) => Ok(Json(session)),
-                            Err(error) => Err(Json(error)),
+                            Ok(session) => Ok(crate::Response(session)),
+                            Err(error) => Err(crate::Response(error)),
                         }
                     })
                     .delete(|Extension(id): Extension<M::Id>, State(mut state): State<Self>| async move {
                         match state.session_manager.delete_session(id) {
                             Ok(()) => Ok(StatusCode::NO_CONTENT),
-                            Err(error) => Err(Json(error)),
+                            Err(error) => Err(crate::Response(error)),
                         }
                     })
                     .into_router()

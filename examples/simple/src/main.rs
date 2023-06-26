@@ -46,12 +46,9 @@ use redfish_codegen::{
 };
 use redfish_core::{error, privilege};
 use seuss::{
-    auth::{pam::LinuxPamAuthenticator, CombinedAuthenticationProxy},
+    auth::{pam::LinuxPamAuthenticator, CombinedAuthenticationProxy, InMemorySessionManager},
     middleware::ResourceLocator,
-    service::{
-        redfish_versions::RedfishVersions,
-        session::{session_manager::InMemorySessionManager, SessionCollection},
-    },
+    service::{redfish_versions::RedfishVersions, session_collection::SessionCollection},
 };
 use std::{
     collections::HashMap,
@@ -111,7 +108,7 @@ async fn main() -> anyhow::Result<()> {
             ServiceRoot::default()
                 .get(move |OriginalUri(uri): OriginalUri| async move {
                     let session_service_path = uri.path().to_string() + "SessionService";
-                    Json(ServiceRootModel {
+                    seuss::Response(ServiceRootModel {
                         odata_id: odata_v4::Id(uri.path().to_string()),
                         id: resource::Id("simple".to_string()),
                         name: resource::Name("Simple Redfish Service".to_string()),
@@ -136,7 +133,7 @@ async fn main() -> anyhow::Result<()> {
                 .account_service(
                     AccountService::default()
                         .get(|OriginalUri(uri): OriginalUri| async move {
-                            Json(AccountServiceModel {
+                            seuss::Response(AccountServiceModel {
                                 odata_id: odata_v4::Id(uri.path().to_string()),
                                 id: resource::Id("AccountService".to_string()),
                                 name: resource::Name("Account Service".to_string()),
@@ -149,7 +146,7 @@ async fn main() -> anyhow::Result<()> {
                         .roles(
                             RoleCollection::default()
                                 .get(|OriginalUri(uri): OriginalUri| async move {
-                                    Json(RoleCollectionModel {
+                                    seuss::Response(RoleCollectionModel {
                                         odata_id: odata_v4::Id(uri.path().to_string()),
                                         name: resource::Name("Roles".to_string()),
                                         members: privilege::Role::iter()
@@ -164,7 +161,7 @@ async fn main() -> anyhow::Result<()> {
                                 .role(
                                     Role::default()
                                         .get(|OriginalUri(uri): OriginalUri, Extension(role): Extension<privilege::Role>| async move {
-                                            Json(RoleModel {
+                                            seuss::Response(RoleModel {
                                                 odata_id: odata_v4::Id(uri.path().to_string()),
                                                 id: resource::Id(role.to_string()),
                                                 name: resource::Name(role.to_string() + " User Role"),
@@ -193,7 +190,7 @@ async fn main() -> anyhow::Result<()> {
                             let systems = Arc::clone(&systems);
                             |OriginalUri(uri): OriginalUri| async move {
                                 let length = systems.lock().unwrap().len();
-                                Json(ComputerSystemCollectionModel {
+                                seuss::Response(ComputerSystemCollectionModel {
                                     odata_id: odata_v4::Id(uri.path().to_string()),
                                     members_odata_count: odata_v4::Count(length.try_into().unwrap()),
                                     members: (0..length)
@@ -215,7 +212,7 @@ async fn main() -> anyhow::Result<()> {
                                 .get({
                                     let systems = Arc::clone(&systems);
                                     |OriginalUri(uri): OriginalUri, Extension(id): Extension<usize>| async move {
-                                    Json(ComputerSystemModel {
+                                    seuss::Response(ComputerSystemModel {
                                         odata_id: odata_v4::Id(uri.path().to_string()),
                                         id: resource::Id(id.to_string()),
                                         name: resource::Name(format!("SimpleSystem-{}", id)),
@@ -242,7 +239,7 @@ async fn main() -> anyhow::Result<()> {
                                     let power_state = match request.reset_type.unwrap() {
                                         ResetType::On | ResetType::GracefulRestart => resource::PowerState::On,
                                         ResetType::ForceOff | ResetType::GracefulShutdown => resource::PowerState::Off,
-                                        _ => return Err(Json(error::one_message(
+                                        _ => return Err(seuss::Response(error::one_message(
                                             Base::ActionParameterNotSupported(
                                                 "ResetType".to_string(),
                                                 "Reset".to_string()
@@ -262,7 +259,7 @@ async fn main() -> anyhow::Result<()> {
                 .session_service(
                     SessionService::default()
                         .get(|OriginalUri(uri): OriginalUri| async move {
-                            Json(SessionServiceModel {
+                            seuss::Response(SessionServiceModel {
                                 id: resource::Id("sessions".to_string()),
                                 name: resource::Name("SessionService".to_string()),
                                 odata_id: odata_v4::Id(uri.path().to_string()),
