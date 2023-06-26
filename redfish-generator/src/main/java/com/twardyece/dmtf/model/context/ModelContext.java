@@ -14,6 +14,7 @@ public class ModelContext {
     public EnumContext enumContext;
     public TupleContext tupleContext;
     public String docComment;
+    public Metadata metadata;
 
     private static ModelContext generic(RustType rustType, List<RustType> dependentTypes, String docComment) {
         ModelContext modelContext = new ModelContext();

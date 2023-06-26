@@ -14,7 +14,7 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 public class ModelResolver {
-    private IModelFileMapper[] mappers;
+    private final IModelFileMapper[] mappers;
     private static final Logger LOGGER = LoggerFactory.getLogger(ModelResolver.class);
     private static final PascalCaseName VEC_NAME = new PascalCaseName("Vec");
     public static final Map<String, RustType> RUST_TYPE_MAP;

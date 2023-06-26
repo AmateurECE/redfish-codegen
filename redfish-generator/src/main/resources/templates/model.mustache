@@ -79,3 +79,9 @@ impl Default for {{name}} {
 #[derive(Default)]
 pub struct {{name}}(pub {{type}});
 {{/tupleContext}}
+{{#metadata}}
+
+impl crate::Metadata<'static> for {{name}} {
+    const JSON_SCHEMA: &'static str = "{{{jsonSchema}}}";
+}
+{{/metadata}}

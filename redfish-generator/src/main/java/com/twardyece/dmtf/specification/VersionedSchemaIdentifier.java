@@ -1,4 +1,4 @@
-package com.twardyece.dmtf.identifiers;
+package com.twardyece.dmtf.specification;
 
 import com.twardyece.dmtf.text.PascalCaseName;
 import com.twardyece.dmtf.text.SnakeCaseName;
@@ -7,12 +7,12 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 public class VersionedSchemaIdentifier {
-    PascalCaseName module;
-    SnakeCaseName version;
-    PascalCaseName model;
+    private final PascalCaseName module;
+    private final SnakeCaseName version;
+    private final PascalCaseName model;
 
     // This regular expression identifies schemas in the OpenAPI document which are tagged with a version.
-    private static Pattern pattern = Pattern.compile("(?<module>[a-zA-z0-9]*)_(?<version>v[0-9]+_[0-9]+_[0-9]+)_(?<model>[a-zA-Z0-9]+)");
+    private static final Pattern pattern = Pattern.compile("(?<module>[a-zA-z0-9]*)_(?<version>v[0-9]+_[0-9]+_[0-9]+)_(?<model>[a-zA-Z0-9]+)");
 
     public VersionedSchemaIdentifier(String name) {
         Matcher matcher = pattern.matcher(name);

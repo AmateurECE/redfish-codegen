@@ -5,8 +5,7 @@ import com.twardyece.dmtf.component.*;
 import com.twardyece.dmtf.component.match.ActionComponentMatcher;
 import com.twardyece.dmtf.component.match.IComponentMatcher;
 import com.twardyece.dmtf.component.match.StandardComponentMatcher;
-import com.twardyece.dmtf.identifiers.IdentifierParseError;
-import com.twardyece.dmtf.identifiers.VersionedSchemaIdentifier;
+import com.twardyece.dmtf.specification.*;
 import com.twardyece.dmtf.model.ModelResolver;
 import com.twardyece.dmtf.model.context.ModelContext;
 import com.twardyece.dmtf.model.context.factory.*;
@@ -16,13 +15,12 @@ import com.twardyece.dmtf.model.mapper.UnversionedModelMapper;
 import com.twardyece.dmtf.model.mapper.VersionedModelMapper;
 import com.twardyece.dmtf.openapi.DocumentParser;
 import com.twardyece.dmtf.policies.IModelGenerationPolicy;
+import com.twardyece.dmtf.policies.ModelMetadataPolicy;
 import com.twardyece.dmtf.policies.ODataPropertyPolicy;
-import com.twardyece.dmtf.policies.ODataTypeIdentifier;
 import com.twardyece.dmtf.policies.PropertyDefaultValueOverridePolicy;
 import com.twardyece.dmtf.registry.RegistryContext;
 import com.twardyece.dmtf.registry.RegistryFactory;
 import com.twardyece.dmtf.registry.RegistryFileDiscovery;
-import com.twardyece.dmtf.registry.Version;
 import com.twardyece.dmtf.text.CaseConversion;
 import com.twardyece.dmtf.text.PascalCaseName;
 import com.twardyece.dmtf.text.SnakeCaseName;
@@ -44,6 +42,7 @@ import java.io.InputStreamReader;
 import java.net.URISyntaxException;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.*;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -68,11 +67,14 @@ public class RedfishCodegen {
         this.specDirectory = specDirectory;
         this.specVersion = specVersion;
 
+        SimpleModelIdentifierFactory redfishModelIdentifierFactory = new SimpleModelIdentifierFactory(Pattern.compile("Redfish(?<model>[a-zA-Z0-9]*)"), "model");
+        SimpleModelIdentifierFactory odataModelIdentifierFactory = new SimpleModelIdentifierFactory(Pattern.compile("odata-v4_(?<model>[a-zA-Z0-9]*)"), "model");
+
         // Model generation setup
         IModelFileMapper[] modelMappers = new IModelFileMapper[4];
         modelMappers[0] = new VersionedModelMapper();
-        modelMappers[1] = new SimpleModelMapper(Pattern.compile("Redfish(?<model>[a-zA-Z0-9]*)"), new SnakeCaseName("redfish"));
-        modelMappers[2] = new SimpleModelMapper(Pattern.compile("odata-v4_(?<model>[a-zA-Z0-9]*)"), new SnakeCaseName("odata_v4"));
+        modelMappers[1] = new SimpleModelMapper(redfishModelIdentifierFactory, new SnakeCaseName("redfish"));
+        modelMappers[2] = new SimpleModelMapper(odataModelIdentifierFactory, new SnakeCaseName("odata_v4"));
         modelMappers[3] = new UnversionedModelMapper();
 
         this.modelResolver = new ModelResolver(modelMappers);
@@ -95,11 +97,33 @@ public class RedfishCodegen {
 
         // These intrusive/low-level policies need to be applied to the set of models as a whole, but should not be
         // coupled to context factories.
-        this.modelGenerationPolicies = new IModelGenerationPolicy[2];
+        this.modelGenerationPolicies = new IModelGenerationPolicy[3];
         this.modelGenerationPolicies[0] = new ODataPropertyPolicy(new ODataTypeIdentifier());
         Map<Pair<String, String>, String> overrides = new HashMap<>();
         overrides.put(new ImmutablePair<>("odata-v4_Service", "kind"), "\\\"Singleton\\\".to_string()");
         this.modelGenerationPolicies[1] = new PropertyDefaultValueOverridePolicy(overrides);
+        JsonSchemaMapper[] jsonSchemaMappers = new JsonSchemaMapper[2];
+
+        Pattern versionParsePattern = Pattern.compile("([0-9]+)_([0-9]+)_([0-9]+)");
+        VersionedFileDiscovery versionedFileDiscovery = new VersionedFileDiscovery(Paths.get(specDirectory + "/json-schema"));
+        Optional<VersionedFileDiscovery.VersionedFile> redfishErrorJsonSchema = versionedFileDiscovery.getFile(
+                "redfish-error", Pattern.compile("redfish-error.v(?<version>" + versionParsePattern + ").json"), "version", versionParsePattern);
+        if (redfishErrorJsonSchema.isEmpty()) {
+            throw new RuntimeException("Could not locate the redfish-error json-schema file!");
+        }
+        jsonSchemaMappers[0] = new JsonSchemaMapper(
+                redfishModelIdentifierFactory,
+                redfishErrorJsonSchema.get().file.getFileName().toString());
+
+        Optional<VersionedFileDiscovery.VersionedFile> odataJsonSchema = versionedFileDiscovery.getFile(
+                "odata", Pattern.compile("odata.v(?<version>" + versionParsePattern + ").json"), "version", versionParsePattern);
+        if (odataJsonSchema.isEmpty()) {
+            throw new RuntimeException("Could not locate the odata json-schema file!");
+        }
+        jsonSchemaMappers[1] = new JsonSchemaMapper(
+                odataModelIdentifierFactory,
+                odataJsonSchema.get().file.getFileName().toString());
+        this.modelGenerationPolicies[2] = new ModelMetadataPolicy(new JsonSchemaIdentifier(jsonSchemaMappers));
 
         // Registry generation
         Path registryDirectoryPath = Path.of(registryDirectory);

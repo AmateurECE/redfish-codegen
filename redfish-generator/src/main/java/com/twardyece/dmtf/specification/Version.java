@@ -1,4 +1,4 @@
-package com.twardyece.dmtf.registry;
+package com.twardyece.dmtf.specification;
 
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;

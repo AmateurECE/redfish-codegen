@@ -1,6 +1,7 @@
 package com.twardyece.dmtf.policies;
 
 import com.twardyece.dmtf.ModuleFile;
+import com.twardyece.dmtf.specification.ODataTypeIdentifier;
 import com.twardyece.dmtf.model.context.ModelContext;
 import com.twardyece.dmtf.model.context.StructContext;
 

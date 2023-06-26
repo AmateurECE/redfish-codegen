@@ -1,8 +1,4 @@
-package com.twardyece.dmtf.policies;
-
-import com.twardyece.dmtf.identifiers.IdentifierParseError;
-import com.twardyece.dmtf.identifiers.UnversionedSchemaIdentifier;
-import com.twardyece.dmtf.identifiers.VersionedSchemaIdentifier;
+package com.twardyece.dmtf.specification;
 
 public class ODataTypeIdentifier {
     public ODataTypeIdentifier() {}

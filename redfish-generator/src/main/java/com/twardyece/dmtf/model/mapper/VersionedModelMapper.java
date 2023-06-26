@@ -1,7 +1,7 @@
 package com.twardyece.dmtf.model.mapper;
 
-import com.twardyece.dmtf.identifiers.IdentifierParseError;
-import com.twardyece.dmtf.identifiers.VersionedSchemaIdentifier;
+import com.twardyece.dmtf.specification.IdentifierParseError;
+import com.twardyece.dmtf.specification.VersionedSchemaIdentifier;
 import com.twardyece.dmtf.text.SnakeCaseName;
 
 import java.util.ArrayList;

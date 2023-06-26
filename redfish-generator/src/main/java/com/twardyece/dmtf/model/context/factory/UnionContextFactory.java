@@ -11,7 +11,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 public class UnionContextFactory implements IModelContextFactory {
-    private ModelResolver modelResolver;
+    private final ModelResolver modelResolver;
     private final UnionVariantParser variantParser;
 
     public UnionContextFactory(ModelResolver modelResolver, UnionVariantParser variantParser) {
@@ -34,7 +34,7 @@ public class UnionContextFactory implements IModelContextFactory {
 
         for (Object object : schema.getAnyOf()) {
             Schema variant = (Schema)object;
-            String identifier = this.modelResolver.getSchemaIdentifier(variant);
+            String identifier = ModelResolver.getSchemaIdentifier(variant);
             RustIdentifier value = this.variantParser.getVariantName(identifier);
             variants.add(new EnumContext.Variant(value,
                     new EnumContext.Variant.Type(this.modelResolver.resolveSchema(variant)),

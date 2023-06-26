@@ -2,7 +2,7 @@ package com.twardyece.dmtf.model.context.factory;
 
 import com.twardyece.dmtf.RustIdentifier;
 import com.twardyece.dmtf.model.NameMapper;
-import com.twardyece.dmtf.identifiers.VersionedSchemaIdentifier;
+import com.twardyece.dmtf.specification.VersionedSchemaIdentifier;
 import com.twardyece.dmtf.text.PascalCaseName;
 import com.twardyece.dmtf.text.SnakeCaseName;
 

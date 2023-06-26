@@ -1,5 +1,7 @@
 package com.twardyece.dmtf.registry;
 
+import com.twardyece.dmtf.specification.Version;
+
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.ArrayList;
@@ -9,6 +11,7 @@ import java.util.Optional;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
+// TODO: Rewrite this class using VersionedFileDiscovery
 public class RegistryFileDiscovery {
     private Path registryDirectory;
     private static final Pattern pattern = Pattern.compile("^(?<name>[A-Za-z0-9]+)[._](?<version>[0-9.]+)\\.json$");
