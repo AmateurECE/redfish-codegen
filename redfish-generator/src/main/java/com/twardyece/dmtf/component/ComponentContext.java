@@ -38,6 +38,7 @@ public class ComponentContext implements Comparable<ComponentContext> {
     }
     public Collection<Operation> operations() { return this.operationMap.values(); }
     public boolean hasOwningComponents() { return !this.owningComponents.isEmpty(); }
+    public boolean isCollection() { return this.rustType.getName().toString().endsWith("Collection"); }
     public List<PrivilegedOperation> privilegedOperations() {
         List<PrivilegedOperation> privilegedOperations = new ArrayList<>();
         this.operationMap
@@ -63,6 +64,7 @@ public class ComponentContext implements Comparable<ComponentContext> {
 
         public SnakeCaseName snakeCaseName() { return new SnakeCaseName(this.pascalCaseName); }
         public String upperSnakeCaseName() { return this.pascalCaseName.toString().toUpperCase(); }
+        public boolean isPost() { return this.pascalCaseName.toString().equals("Post"); }
     }
 
     public record Supercomponent(PascalCaseName componentName, RustType componentType) {}

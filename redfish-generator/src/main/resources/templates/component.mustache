@@ -59,6 +59,9 @@ where
     router: axum::routing::MethodRouter<S>,
     privilege_marker: std::marker::PhantomData<fn() -> P>,
     allowed_methods: Vec<axum::http::method::Method>,
+{{#isCollection}}
+    members_router: axum::routing::MethodRouter<S>,
+{{/isCollection}}
 {{#subcomponents}}
     {{snakeCaseName}}: Option<axum::Router<S>>,
 {{/subcomponents}}
@@ -77,6 +80,9 @@ where
             router: Default::default(),
             privilege_marker: Default::default(),
             allowed_methods: Vec::new(),
+{{#isCollection}}
+            members_router: Default::default(),
+{{/isCollection}}
 {{#subcomponents}}
             {{snakeCaseName}}: Default::default(),
 {{/subcomponents}}
@@ -102,7 +108,7 @@ where
         H: axum::handler::Handler<T, S, axum::body::Body>,
         T: 'static,
     {
-        self.router = self.router.{{snakeCaseName}}(
+        let operation = axum::routing::{{snakeCaseName}}(
             |{{#requiresAuth}}auth: redfish_core::extract::RedfishAuth<P::{{pascalCaseName}}>,{{/requiresAuth}}
              axum::extract::State(state): axum::extract::State<S>,
              mut request: axum::http::Request<axum::body::Body>| async {
@@ -115,6 +121,12 @@ where
                 handler.call(request, state).await
             },
         );
+{{#isCollection}}
+{{#isPost}}
+        self.members_router = self.members_router.post(operation.clone());
+{{/isPost}}
+{{/isCollection}}
+        self.router = self.router.{{snakeCaseName}}(operation);
         self.allowed_methods.push(axum::http::method::Method::{{upperSnakeCaseName}});
         self
     }
@@ -151,6 +163,9 @@ where
         let Self {
             router,
             mut allowed_methods,
+{{#isCollection}}
+            members_router,
+{{/isCollection}}
 {{#subcomponents}}
             {{snakeCaseName}},
 {{/subcomponents}}
@@ -172,6 +187,17 @@ where
             None => result,
         };
 {{/actions}}
+{{#isCollection}}
+        let result = result.route(
+            "/Members",
+            members_router.fallback(|| async {
+                (
+                    axum::http::StatusCode::METHOD_NOT_ALLOWED,
+                    axum::Json(redfish_core::error::one_message({{baseRegistry}}::OperationNotAllowed.into())),
+                )
+            })
+        );
+{{/isCollection}}
         allowed_methods.dedup();
         let allow_header = allowed_methods
             .into_iter()
