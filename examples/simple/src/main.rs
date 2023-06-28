@@ -25,7 +25,6 @@ use redfish_axum::{
     account_service::AccountService, computer_system::ComputerSystem,
     computer_system_collection::ComputerSystemCollection, metadata::Metadata, odata::OData,
     role::Role, role_collection::RoleCollection, service_root::ServiceRoot,
-    session_service::SessionService,
 };
 use redfish_codegen::{
     models::{
@@ -40,7 +39,6 @@ use redfish_codegen::{
         role::v1_3_1::Role as RoleModel,
         role_collection::RoleCollection as RoleCollectionModel,
         service_root::v1_15_0::{Links, ServiceRoot as ServiceRootModel},
-        session_service::v1_1_8::SessionService as SessionServiceModel,
     },
     registries::base::v1_15_0::Base,
 };
@@ -48,7 +46,7 @@ use redfish_core::{error, privilege};
 use seuss::{
     auth::{pam::LinuxPamAuthenticator, CombinedAuthenticationProxy, InMemorySessionManager},
     middleware::{ODataLayer, ResourceLocator},
-    service::{redfish_versions::RedfishVersions, session_collection::SessionCollection},
+    service::{RedfishVersions, SessionService},
 };
 use std::{
     collections::HashMap,
@@ -257,19 +255,7 @@ async fn main() -> anyhow::Result<()> {
                         .into_router(),
                 )
                 .session_service(
-                    SessionService::default()
-                        .get(|OriginalUri(uri): OriginalUri| async move {
-                            seuss::Response(SessionServiceModel {
-                                id: resource::Id("sessions".to_string()),
-                                name: resource::Name("SessionService".to_string()),
-                                odata_id: odata_v4::Id(uri.path().to_string()),
-                                sessions: Some(odata_v4::IdRef {
-                                    odata_id: Some(odata_v4::Id(uri.path().to_string() + "/Sessions")),
-                                }),
-                                ..Default::default()
-                            })
-                        })
-                        .sessions(SessionCollection::new(session_manager, proxy.clone()).into_router())
+                    SessionService::new(session_manager, proxy.clone())
                         .into_router()
                 )
                 .into_router()
