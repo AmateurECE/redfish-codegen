@@ -62,6 +62,7 @@ public class ComponentContext implements Comparable<ComponentContext> {
         }
 
         public SnakeCaseName snakeCaseName() { return new SnakeCaseName(this.pascalCaseName); }
+        public String upperSnakeCaseName() { return this.pascalCaseName.toString().toUpperCase(); }
     }
 
     public record Supercomponent(PascalCaseName componentName, RustType componentType) {}

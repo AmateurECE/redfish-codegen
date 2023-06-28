@@ -58,6 +58,7 @@ where
 {
     router: axum::routing::MethodRouter<S>,
     privilege_marker: std::marker::PhantomData<fn() -> P>,
+    allowed_methods: Vec<axum::http::method::Method>,
 {{#subcomponents}}
     {{snakeCaseName}}: Option<axum::Router<S>>,
 {{/subcomponents}}
@@ -75,6 +76,7 @@ where
         Self {
             router: Default::default(),
             privilege_marker: Default::default(),
+            allowed_methods: Vec::new(),
 {{#subcomponents}}
             {{snakeCaseName}}: Default::default(),
 {{/subcomponents}}
@@ -113,6 +115,7 @@ where
                 handler.call(request, state).await
             },
         );
+        self.allowed_methods.push(axum::http::method::Method::{{upperSnakeCaseName}});
         self
     }
 
@@ -147,6 +150,7 @@ where
     pub fn into_router(self) -> axum::Router<S> {
         let Self {
             router,
+            mut allowed_methods,
 {{#subcomponents}}
             {{snakeCaseName}},
 {{/subcomponents}}
@@ -168,6 +172,12 @@ where
             None => result,
         };
 {{/actions}}
+        allowed_methods.dedup();
+        let allow_header = allowed_methods
+            .into_iter()
+            .map(|method| method.to_string())
+            .reduce(|one, two| one + "," + &two)
+            .unwrap();
         result.route(
             "/",
             router.fallback(|| async {
@@ -175,7 +185,23 @@ where
                     axum::http::StatusCode::METHOD_NOT_ALLOWED,
                     axum::Json(redfish_core::error::one_message({{baseRegistry}}::OperationNotAllowed.into())),
                 )
-            }),
+            })
+            .route_layer(axum::middleware::from_fn_with_state(
+                allow_header,
+                |axum::extract::State(allow_header): axum::extract::State<String>,
+                 request: axum::http::Request<axum::body::Body>,
+                 next: axum::middleware::Next<axum::body::Body>| async move {
+                    let apply_allow = matches!(*request.method(), axum::http::Method::GET | axum::http::Method::HEAD);
+                    let mut response = next.run(request).await;
+                    if apply_allow && !response.headers().contains_key(axum::http::header::ALLOW) {
+                        response.headers_mut().insert(
+                            axum::http::header::ALLOW,
+                            axum::http::HeaderValue::from_str(&allow_header).unwrap(),
+                        );
+                    }
+                    response
+                },
+            )),
         )
     }
 }
