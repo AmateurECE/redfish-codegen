@@ -16,14 +16,14 @@
 
 use axum::{
     extract::OriginalUri,
-    http::StatusCode,
-    response::{Redirect, Response},
-    Extension, Json, Router,
+    http::{StatusCode, Uri},
+    response::{IntoResponse, Response},
+    Extension, Json,
 };
 use clap::Parser;
 use redfish_axum::{
     computer_system::ComputerSystem, computer_system_collection::ComputerSystemCollection,
-    metadata::Metadata, odata::OData, service_root::ServiceRoot,
+    odata::OData, service_root::ServiceRoot,
 };
 use redfish_codegen::{
     models::{
@@ -40,8 +40,8 @@ use redfish_codegen::{
 use redfish_core::{error, privilege};
 use seuss::{
     auth::{pam::LinuxPamAuthenticator, CombinedAuthenticationProxy, InMemorySessionManager},
-    middleware::{ODataLayer, ResourceLocator},
-    service::{AccountService, RedfishVersions, SessionService},
+    middleware::ResourceLocator,
+    service::{AccountService, RedfishService, SessionService},
 };
 use std::{
     collections::HashMap,
@@ -67,6 +67,89 @@ struct Configuration {
 
 struct SimpleSystem(resource::PowerState);
 
+async fn service_root(OriginalUri(uri): OriginalUri) -> impl IntoResponse {
+    let session_service_path = uri.path().to_string() + "SessionService";
+    seuss::Response(ServiceRootModel {
+        odata_id: odata_v4::Id(uri.path().to_string()),
+        id: resource::Id("simple".to_string()),
+        name: resource::Name("Simple Redfish Service".to_string()),
+        systems: Some(odata_v4::IdRef {
+            odata_id: Some(odata_v4::Id(uri.path().to_string() + "Systems")),
+        }),
+        session_service: Some(odata_v4::IdRef {
+            odata_id: Some(odata_v4::Id(session_service_path.clone())),
+        }),
+        account_service: Some(odata_v4::IdRef {
+            odata_id: Some(odata_v4::Id(uri.path().to_string() + "AccountService")),
+        }),
+        links: Links {
+            sessions: odata_v4::IdRef {
+                odata_id: Some(odata_v4::Id(session_service_path + "/Sessions")),
+            },
+            ..Default::default()
+        },
+        ..Default::default()
+    })
+}
+
+async fn computer_system_collection(
+    uri: Uri,
+    systems: Arc<Mutex<Vec<SimpleSystem>>>,
+) -> impl IntoResponse {
+    let length = systems.lock().unwrap().len();
+    seuss::Response(ComputerSystemCollectionModel {
+        odata_id: odata_v4::Id(uri.path().to_string()),
+        members_odata_count: odata_v4::Count(length.try_into().unwrap()),
+        members: (0..length)
+            .map(|id| odata_v4::IdRef {
+                odata_id: Some(odata_v4::Id(format!("{}/{}", uri.path(), id + 1))),
+            })
+            .collect(),
+        name: resource::Name("Computer System Collection".to_string()),
+        ..Default::default()
+    })
+}
+
+async fn computer_system(
+    uri: Uri,
+    id: usize,
+    systems: Arc<Mutex<Vec<SimpleSystem>>>,
+) -> impl IntoResponse {
+    seuss::Response(ComputerSystemModel {
+        odata_id: odata_v4::Id(uri.path().to_string()),
+        id: resource::Id(id.to_string()),
+        name: resource::Name(format!("SimpleSystem-{}", id)),
+        power_state: Some(systems.lock().unwrap().get(id - 1).unwrap().0.clone()),
+        actions: Some(Actions {
+            computer_system_reset: Some(Reset {
+                target: Some(uri.path().to_string() + "/Actions/ComputerSystem.Reset"),
+                ..Default::default()
+            }),
+            ..Default::default()
+        }),
+        ..Default::default()
+    })
+}
+
+async fn computer_system_reset(
+    id: usize,
+    systems: Arc<Mutex<Vec<SimpleSystem>>>,
+    request: ResetRequestBody,
+) -> impl IntoResponse {
+    let power_state = match request.reset_type.unwrap() {
+        ResetType::On | ResetType::GracefulRestart => resource::PowerState::On,
+        ResetType::ForceOff | ResetType::GracefulShutdown => resource::PowerState::Off,
+        _ => {
+            return Err(seuss::Response(error::one_message(
+                Base::ActionParameterNotSupported("ResetType".to_string(), "Reset".to_string())
+                    .into(),
+            )))
+        }
+    };
+    systems.lock().unwrap().get_mut(id - 1).unwrap().0 = power_state;
+    Ok(StatusCode::NO_CONTENT)
+}
+
 #[tokio::main]
 async fn main() -> anyhow::Result<()> {
     tracing_subscriber::fmt::init();
@@ -80,47 +163,18 @@ async fn main() -> anyhow::Result<()> {
     let systems: Vec<SimpleSystem> = vec![SimpleSystem(resource::PowerState::Off)];
     let systems = Arc::new(Mutex::new(systems));
 
-    let app = Router::new()
-        .route("/redfish", RedfishVersions::default().into())
-        .route(
-            "/redfish/v1",
-            axum::routing::get(|| async { Redirect::permanent("/redfish/v1/") }),
-        )
-        .route("/redfish/v1/odata", OData::new()
-            .enable_systems()
-            .enable_session_service()
-            .enable_account_service()
-            .enable_sessions()
-            .into()
-        )
-        .route("/redfish/v1/$metadata", Metadata.into())
-        .nest(
-            "/redfish/v1/",
+    let odata = OData::new()
+        .enable_systems()
+        .enable_session_service()
+        .enable_account_service()
+        .enable_sessions()
+        .into();
+
+    let app = RedfishService::new()
+        .into_router(
+            odata,
             ServiceRoot::default()
-                .get(move |OriginalUri(uri): OriginalUri| async move {
-                    let session_service_path = uri.path().to_string() + "SessionService";
-                    seuss::Response(ServiceRootModel {
-                        odata_id: odata_v4::Id(uri.path().to_string()),
-                        id: resource::Id("simple".to_string()),
-                        name: resource::Name("Simple Redfish Service".to_string()),
-                        systems: Some(odata_v4::IdRef {
-                            odata_id: Some(odata_v4::Id(uri.path().to_string() + "Systems")),
-                        }),
-                        session_service: Some(odata_v4::IdRef {
-                            odata_id: Some(odata_v4::Id(session_service_path.clone())),
-                        }),
-                        account_service: Some(odata_v4::IdRef {
-                            odata_id: Some(odata_v4::Id(uri.path().to_string() + "AccountService")),
-                        }),
-                        links: Links {
-                            sessions: odata_v4::IdRef {
-                                odata_id: Some(odata_v4::Id(session_service_path + "/Sessions")),
-                            },
-                            ..Default::default()
-                        },
-                        ..Default::default()
-                    })
-                })
+                .get(service_root)
                 .account_service(
                     AccountService::new()
                         .into_router()
@@ -130,22 +184,7 @@ async fn main() -> anyhow::Result<()> {
                         .get({
                             let systems = Arc::clone(&systems);
                             |OriginalUri(uri): OriginalUri| async move {
-                                let length = systems.lock().unwrap().len();
-                                seuss::Response(ComputerSystemCollectionModel {
-                                    odata_id: odata_v4::Id(uri.path().to_string()),
-                                    members_odata_count: odata_v4::Count(length.try_into().unwrap()),
-                                    members: (0..length)
-                                        .map(|id| odata_v4::IdRef {
-                                            odata_id: Some(odata_v4::Id(format!(
-                                                "{}/{}",
-                                                uri.path(),
-                                                id + 1
-                                            ))),
-                                        })
-                                        .collect(),
-                                    name: resource::Name("Computer System Collection".to_string()),
-                                    ..Default::default()
-                                })
+                                computer_system_collection(uri, systems).await
                             }
                         })
                         .computer_system(
@@ -153,41 +192,10 @@ async fn main() -> anyhow::Result<()> {
                                 .get({
                                     let systems = Arc::clone(&systems);
                                     |OriginalUri(uri): OriginalUri, Extension(id): Extension<usize>| async move {
-                                    seuss::Response(ComputerSystemModel {
-                                        odata_id: odata_v4::Id(uri.path().to_string()),
-                                        id: resource::Id(id.to_string()),
-                                        name: resource::Name(format!("SimpleSystem-{}", id)),
-                                        power_state: Some(
-                                            systems
-                                                .lock()
-                                                .unwrap()
-                                                .get(id - 1)
-                                                .unwrap()
-                                                .0
-                                                .clone(),
-                                        ),
-                                        actions: Some(Actions {
-                                            computer_system_reset: Some(Reset {
-                                                target: Some(uri.path().to_string() + "/Actions/ComputerSystem.Reset"),
-                                                ..Default::default()
-                                            }),
-                                            ..Default::default()
-                                        }),
-                                        ..Default::default()
-                                    })
+                                        computer_system(uri, id, systems).await
                                 }})
                                 .reset(|Extension(id): Extension<usize>, Json(request): Json<ResetRequestBody>| async move {
-                                    let power_state = match request.reset_type.unwrap() {
-                                        ResetType::On | ResetType::GracefulRestart => resource::PowerState::On,
-                                        ResetType::ForceOff | ResetType::GracefulShutdown => resource::PowerState::Off,
-                                        _ => return Err(seuss::Response(error::one_message(
-                                            Base::ActionParameterNotSupported(
-                                                "ResetType".to_string(),
-                                                "Reset".to_string()
-                                            ).into()))),
-                                    };
-                                    systems.lock().unwrap().get_mut(id - 1).unwrap().0 = power_state;
-                                    Ok(StatusCode::NO_CONTENT)
+                                    computer_system_reset(id, systems, request).await
                                 })
                                 .into_router()
                                 .route_layer(ResourceLocator::new(
@@ -202,8 +210,7 @@ async fn main() -> anyhow::Result<()> {
                         .into_router()
                 )
                 .into_router()
-                .with_state(proxy)
-                .route_layer(ODataLayer),
+                .with_state(proxy),
         )
         .layer(TraceLayer::new_for_http());
 
