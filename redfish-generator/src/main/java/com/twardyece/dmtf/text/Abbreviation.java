@@ -19,6 +19,7 @@ public class Abbreviation implements IWord {
         SPECIAL_ABBREVIATIONS.put("IPv6", new Abbreviation("IPv6"));
         SPECIAL_ABBREVIATIONS.put("kWh", new Abbreviation("kWh"));
         SPECIAL_ABBREVIATIONS.put("iSCSI", new Word("iSCSI"));
+        SPECIAL_ABBREVIATIONS.put("NVMe", new Word("NVMe"));
     }
 
     public Abbreviation(String upperCaseValue) {
