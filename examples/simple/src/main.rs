@@ -164,54 +164,47 @@ async fn main() -> anyhow::Result<()> {
     let systems = Arc::new(Mutex::new(systems));
 
     let odata = OData::new()
-        .enable_systems()
-        .enable_session_service()
         .enable_account_service()
+        .enable_session_service()
         .enable_sessions()
+        .enable_systems()
         .into();
 
+    let service_root = ServiceRoot::default()
+    .get(service_root)
+    .account_service(AccountService::new().into_router())
+    .session_service(SessionService::new(session_manager, proxy.clone()).into_router())
+    .systems(
+        ComputerSystemCollection::default()
+            .get({
+                let systems = Arc::clone(&systems);
+                |OriginalUri(uri): OriginalUri| async move {
+                    computer_system_collection(uri, systems).await
+                }
+            })
+            .computer_system(
+                ComputerSystem::default()
+                    .get({
+                        let systems = Arc::clone(&systems);
+                        |OriginalUri(uri): OriginalUri, Extension(id): Extension<usize>| async move {
+                            computer_system(uri, id, systems).await
+                    }})
+                    .reset(|Extension(id): Extension<usize>, Json(request): Json<ResetRequestBody>| async move {
+                        computer_system_reset(id, systems, request).await
+                    })
+                    .into_router()
+                    .route_layer(ResourceLocator::new(
+                        "computer_system_id".to_string(),
+                        |id: usize| async move { Ok::<_, Response>(id) },
+                    )),
+            )
+            .into_router(),
+    )
+    .into_router()
+    .with_state(proxy);
+
     let app = RedfishService::new()
-        .into_router(
-            odata,
-            ServiceRoot::default()
-                .get(service_root)
-                .account_service(
-                    AccountService::new()
-                        .into_router()
-                )
-                .systems(
-                    ComputerSystemCollection::default()
-                        .get({
-                            let systems = Arc::clone(&systems);
-                            |OriginalUri(uri): OriginalUri| async move {
-                                computer_system_collection(uri, systems).await
-                            }
-                        })
-                        .computer_system(
-                            ComputerSystem::default()
-                                .get({
-                                    let systems = Arc::clone(&systems);
-                                    |OriginalUri(uri): OriginalUri, Extension(id): Extension<usize>| async move {
-                                        computer_system(uri, id, systems).await
-                                }})
-                                .reset(|Extension(id): Extension<usize>, Json(request): Json<ResetRequestBody>| async move {
-                                    computer_system_reset(id, systems, request).await
-                                })
-                                .into_router()
-                                .route_layer(ResourceLocator::new(
-                                    "computer_system_id".to_string(),
-                                    |id: usize| async move { Ok::<_, Response>(id) },
-                                )),
-                        )
-                        .into_router(),
-                )
-                .session_service(
-                    SessionService::new(session_manager, proxy.clone())
-                        .into_router()
-                )
-                .into_router()
-                .with_state(proxy),
-        )
+        .into_router(odata, service_root)
         .layer(TraceLayer::new_for_http());
 
     seuss::router::serve(config.server, app).await
