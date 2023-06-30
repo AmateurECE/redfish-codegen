@@ -42,7 +42,7 @@ where
     S: SessionAuthentication + Clone,
 {
     sessions: Arc<Mutex<HashMap<String, ManagedSession>>>,
-    last_id: Arc<Mutex<i64>>,
+    last_id: Arc<Mutex<u64>>,
     timeout: Duration,
     auth_handler: S,
 }
@@ -141,7 +141,11 @@ where
         let mut sessions = self.sessions.lock().unwrap();
         let mut last_id = self.last_id.lock().unwrap();
         *last_id += 1;
-        let id = last_id.to_string();
+        let mut id = last_id.to_string();
+        while sessions.iter().find(|session| session.1.session.id.0 == id).is_some() {
+            *last_id += 1;
+            id = last_id.to_string();
+        }
         let token = self.token(&user_name);
 
         let created_session = v1_6_0::Session {
