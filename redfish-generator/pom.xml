@@ -9,8 +9,8 @@
   <version>1.0-SNAPSHOT</version>
 
   <name>redfish-codegen</name>
-  <!-- FIXME change it to the project's website -->
-  <url>http://www.example.com</url>
+  <license>Apache-2.0</license>
+  <url>https://github.com/AmateurECE/redfish-codegen</url>
 
   <properties>
     <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>

@@ -22,3 +22,10 @@ depends on the following utilities to be available in $PATH:
  * `sed(1)`
 
 [1]: https://docs.rs/redfish-codegen
+
+# Licensing
+
+The `redfish-generator` application (the Java code) is licensed under
+Apache-2.0, because it contains derivative works of the openapi-generator
+project (See the associated license notices in the com.twardyece.dmtf.openapi
+package). The Rust crates are dual-licensed under MIT or Apache-2.0.

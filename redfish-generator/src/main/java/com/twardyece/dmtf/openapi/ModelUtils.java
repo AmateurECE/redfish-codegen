@@ -1,7 +1,7 @@
 /*
  * Copyright 2018 OpenAPI-Generator Contributors (https://openapi-generator.tech)
  * Copyright 2018 SmartBear Software
- * Copyright 2023 Ethan Twardy <ethan.twardy@gmail.com>
+ * Modifications made by Ethan D. Twardy in 2023
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
