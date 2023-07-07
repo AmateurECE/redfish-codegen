@@ -3,7 +3,7 @@ use axum::{
     response::{IntoResponse, Response},
     Json,
 };
-use redfish_codegen::registries::base::v1_15_0::Base;
+use redfish_codegen::registries::base::v1_16_0::Base;
 use redfish_core::error;
 use tracing::{event, Level};
 

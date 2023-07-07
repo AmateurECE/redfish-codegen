@@ -1,0 +1,14 @@
+Removes a trailing slash at the end of a URI which is required not
+to have a trailing slash, which was discovered via a
+NullPointerException in the redfish-generator.
+--- a/api/openapi/openapi.yaml
++++ b/api/openapi/openapi.yaml
+@@ -162743,7 +162743,7 @@
+               schema:
+                 $ref: '#/components/schemas/RedfishError'
+           description: Error condition
+-  /redfish/v1/ThermalEquipment/HeatExchangers/{CoolingUnitId}/LeakDetection/LeakDetectors/:
++  /redfish/v1/ThermalEquipment/HeatExchangers/{CoolingUnitId}/LeakDetection/LeakDetectors:
+     get:
+       parameters:
+       - description: The value of the Id property of the CoolingUnit resource

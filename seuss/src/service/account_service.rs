@@ -3,7 +3,7 @@ use std::str::FromStr;
 use axum::{extract::OriginalUri, response::Response, Extension, Router};
 use redfish_axum::{role::Role, role_collection::RoleCollection};
 use redfish_codegen::models::{
-    account_service::v1_12_0::AccountService as AccountServiceModel, odata_v4,
+    account_service::v1_13_0::AccountService as AccountServiceModel, odata_v4,
     privileges::PrivilegeType, resource, role::v1_3_1::Role as RoleModel,
     role_collection::RoleCollection as RoleCollectionModel,
 };

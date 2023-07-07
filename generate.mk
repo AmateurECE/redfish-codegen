@@ -13,7 +13,7 @@
 ####
 
 RELEASE_LINK=https://www.dmtf.org/sites/default/files/standards/documents
-RELEASE_VERSION=2022.3
+RELEASE_VERSION=2023.1
 SCHEMA_FILE=DSP8010_$(RELEASE_VERSION).zip
 REGISTRY_FILE=DSP8011_$(RELEASE_VERSION).zip
 
@@ -23,7 +23,7 @@ SWORDFISH_LINK=https://www.snia.org/sites/default/files/technical-work/swordfish
 
 OPENAPI_DOCUMENT=api/openapi/openapi.yaml
 
-JAR_FILE=redfish-generator/target/redfish-codegen-1.0-SNAPSHOT.jar
+JAR_FILE=redfish-generator/target/redfish-codegen-0.3.0-SNAPSHOT.jar
 JVM_ARGS=-DmaxYamlCodePoints=6291456 -Dfile.encoding=UTF-8
 
 define redfish_codegen
@@ -57,13 +57,15 @@ $(SWORDFISH_SCHEMA_FILE):
 
 api/openapi/openapi.yaml: $(SCHEMA_FILE) $(SWORDFISH_SCHEMA_FILE)
 	unzip -o -DD -d api $(SCHEMA_FILE)
-	QUILT_PC=api/.pc QUILT_PATCHES=schema-patches quilt push -a
-	unzip -o -DD -d api $(SWORDFISH_SCHEMA_FILE)
-	mv -f api/openapi/openapi.yaml api/redfish.yaml
-	mv -f api/yaml/* api/openapi/
-	mv -f api/redfish.yaml api/openapi/openapi.yaml
-	sed -i -e 's#http://redfish.dmtf.org/schemas/v1#./#' api/openapi/*.yaml
-	sed -i -e 's#http://redfish.dmtf.org/schemas/swordfish/v1#./#' \
+	if [ -f schema-patches/series ]; then \
+		QUILT_PC=api/.pc QUILT_PATCHES=schema-patches quilt push -a --leave-rejects; \
+	fi
+	: # Unzip from the swordfish distribution only those files which are
+	: # not included in the Redfish distribution.
+	unzip -n -DD -d api $(SWORDFISH_SCHEMA_FILE)
+	mv --update=none api/yaml/* api/openapi/
+	sed -i -e 's#http://redfish.dmtf.org/schemas/v1#.#' api/openapi/*.yaml
+	sed -i -e 's#http://redfish.dmtf.org/schemas/swordfish/v1#.#' \
 		api/openapi/*.yaml
 
 # Registry

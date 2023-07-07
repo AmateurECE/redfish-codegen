@@ -11,15 +11,15 @@ use redfish_axum::{
 };
 use redfish_codegen::{
     models::{
-        computer_system::v1_20_0::{
+        computer_system::v1_20_1::{
             Actions, ComputerSystem as ComputerSystemModel, Reset, ResetRequestBody,
         },
         computer_system_collection::ComputerSystemCollection as ComputerSystemCollectionModel,
         odata_v4,
         resource::{self, ResetType},
-        service_root::v1_15_0::{Links, ServiceRoot as ServiceRootModel},
+        service_root::v1_16_0::{Links, ServiceRoot as ServiceRootModel},
     },
-    registries::base::v1_15_0::Base,
+    registries::base::v1_16_0::Base,
 };
 use redfish_core::{error, privilege};
 use seuss::{

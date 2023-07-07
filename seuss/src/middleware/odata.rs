@@ -14,7 +14,7 @@ use axum::{
     Json,
 };
 use futures::Future;
-use redfish_codegen::{registries::base::v1_15_0::Base, ODATA_VERSION};
+use redfish_codegen::{registries::base::v1_16_0::Base, ODATA_VERSION};
 use redfish_core::error;
 use tower::{Layer, Service};
 
