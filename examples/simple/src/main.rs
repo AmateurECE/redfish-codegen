@@ -156,7 +156,7 @@ async fn main() -> anyhow::Result<()> {
 
     let service_root = ServiceRoot::default()
     .get(service_root)
-    .account_service(AccountService::new().into_router())
+    .account_service(AccountService::default().into_router())
     .session_service(SessionService::new(session_manager, proxy.clone()).into_router())
     .systems(
         ComputerSystemCollection::default()
@@ -187,7 +187,7 @@ async fn main() -> anyhow::Result<()> {
     .into_router()
     .with_state(proxy);
 
-    let app = RedfishService::new()
+    let app = RedfishService::default()
         .into_router(odata, service_root)
         .layer(TraceLayer::new_for_http());
 

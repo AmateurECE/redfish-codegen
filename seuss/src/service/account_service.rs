@@ -12,13 +12,10 @@ use strum::IntoEnumIterator;
 
 use crate::middleware::ResourceLocator;
 
+#[derive(Default)]
 pub struct AccountService;
 
 impl AccountService {
-    pub fn new() -> Self {
-        Self
-    }
-
     pub fn into_router<S>(self) -> Router<S>
     where
         S: AsRef<dyn AuthenticateRequest> + Clone + Send + Sync + 'static,

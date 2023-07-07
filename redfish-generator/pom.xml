@@ -9,7 +9,11 @@
   <version>1.0-SNAPSHOT</version>
 
   <name>redfish-codegen</name>
-  <license>Apache-2.0</license>
+  <licenses>
+    <license>
+      <name>Apache-2.0</name>
+    </license>
+  </licenses>
   <url>https://github.com/AmateurECE/redfish-codegen</url>
 
   <properties>

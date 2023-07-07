@@ -5,13 +5,10 @@ use crate::middleware::ODataLayer;
 
 use super::RedfishVersions;
 
+#[derive(Default)]
 pub struct RedfishService;
 
 impl RedfishService {
-    pub fn new() -> Self {
-        Self
-    }
-
     pub fn into_router(self, odata: MethodRouter, service_root: Router) -> Router {
         Router::new()
             .route("/redfish", RedfishVersions::default().into())

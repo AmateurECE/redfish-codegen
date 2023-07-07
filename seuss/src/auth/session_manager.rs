@@ -126,7 +126,7 @@ where
         let mut last_id = self.last_id.lock().unwrap();
         *last_id += 1;
         let mut id = last_id.to_string();
-        while sessions.iter().find(|session| session.1.session.id.0 == id).is_some() {
+        while sessions.iter().any(|session| session.1.session.id.0 == id) {
             *last_id += 1;
             id = last_id.to_string();
         }
