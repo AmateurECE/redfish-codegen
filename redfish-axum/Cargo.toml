@@ -17,5 +17,5 @@ include = [
 
 [dependencies]
 axum = { version = "0.6.18", default-features = false }
-redfish-core = { version = "0.1.0", path = "../redfish-core" }
-redfish-codegen = { version = "0.2.0", path = "../redfish-codegen" }
+redfish-core = { version = "0.3.0", path = "../redfish-core" }
+redfish-codegen = { version = "0.3.0", path = "../redfish-codegen" }

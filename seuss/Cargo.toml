@@ -22,9 +22,9 @@ tower = "0.4.13"
 tracing = "0.1.37"
 users = { version = "0.11.0", optional = true }
 
-redfish-axum = { version = "0.2.0", path = "../redfish-axum" }
-redfish-core = { version = "0.1.0", path = "../redfish-core" }
-redfish-codegen = { version = "0.2.0", path = "../redfish-codegen" }
+redfish-axum = { version = "0.3.0", path = "../redfish-axum" }
+redfish-core = { version = "0.3.0", path = "../redfish-core" }
+redfish-codegen = { version = "0.3.0", path = "../redfish-codegen" }
 strum = "0.25.0"
 
 [features]

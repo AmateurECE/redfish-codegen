@@ -6,7 +6,7 @@ license = "MIT OR Apache-2.0"
 
 [dependencies]
 axum = { version = "0.6.18", features = ["json"], default-features = false, optional = true }
-redfish-codegen = { version = "0.2.0", path = "../redfish-codegen" }
+redfish-codegen = { version = "0.3.0", path = "../redfish-codegen" }
 serde = { version = "1.0.164", features = ["derive"], optional = true }
 strum = { version = "0.25.0", features = ["derive"] }
 

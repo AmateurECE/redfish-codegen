@@ -15,8 +15,8 @@ tower-http = { version = "0.4.1", default-features = false, features = ["trace"]
 tracing = { version = "0.1.37", default-features = false }
 tracing-subscriber = { version = "0.3.17", default-features = false, features = ["fmt"] }
 
-redfish-axum = { version = "0.2.0", path = "../../redfish-axum" }
-redfish-codegen = { version = "0.2.0", path = "../../redfish-codegen" }
-redfish-core = { version = "0.1.0", path = "../../redfish-core" }
-seuss = { version = "0.1.0", path = "../../seuss", features = ["router", "serde", "auth-pam"] }
+redfish-axum = { version = "0.3.0", path = "../../redfish-axum" }
+redfish-codegen = { version = "0.3.0", path = "../../redfish-codegen" }
+redfish-core = { version = "0.3.0", path = "../../redfish-core" }
+seuss = { version = "0.3.0", path = "../../seuss", features = ["router", "serde", "auth-pam"] }
 strum = "0.25.0"
