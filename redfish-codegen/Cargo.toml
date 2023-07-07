@@ -1,6 +1,6 @@
 [package]
 name = "redfish-codegen"
-version = "0.2.0"
+version = "0.3.0"
 authors = ["Ethan D. Twardy <ethan.twardy@gmail.com>"]
 description = "An unopinionated translation of the Redfish specification into Rust."
 license = "MIT OR Apache-2.0"
