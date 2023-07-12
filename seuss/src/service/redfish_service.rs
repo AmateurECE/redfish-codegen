@@ -11,7 +11,10 @@ pub struct RedfishService;
 impl RedfishService {
     pub fn into_router(self, odata: MethodRouter, service_root: Router) -> Router {
         Router::new()
-            .route("/redfish/", axum::routing::get(|| async { Redirect::permanent("/redfish") }))
+            .route(
+                "/redfish/",
+                axum::routing::get(|| async { Redirect::permanent("/redfish") }),
+            )
             .route("/redfish", RedfishVersions::default().into())
             .route(
                 "/redfish/v1",

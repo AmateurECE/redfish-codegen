@@ -5,11 +5,14 @@ use axum::{
     Extension, Json,
 };
 use clap::Parser;
-use redfish_axum::{
-    computer_system::ComputerSystem, computer_system_collection::ComputerSystemCollection,
-    odata::OData, service_root::ServiceRoot,
-};
-use redfish_codegen::{
+use seuss::{
+    auth::{pam::LinuxPamAuthenticator, CombinedAuthenticationProxy, InMemorySessionManager},
+    components::{
+        computer_system::ComputerSystem, computer_system_collection::ComputerSystemCollection,
+        odata::OData, service_root::ServiceRoot,
+    },
+    core::{error, privilege},
+    middleware::ResourceLocator,
     models::{
         computer_system::v1_20_1::{
             Actions, ComputerSystem as ComputerSystemModel, Reset, ResetRequestBody,
@@ -20,11 +23,6 @@ use redfish_codegen::{
         service_root::v1_16_0::{Links, ServiceRoot as ServiceRootModel},
     },
     registries::base::v1_16_0::Base,
-};
-use redfish_core::{error, privilege};
-use seuss::{
-    auth::{pam::LinuxPamAuthenticator, CombinedAuthenticationProxy, InMemorySessionManager},
-    middleware::ResourceLocator,
     service::{AccountService, RedfishService, SessionService},
 };
 use std::{
