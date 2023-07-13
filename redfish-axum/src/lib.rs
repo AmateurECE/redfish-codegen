@@ -233,4 +233,4 @@ pub mod zone;
 pub mod zone_collection;
 
 /// The version of the Redfish Schema Specification provided by this crate.
-pub const REDFISH_VERSION: &str = "2022.3";
+pub const REDFISH_VERSION: &str = "2023.1";

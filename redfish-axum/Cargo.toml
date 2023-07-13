@@ -1,8 +1,8 @@
 [package]
 name = "redfish-axum"
-version = "0.3.0"
+version = "0.3.1"
 authors = ["Ethan D. Twardy <ethan.twardy@gmail.com>"]
-description = "An unopinionated translation of the Redfish specification into Rust."
+description = "Components for implementing a Redfish service, based on axum."
 license = "MIT OR Apache-2.0"
 edition = "2021"
 homepage = "https://github.com/AmateurECE/redfish-codegen"
@@ -17,5 +17,5 @@ include = [
 
 [dependencies]
 axum = { version = "0.6.18", default-features = false }
-redfish-core = { version = "0.3.0", path = "../redfish-core" }
-redfish-codegen = { version = "0.3.0", path = "../redfish-codegen" }
+redfish-core = { version = "0.3.1", path = "../redfish-core" }
+redfish-codegen = { version = "0.3.1", path = "../redfish-codegen" }

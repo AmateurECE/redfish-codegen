@@ -23,7 +23,7 @@ SWORDFISH_LINK=https://www.snia.org/sites/default/files/technical-work/swordfish
 
 OPENAPI_DOCUMENT=api/openapi/openapi.yaml
 
-JAR_FILE=redfish-generator/target/redfish-codegen-0.3.0-SNAPSHOT.jar
+JAR_FILE=redfish-generator/target/redfish-codegen-0.3.1.jar
 JVM_ARGS=-DmaxYamlCodePoints=6291456 -Dfile.encoding=UTF-8
 
 define redfish_codegen
@@ -57,7 +57,7 @@ $(SWORDFISH_SCHEMA_FILE):
 
 api/openapi/openapi.yaml: $(SCHEMA_FILE) $(SWORDFISH_SCHEMA_FILE)
 	unzip -o -DD -d api $(SCHEMA_FILE)
-	if [ -f schema-patches/series ]; then \
+	-if [ -f schema-patches/series ]; then \
 		QUILT_PC=api/.pc QUILT_PATCHES=schema-patches quilt push -a --leave-rejects; \
 	fi
 	: # Unzip from the swordfish distribution only those files which are
@@ -75,7 +75,7 @@ $(REGISTRY_FILE):
 
 registry/DSP8011_2022.3.pdf: $(REGISTRY_FILE)
 	unzip -o -DD -d registry $(REGISTRY_FILE)
-	QUILT_PC=registry/.pc QUILT_PATCHES=registry-patches quilt push -a
+	-QUILT_PC=registry/.pc QUILT_PATCHES=registry-patches quilt push -a
 
 # Jar
 

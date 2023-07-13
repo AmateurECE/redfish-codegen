@@ -1,5 +1,6 @@
 use std::{
     convert::Infallible,
+    future::Future,
     pin::Pin,
     task::{Context, Poll},
 };
@@ -13,7 +14,6 @@ use axum::{
     routing::Route,
     Json,
 };
-use futures::Future;
 use redfish_codegen::{registries::base::v1_16_0::Base, ODATA_VERSION};
 use redfish_core::error;
 use tower::{Layer, Service};
