@@ -185,7 +185,7 @@ async fn main() -> anyhow::Result<()> {
     let session_manager = InMemorySessionManager::new(authenticator.clone());
 
     // The CombinedAuthenticationProxy uses our LinuxPamAuthenticator and InMemorySessionManager
-    // to check authenticate users and authorize every HTTP request for both basic and session
+    // to authenticate users and authorize every HTTP request for both basic and session
     // authentication. There is also a BasicAuthenticationProxy if only Basic authentication
     // support is desired. These types are generic over the SessionManagement and
     // {Basic,Session}Authentication traits, so a service author could easily write an
@@ -211,49 +211,49 @@ async fn main() -> anyhow::Result<()> {
     // sub-routes relative to "/redfish/v1/Systems". Components are also convertible to
     // axum::Router, so that they can integrate seamlessly with the rest of the axum ecosystem.
     let service_root = ServiceRoot::default()
-    .get(service_root)
-    // These AccountService and SessionService implementations are provided standard as part of the
-    // seuss crate. The seuss crate provides implementations for some of the boring services.
-    .account_service(AccountService::default().into_router())
-    .session_service(SessionService::new(session_manager, proxy.clone()).into_router())
-    .systems(
-        ComputerSystemCollection::default()
-            .get({
-                let systems = Arc::clone(&systems);
-                |OriginalUri(uri): OriginalUri| async move {
-                    computer_system_collection(uri, systems).await
-                }
-            })
-            .computer_system(
-                ComputerSystem::default()
-                    .get({
-                        let systems = Arc::clone(&systems);
-                        |OriginalUri(uri): OriginalUri, Extension(id): Extension<usize>| async move {
-                            computer_system(uri, id, systems).await
-                    }})
-                    .reset(|Extension(id): Extension<usize>, Json(request): Json<ResetRequestBody>| async move {
-                        computer_system_reset(id, systems, request).await
-                    })
-                    .into_router()
-                    // A ResourceLocator is middleware that converts path parameters to data that
-                    // are required to locate instances of entities within handlers. The data are
-                    // passed as Extensions. This one isn't particularly interesting, but in more
-                    // exotic systems, it could be used to perform RPC or REST calls to upstream or
-                    // remote services. The parameter name is taken from the Redfish OpenAPI
-                    // document--by convention, it's the name of the entity (in snake case)
-                    // suffixed with "_id".
-                    .route_layer(ResourceLocator::new(
-                        "computer_system_id".to_string(),
-                        |id: usize| async move { Ok::<_, Response>(id) },
-                    )),
-            )
-            .into_router(),
-    )
-    .into_router()
-    .with_state(proxy);
+        .get(service_root)
+        // These AccountService and SessionService implementations are provided standard as part of the
+        // seuss crate. The seuss crate provides implementations for some of the boring services.
+        .account_service(AccountService::default().into_router())
+        .session_service(SessionService::new(session_manager, proxy.clone()).into_router())
+        .systems(
+            ComputerSystemCollection::default()
+                .get({
+                    let systems = Arc::clone(&systems);
+                    |OriginalUri(uri): OriginalUri| async move {
+                        computer_system_collection(uri, systems).await
+                    }
+                })
+                .computer_system(
+                    ComputerSystem::default()
+                        .get({
+                            let systems = Arc::clone(&systems);
+                            |OriginalUri(uri): OriginalUri, Extension(id): Extension<usize>| async move {
+                                computer_system(uri, id, systems).await
+                        }})
+                        .reset(|Extension(id): Extension<usize>, Json(request): Json<ResetRequestBody>| async move {
+                            computer_system_reset(id, systems, request).await
+                        })
+                        .into_router()
+                        // A ResourceLocator is middleware that converts path parameters to data that
+                        // are required to locate instances of entities within handlers. The data are
+                        // passed as Extensions. This one isn't particularly interesting, but in more
+                        // exotic systems, it could be used to perform RPC or REST calls to upstream or
+                        // remote services. The parameter name is taken from the Redfish OpenAPI
+                        // document--by convention, it's the name of the entity (in snake case)
+                        // suffixed with "_id".
+                        .route_layer(ResourceLocator::new(
+                            "computer_system_id".to_string(),
+                            |id: usize| async move { Ok::<_, Response>(id) },
+                        )),
+                )
+                .into_router(),
+        )
+        .into_router()
+        .with_state(proxy);
 
     // Attach our ServiceRoot and OData service document to a redfish service. The RedfishService
-    // also takes care of setting up required redirects and also serves an OData metadata document.
+    // takes care of setting up required redirects and also serves an OData metadata document.
     let app = RedfishService::default()
         .into_router(odata, service_root)
         .layer(TraceLayer::new_for_http());
@@ -261,6 +261,6 @@ async fn main() -> anyhow::Result<()> {
     // Finally, use the seuss::router module to serve our redfish service. This takes a
     // seuss::router::Configuration instance (which we deserialize from yaml), and an axum::Router
     // (generated from the RedfishService). It will redirect HTTP requests to the HTTPS server, and
-    // do some other boring setup.
+    // do some other setup that would be boring to write by hand.
     seuss::router::serve(config.server, app).await
 }
