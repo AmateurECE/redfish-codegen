@@ -23,7 +23,7 @@ SWORDFISH_LINK=https://www.snia.org/sites/default/files/technical-work/swordfish
 
 OPENAPI_DOCUMENT=api/openapi/openapi.yaml
 
-JAR_FILE=redfish-generator/target/redfish-codegen-0.3.1.jar
+JAR_FILE=redfish-generator/target/redfish-codegen-0.3.1-SNAPSHOT.jar
 JVM_ARGS=-DmaxYamlCodePoints=6291456 -Dfile.encoding=UTF-8
 
 define redfish_codegen

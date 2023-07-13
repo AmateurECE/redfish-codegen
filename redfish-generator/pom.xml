@@ -6,7 +6,7 @@
 
   <groupId>com.twardyece.dmtf</groupId>
   <artifactId>redfish-codegen</artifactId>
-  <version>0.3.1</version>
+  <version>0.3.1-SNAPSHOT</version>
 
   <name>redfish-codegen</name>
   <licenses>
