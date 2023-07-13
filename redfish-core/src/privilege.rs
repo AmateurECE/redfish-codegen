@@ -1,6 +1,7 @@
 use redfish_codegen::models::privileges::PrivilegeType;
 use std::marker::PhantomData;
 
+/// The privileges called out in the Redfish specification.
 #[derive(Clone, Copy, PartialEq, Eq, Hash, strum::EnumIter, strum::Display, strum::EnumString)]
 #[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
 pub enum Privilege {
@@ -27,6 +28,7 @@ pub trait SatisfiesPrivilege {
     fn is_satisfied(privileges: &[Privilege]) -> bool;
 }
 
+/// The Login privilege.
 #[derive(Clone, Default)]
 pub struct Login;
 impl SatisfiesPrivilege for Login {
@@ -35,6 +37,7 @@ impl SatisfiesPrivilege for Login {
     }
 }
 
+/// The ConfigureManager privilege.
 #[derive(Clone, Default)]
 pub struct ConfigureManager;
 impl SatisfiesPrivilege for ConfigureManager {
@@ -43,6 +46,7 @@ impl SatisfiesPrivilege for ConfigureManager {
     }
 }
 
+/// The ConfigureUsers privilege.
 #[derive(Clone, Default)]
 pub struct ConfigureUsers;
 impl SatisfiesPrivilege for ConfigureUsers {
@@ -51,6 +55,7 @@ impl SatisfiesPrivilege for ConfigureUsers {
     }
 }
 
+/// The ConfigureComponents privilege.
 #[derive(Clone, Default)]
 pub struct ConfigureComponents;
 impl SatisfiesPrivilege for ConfigureComponents {
@@ -59,6 +64,7 @@ impl SatisfiesPrivilege for ConfigureComponents {
     }
 }
 
+/// The ConfigureSelf privilege.
 #[derive(Clone, Default)]
 pub struct ConfigureSelf;
 impl SatisfiesPrivilege for ConfigureSelf {
@@ -67,6 +73,7 @@ impl SatisfiesPrivilege for ConfigureSelf {
     }
 }
 
+/// This struct can be used to disable authentication and authorization for a Redfish service.
 #[derive(Clone, Default)]
 pub struct NoAuth;
 impl SatisfiesPrivilege for NoAuth {
@@ -75,6 +82,7 @@ impl SatisfiesPrivilege for NoAuth {
     }
 }
 
+/// A combinator that requires both privileges to be satisfied.
 #[derive(Clone)]
 pub struct And<P, R>(PhantomData<fn() -> (P, R)>)
 where
@@ -90,6 +98,7 @@ where
     }
 }
 
+/// A combinator that requires at least one privilege to be satisfied.
 #[derive(Clone)]
 pub struct Or<P, R>(PhantomData<fn() -> (P, R)>)
 where
@@ -105,11 +114,16 @@ where
     }
 }
 
+/// The standard roles defined in the Redfish specification.
 #[derive(Clone, Copy, PartialEq, Eq, Hash, strum::EnumIter, strum::Display, strum::EnumString)]
 #[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
 pub enum Role {
+    /// Administrators have sufficient privilege to perform any operation.
     Administrator,
+    /// Operators have all the privileges of ReadOnly users, plus the ConfigureComponents
+    /// privilege.
     Operator,
+    /// ReadOnly users have only the Login and ConfigureSelf privileges.
     ReadOnly,
 }
 
@@ -133,6 +147,7 @@ impl Role {
     }
 }
 
+/// This trait maps HTTP verbs to required privileges and/or privilege combinators.
 pub trait OperationPrivilegeMapping {
     type Get: SatisfiesPrivilege;
     type Head: SatisfiesPrivilege;

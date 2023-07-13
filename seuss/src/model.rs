@@ -31,8 +31,9 @@ where
     }
 }
 
-/// Constructs an HTTP response using the provided Redfish model instance. This
-/// creates a request with the following:
+/// Constructs an HTTP response from a Redfish model instance.
+///
+/// This creates a request with the following:
 /// 1. The Link header is set with the URL to the json-schema of the model
 ///    contained in the request body.
 /// 2. The Cache-Control header is set to "no-cache".

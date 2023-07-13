@@ -12,21 +12,33 @@ use futures::{FutureExt, StreamExt};
 use signal_hook::consts::{SIGINT, SIGTERM};
 use signal_hook_tokio::Signals;
 
+/// The ports bound by the service.
 #[derive(Copy, Clone)]
 #[cfg_attr(feature = "serde", derive(serde::Deserialize))]
-struct Ports {
-    http: u16,
-    https: u16,
+pub struct Ports {
+    /// The port to listen for HTTP requests.
+    pub http: u16,
+    /// The port to listen for HTTPS requests.
+    pub https: u16,
 }
 
+/// Configuration for the service.
 #[cfg_attr(feature = "serde", derive(serde::Deserialize))]
 pub struct Configuration {
-    address: String,
-    ports: Ports,
+    /// The IPv4 address to listen for connections on.
+    pub address: String,
+    /// The ports to listen on.
+    pub ports: Ports,
+    /// The path to a TLS certificate file for the server. Not all container formats are supported,
+    /// but RFC 1422 PEM (.pem) files _are_ supported. In that case, this file should contain a
+    /// full certificate chain for the service.
     #[cfg_attr(feature = "serde", serde(rename = "certificate-file"))]
-    certificate_file: String,
+    pub certificate_file: String,
+    /// The path to a TLS key chain for the server. Not all container formats are supported, but
+    /// RFC 1422 PEM (.pem) files _are_ supported. In that case, it should contain an encoded
+    /// private key.
     #[cfg_attr(feature = "serde", serde(rename = "key-file"))]
-    key_file: String,
+    pub key_file: String,
 }
 
 async fn redirect_http_to_https(address: String, ports: Ports) {
@@ -64,6 +76,9 @@ async fn redirect_http_to_https(address: String, ports: Ports) {
         .unwrap();
 }
 
+/// Exposes the service (described by the [axum::Router]) over HTTPS using the provided
+/// configuration. Also starts an HTTP service that responds to all requests with a 301 Permanent
+/// Redirect to the same URL with the https:// scheme.
 pub async fn serve(config: Configuration, app: Router) -> anyhow::Result<()> {
     let server_handle = Handle::new();
     let signals = Signals::new([SIGINT, SIGTERM])?;

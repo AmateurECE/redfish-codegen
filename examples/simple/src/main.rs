@@ -160,7 +160,7 @@ async fn computer_system_reset(
             return Err(seuss::Response(error::one_message(
                 Base::ActionParameterNotSupported("ResetType".to_string(), "Reset".to_string())
                     .into(),
-            )))
+            )));
         }
     };
     systems.lock().unwrap().get_mut(id - 1).unwrap().0 = power_state;
@@ -185,7 +185,7 @@ async fn main() -> anyhow::Result<()> {
     let session_manager = InMemorySessionManager::new(authenticator.clone());
 
     // The CombinedAuthenticationProxy uses our LinuxPamAuthenticator and InMemorySessionManager
-    // to check authenticate users and authorize every HTTP request for both basic and session 
+    // to check authenticate users and authorize every HTTP request for both basic and session
     // authentication. There is also a BasicAuthenticationProxy if only Basic authentication
     // support is desired. These types are generic over the SessionManagement and
     // {Basic,Session}Authentication traits, so a service author could easily write an
