@@ -1,10 +1,15 @@
 [package]
 name = "seuss"
+version = "0.3.1"
 authors = ["Ethan D. Twardy <ethan.twardy@gmail.com>"]
 description = "A batteries-included framework for implementing Redfish-compliant services."
-version = "0.3.1"
 edition = "2021"
 license = "MIT OR Apache-2.0"
+homepage = "https://github.com/AmateurECE/redfish-codegen"
+documentation = "https://docs.rs/seuss"
+repository = "https://github.com/AmateurECE/redfish-codegen"
+readme = "README.md"
+keywords = ["redfish"]
 
 [dependencies]
 anyhow = { version = "1.0.71", optional = true }
