@@ -1,4 +1,4 @@
-/src/
-!/src/lib.rs
+/src/models/
+/src/registries/
 /target/
 Cargo.lock
