@@ -55,31 +55,42 @@ $(SCHEMA_FILE):
 $(SWORDFISH_SCHEMA_FILE):
 	curl -LO $(SWORDFISH_LINK)
 
-api/openapi/openapi.yaml: $(SCHEMA_FILE) $(SWORDFISH_SCHEMA_FILE)
+get-schema: $(SCHEMA_FILE) $(SWORDFISH_SCHEMA_FILE) $(REGISTRY_FILE)
+
+unzip: get-schema
 	unzip -o -DD -d api $(SCHEMA_FILE)
-	-if [ -f schema-patches/series ]; then \
-		QUILT_PC=api/.pc QUILT_PATCHES=schema-patches quilt push -a --leave-rejects; \
-	fi
 	: # Unzip from the swordfish distribution only those files which are
 	: # not included in the Redfish distribution.
 	unzip -n -DD -d api $(SWORDFISH_SCHEMA_FILE)
 	mv --update=none api/yaml/* api/openapi/
+	unzip -o -DD -d registry $(REGISTRY_FILE)
+
+api/openapi/openapi.yaml: unzip
+	-if [ -f schema-patches/series ]; then \
+		QUILT_PC=api/.pc QUILT_PATCHES=schema-patches quilt push -a --leave-rejects; \
+	fi
 	sed -i -e 's#http://redfish.dmtf.org/schemas/v1#.#' api/openapi/*.yaml
 	sed -i -e 's#http://redfish.dmtf.org/schemas/swordfish/v1#.#' \
 		api/openapi/*.yaml
+
+clean:
+	rm -rf api registry
 
 # Registry
 
 $(REGISTRY_FILE):
 	curl -L -O $(RELEASE_LINK)/$(REGISTRY_FILE)
 
-registry/DSP8011_2022.3.pdf: $(REGISTRY_FILE)
-	unzip -o -DD -d registry $(REGISTRY_FILE)
+registry/DSP8011_$(RELEASE_VERSION).pdf: unzip
 	-QUILT_PC=registry/.pc QUILT_PATCHES=registry-patches quilt push -a
+
+prepare: registry/DSP8011_$(RELEASE_VERSION).pdf api/openapi/openapi.yaml
 
 # Jar
 
 $(JAR_FILE): redfish-generator/pom.xml
 	(cd redfish-generator && mvn clean package)
+
+.PHONY: get-schema unzip clean prepare
 
 ###############################################################################
