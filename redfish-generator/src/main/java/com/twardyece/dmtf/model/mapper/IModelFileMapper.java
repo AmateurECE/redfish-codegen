@@ -8,6 +8,7 @@ import com.twardyece.dmtf.text.SnakeCaseName;
 import java.util.List;
 
 public interface IModelFileMapper {
+    // TODO: Replace this with Optional<ModelMatchResult>
     ModelMatchResult matches(String name);
 
     class ModelMatchResult {

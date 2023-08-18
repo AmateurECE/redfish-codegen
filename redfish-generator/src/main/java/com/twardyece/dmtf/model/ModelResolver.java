@@ -15,6 +15,7 @@ import java.util.regex.Pattern;
 
 public class ModelResolver {
     private final IModelFileMapper[] mappers;
+    private final NamespaceMapper[] namespaceMappers;
     private static final Logger LOGGER = LoggerFactory.getLogger(ModelResolver.class);
     private static final PascalCaseName VEC_NAME = new PascalCaseName("Vec");
     public static final Map<String, RustType> RUST_TYPE_MAP;
@@ -29,8 +30,9 @@ public class ModelResolver {
     }
 
 
-    public ModelResolver(IModelFileMapper[] mappers) {
+    public ModelResolver(IModelFileMapper[] mappers, NamespaceMapper[] namespaceMappers) {
         this.mappers = mappers;
+        this.namespaceMappers = namespaceMappers;
     }
 
     public static String getSchemaIdentifier(Schema schema) {
@@ -45,6 +47,12 @@ public class ModelResolver {
     }
 
     public RustType resolvePath(String name) {
+        for (NamespaceMapper namespaceMapper : namespaceMappers) {
+            if (namespaceMapper.matches(name)) {
+                name = namespaceMapper.translate(name);
+            }
+        }
+
         for (IModelFileMapper mapper : this.mappers) {
             IModelFileMapper.ModelMatchResult module = mapper.matches(name);
             if (null != module) {

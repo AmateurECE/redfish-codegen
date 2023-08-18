@@ -6,15 +6,22 @@ import com.twardyece.dmtf.specification.VersionedSchemaIdentifier;
 import com.twardyece.dmtf.text.PascalCaseName;
 import com.twardyece.dmtf.text.SnakeCaseName;
 
-import java.util.regex.Pattern;
-
 public class UnionVariantParser {
-    private static final NameMapper mapper = new NameMapper(Pattern.compile("odata-v4_(?<model>[a-zA-Z0-9]*)"), "model");
+    private final NameMapper[] nameMappers;
 
-    public UnionVariantParser() {}
+    public UnionVariantParser(NameMapper[] nameMappers) {
+        this.nameMappers = nameMappers;
+    }
 
     public RustIdentifier getVariantName(String identifier) {
-        SnakeCaseName identifierName = mapper.matchComponent(identifier);
+        SnakeCaseName identifierName = null;
+        for (NameMapper nameMapper : nameMappers) {
+            identifierName = nameMapper.matchComponent(identifier);
+            if (null != identifierName) {
+                break;
+            }
+        }
+
         RustIdentifier value;
         if (null == identifierName) {
             VersionedSchemaIdentifier versioned = new VersionedSchemaIdentifier(identifier);

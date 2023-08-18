@@ -5,6 +5,9 @@ import com.twardyece.dmtf.component.*;
 import com.twardyece.dmtf.component.match.ActionComponentMatcher;
 import com.twardyece.dmtf.component.match.IComponentMatcher;
 import com.twardyece.dmtf.component.match.StandardComponentMatcher;
+import com.twardyece.dmtf.model.NameMapper;
+import com.twardyece.dmtf.model.NamespaceMapper;
+import com.twardyece.dmtf.policies.*;
 import com.twardyece.dmtf.specification.*;
 import com.twardyece.dmtf.model.ModelResolver;
 import com.twardyece.dmtf.model.context.ModelContext;
@@ -14,16 +17,13 @@ import com.twardyece.dmtf.model.mapper.SimpleModelMapper;
 import com.twardyece.dmtf.model.mapper.UnversionedModelMapper;
 import com.twardyece.dmtf.model.mapper.VersionedModelMapper;
 import com.twardyece.dmtf.openapi.DocumentParser;
-import com.twardyece.dmtf.policies.IModelGenerationPolicy;
-import com.twardyece.dmtf.policies.ModelMetadataPolicy;
-import com.twardyece.dmtf.policies.ODataPropertyPolicy;
-import com.twardyece.dmtf.policies.PropertyDefaultValueOverridePolicy;
 import com.twardyece.dmtf.registry.RegistryContext;
 import com.twardyece.dmtf.registry.RegistryFactory;
 import com.twardyece.dmtf.registry.RegistryFileDiscovery;
 import com.twardyece.dmtf.text.CaseConversion;
 import com.twardyece.dmtf.text.PascalCaseName;
 import com.twardyece.dmtf.text.SnakeCaseName;
+import io.swagger.models.Model;
 import io.swagger.v3.oas.models.OpenAPI;
 import io.swagger.v3.oas.models.PathItem;
 import io.swagger.v3.oas.models.media.Schema;
@@ -77,20 +77,27 @@ public class RedfishCodegen {
         modelMappers[2] = new SimpleModelMapper(odataModelIdentifierFactory, new SnakeCaseName("odata_v4"));
         modelMappers[3] = new UnversionedModelMapper();
 
-        this.modelResolver = new ModelResolver(modelMappers);
+        NamespaceMapper[] namespaceMappers = new NamespaceMapper[1];
+        Pattern odataModelPattern = Pattern.compile("odata_v?4_0_[0-9]_");
+        namespaceMappers[0] = new NamespaceMapper(odataModelPattern, "odata-v4_");
+        this.modelResolver = new ModelResolver(modelMappers, namespaceMappers);
         IModelContextFactory[] factories = new IModelContextFactory[6];
         factories[0] = new EnumContextFactory();
         factories[1] = new FreeFormObjectContextFactory();
         factories[2] = new StructContextFactory(this.modelResolver);
         factories[3] = new TupleContextFactory(this.modelResolver);
-        factories[4] = new UnionContextFactory(this.modelResolver, new UnionVariantParser());
+        NameMapper[] nameMappers = new NameMapper[2];
+        nameMappers[0] = new NameMapper(Pattern.compile("odata-v4_(?<model>[a-zA-Z0-9]*)"), "model");
+        nameMappers[1] = new NameMapper(Pattern.compile("Resource_(?<model>[a-zA-Z0-9]*)"), "model");
+        factories[4] = new UnionContextFactory(this.modelResolver, new UnionVariantParser(nameMappers));
         factories[5] = new UnitContextFactory();
         this.fileFactory = new FileFactory(new DefaultMustacheFactory(), factories);
 
         // These intrusive/low-level policies need to be applied to the set of models as a whole, but should not be
         // coupled to context factories.
-        this.modelGenerationPolicies = new IModelGenerationPolicy[2];
-        this.modelGenerationPolicies[0] = new ODataPropertyPolicy(new ODataTypeIdentifier());
+        this.modelGenerationPolicies = new IModelGenerationPolicy[3];
+        this.modelGenerationPolicies[0] = new ModelDeletionPolicy(odataModelPattern);
+        this.modelGenerationPolicies[1] = new ODataPropertyPolicy(new ODataTypeIdentifier());
         JsonSchemaMapper[] jsonSchemaMappers = new JsonSchemaMapper[2];
 
         Pattern versionParsePattern = Pattern.compile("([0-9]+)_([0-9]+)_([0-9]+)");
@@ -112,7 +119,7 @@ public class RedfishCodegen {
         jsonSchemaMappers[1] = new JsonSchemaMapper(
                 odataModelIdentifierFactory,
                 odataJsonSchema.get().file.getFileName().toString());
-        this.modelGenerationPolicies[1] = new ModelMetadataPolicy(new JsonSchemaIdentifier(jsonSchemaMappers));
+        this.modelGenerationPolicies[2] = new ModelMetadataPolicy(new JsonSchemaIdentifier(jsonSchemaMappers));
 
         // Registry generation
         Path registryDirectoryPath = Path.of(registryDirectory);

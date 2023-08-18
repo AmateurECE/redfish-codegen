@@ -13,7 +13,7 @@ import java.util.regex.Pattern;
 public class OpenapiSpecification {
     private final Path specDirectory;
     private final Map<String, String> inlineSchemaNameMappings;
-    private static final Pattern VERSIONED_SCHEMA_FILE = Pattern.compile("[A-Za-z].v[0-9]+_[0-9]+_[0-9]+.yaml");
+    private static final Pattern VERSIONED_SCHEMA_FILE = Pattern.compile("[A-Z][A-Za-z]*.v[0-9]+_[0-9]+_[0-9]+.yaml");
     private static final List<String> ignoredSchemaFiles;
 
     static {

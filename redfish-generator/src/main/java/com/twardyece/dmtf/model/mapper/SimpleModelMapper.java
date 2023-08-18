@@ -15,6 +15,7 @@ public class SimpleModelMapper implements IModelFileMapper {
     private final SimpleModelIdentifierFactory identifierFactory;
     private final SnakeCaseName module;
 
+    // TODO: Seems like we have some duplicated classes. Can we consolidate this class with the NameMapper class somehow?
     public SimpleModelMapper(SimpleModelIdentifierFactory identifierFactory, SnakeCaseName module) {
         this.identifierFactory = identifierFactory;
         this.module = module;
