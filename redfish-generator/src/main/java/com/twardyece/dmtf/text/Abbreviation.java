@@ -21,6 +21,8 @@ public class Abbreviation implements IWord {
         SPECIAL_ABBREVIATIONS.put("iSCSI", new Word("iSCSI"));
         SPECIAL_ABBREVIATIONS.put("NVMe", new Abbreviation("NVMe"));
         SPECIAL_ABBREVIATIONS.put("oF", new Abbreviation("oF"));
+        SPECIAL_ABBREVIATIONS.put("OAuth2", new Abbreviation("OAuth2"));
+        SPECIAL_ABBREVIATIONS.put("OAuth", new Abbreviation("OAuth"));
     }
 
     public Abbreviation(String upperCaseValue) {
