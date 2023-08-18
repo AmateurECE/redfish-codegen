@@ -13,6 +13,7 @@ public class ModelContext {
     public StructContext structContext;
     public EnumContext enumContext;
     public TupleContext tupleContext;
+    public boolean unitContext;
     public String docComment;
     public Metadata metadata;
 
@@ -22,6 +23,7 @@ public class ModelContext {
         modelContext.moduleContext = new ModuleContext(path, dependentTypes);
 
         modelContext.rustType = rustType;
+        modelContext.unitContext = false;
         modelContext.docComment = docComment;
         return modelContext;
     }
@@ -41,6 +43,12 @@ public class ModelContext {
     public static ModelContext forTuple(RustType rustType, TupleContext tupleContext, String docComment) {
         ModelContext modelContext = ModelContext.generic(rustType, tupleContext.getDependentTypes(), docComment);
         modelContext.tupleContext = tupleContext;
+        return modelContext;
+    }
+
+    public static ModelContext forUnit(RustType rustType, String docComment) {
+        ModelContext modelContext = ModelContext.generic(rustType, null, docComment);
+        modelContext.unitContext = true;
         return modelContext;
     }
 

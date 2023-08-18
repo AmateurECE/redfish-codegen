@@ -78,12 +78,13 @@ public class RedfishCodegen {
         modelMappers[3] = new UnversionedModelMapper();
 
         this.modelResolver = new ModelResolver(modelMappers);
-        IModelContextFactory[] factories = new IModelContextFactory[5];
+        IModelContextFactory[] factories = new IModelContextFactory[6];
         factories[0] = new EnumContextFactory();
         factories[1] = new FreeFormObjectContextFactory();
         factories[2] = new StructContextFactory(this.modelResolver);
         factories[3] = new TupleContextFactory(this.modelResolver);
         factories[4] = new UnionContextFactory(this.modelResolver, new UnionVariantParser());
+        factories[5] = new UnitContextFactory();
         this.fileFactory = new FileFactory(new DefaultMustacheFactory(), factories);
 
         // These intrusive/low-level policies need to be applied to the set of models as a whole, but should not be

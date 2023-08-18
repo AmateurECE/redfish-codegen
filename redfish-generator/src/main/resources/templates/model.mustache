@@ -64,6 +64,9 @@ impl Default for {{name}} {
 #[derive(Default)]
 pub struct {{name}}(pub {{type}});
 {{/tupleContext}}
+{{#unitContext}}
+pub struct {{name}};
+{{/unitContext}}
 {{#metadata}}
 
 impl crate::Metadata<'static> for {{name}} {
