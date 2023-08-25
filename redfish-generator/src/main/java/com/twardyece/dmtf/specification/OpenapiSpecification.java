@@ -4,6 +4,8 @@ import com.twardyece.dmtf.openapi.DocumentParser;
 import io.swagger.v3.oas.models.Components;
 import io.swagger.v3.oas.models.OpenAPI;
 import io.swagger.v3.oas.models.media.Schema;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.nio.file.Path;
 import java.util.*;
@@ -15,6 +17,7 @@ public class OpenapiSpecification {
     private final Map<String, String> inlineSchemaNameMappings;
     private static final Pattern VERSIONED_SCHEMA_FILE = Pattern.compile("[A-Z][A-Za-z]*.v[0-9]+_[0-9]+_[0-9]+.yaml");
     private static final List<String> ignoredSchemaFiles;
+    private static final Logger LOGGER = LoggerFactory.getLogger(OpenapiSpecification.class);
 
     static {
         ignoredSchemaFiles = new ArrayList<>();
@@ -24,6 +27,12 @@ public class OpenapiSpecification {
     public OpenapiSpecification(Path specDirectory, Map<String, String> inlineSchemaNameMappings) {
         this.specDirectory = specDirectory;
         this.inlineSchemaNameMappings = inlineSchemaNameMappings;
+    }
+
+    private static void debugInformDuplicateSchemas(String schema, String file) {
+        if (schema.endsWith("_1")) {
+            LOGGER.warn("Duplicate schema " + schema + " encountered while parsing " + file);
+        }
     }
 
     public OpenAPI getRedfishDataModel() {
@@ -45,6 +54,7 @@ public class OpenapiSpecification {
             }
 
             for (Map.Entry<String, Schema> entry : schemaDocument.getComponents().getSchemas().entrySet()) {
+                debugInformDuplicateSchemas(entry.getKey(), file);
                 if (!redfishComponents.getSchemas().containsKey(entry.getKey())) {
                     redfishComponents.addSchemas(entry.getKey(), entry.getValue());
                 }

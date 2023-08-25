@@ -88,7 +88,7 @@ public class RedfishCodegen {
         factories[3] = new TupleContextFactory(this.modelResolver);
         NameMapper[] nameMappers = new NameMapper[2];
         nameMappers[0] = new NameMapper(Pattern.compile("odata-v4_(?<model>[a-zA-Z0-9]*)"), "model");
-        nameMappers[1] = new NameMapper(Pattern.compile("Resource_(?<model>[a-zA-Z0-9]*)"), "model");
+        nameMappers[1] = new NameMapper(Pattern.compile("^Resource_(?<model>[a-zA-Z0-9]*)$"), "model");
         factories[4] = new UnionContextFactory(this.modelResolver, new UnionVariantParser(nameMappers));
         factories[5] = new UnitContextFactory();
         this.fileFactory = new FileFactory(new DefaultMustacheFactory(), factories);

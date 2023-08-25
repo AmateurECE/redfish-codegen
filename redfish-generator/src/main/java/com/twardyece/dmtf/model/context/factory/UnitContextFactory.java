@@ -8,7 +8,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 public class UnitContextFactory implements IModelContextFactory {
-    private static final Logger LOGGER = LoggerFactory.getLogger(FileFactory.class);
+    private static final Logger LOGGER = LoggerFactory.getLogger(UnitContextFactory.class);
 
     @Override
     public ModelContext makeModelContext(RustType type, Schema schema) {
