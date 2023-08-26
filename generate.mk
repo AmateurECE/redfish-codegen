@@ -35,7 +35,7 @@ define redfish_codegen
 endef
 
 CODEGEN_DEPENDENCIES += api/openapi/openapi.yaml
-CODEGEN_DEPENDENCIES += registry/DSP8011_2022.3.pdf
+CODEGEN_DEPENDENCIES += registry/DSP8011_$(RELEASE_VERSION).pdf
 CODEGEN_DEPENDENCIES += $(JAR_FILE)
 
 models: redfish-codegen/src/lib.rs
@@ -55,17 +55,24 @@ $(SCHEMA_FILE):
 $(SWORDFISH_SCHEMA_FILE):
 	curl -LO $(SWORDFISH_LINK)
 
-get-schema: $(SCHEMA_FILE) $(SWORDFISH_SCHEMA_FILE) $(REGISTRY_FILE)
+SCHEMA_FILES += $(SCHEMA_FILE)
+SCHEMA_FILES += $(SWORDFISH_SCHEMA_FILE)
+SCHEMA_FILES += $(REGISTRY_FILE)
 
-unzip: get-schema
+get-schema: $(SCHEMA_FILES)
+
+api/.unzip.lock: $(SCHEMA_FILES)
 	unzip -o -DD -d api $(SCHEMA_FILE)
 	: # Unzip from the swordfish distribution only those files which are
 	: # not included in the Redfish distribution.
 	unzip -n -DD -d api $(SWORDFISH_SCHEMA_FILE)
 	mv --update=none api/yaml/* api/openapi/
 	unzip -o -DD -d registry $(REGISTRY_FILE)
+	touch $@
 
-api/openapi/openapi.yaml: unzip
+unzip: api/.unzip.lock
+
+api/openapi/openapi.yaml: api/.unzip.lock
 	-if [ -f schema-patches/series ]; then \
 		QUILT_PC=api/.pc QUILT_PATCHES=schema-patches quilt push -a --leave-rejects; \
 	fi
@@ -81,8 +88,9 @@ clean:
 $(REGISTRY_FILE):
 	curl -L -O $(RELEASE_LINK)/$(REGISTRY_FILE)
 
-registry/DSP8011_$(RELEASE_VERSION).pdf: unzip
+registry/DSP8011_$(RELEASE_VERSION).pdf: api/.unzip.lock
 	-QUILT_PC=registry/.pc QUILT_PATCHES=registry-patches quilt push -a
+	touch $@
 
 prepare: registry/DSP8011_$(RELEASE_VERSION).pdf api/openapi/openapi.yaml
 
