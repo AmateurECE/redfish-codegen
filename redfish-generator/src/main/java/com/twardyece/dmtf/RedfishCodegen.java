@@ -20,6 +20,7 @@ import com.twardyece.dmtf.openapi.DocumentParser;
 import com.twardyece.dmtf.registry.RegistryContext;
 import com.twardyece.dmtf.registry.RegistryFactory;
 import com.twardyece.dmtf.registry.RegistryFileDiscovery;
+import com.twardyece.dmtf.specification.file.DirectoryFileList;
 import com.twardyece.dmtf.text.CaseConversion;
 import com.twardyece.dmtf.text.PascalCaseName;
 import com.twardyece.dmtf.text.SnakeCaseName;
@@ -101,7 +102,7 @@ public class RedfishCodegen {
         JsonSchemaMapper[] jsonSchemaMappers = new JsonSchemaMapper[2];
 
         Pattern versionParsePattern = Pattern.compile("([0-9]+)_([0-9]+)_([0-9]+)");
-        VersionedFileDiscovery versionedFileDiscovery = new VersionedFileDiscovery(Paths.get(specDirectory + "/json-schema"));
+        VersionedFileDiscovery versionedFileDiscovery = new VersionedFileDiscovery(new DirectoryFileList(Paths.get(specDirectory + "/json-schema")));
         Optional<VersionedFileDiscovery.VersionedFile> redfishErrorJsonSchema = versionedFileDiscovery.getFile(
                 "redfish-error", Pattern.compile("redfish-error.v(?<version>" + versionParsePattern + ").json"), "version", versionParsePattern);
         if (redfishErrorJsonSchema.isEmpty()) {
@@ -150,7 +151,11 @@ public class RedfishCodegen {
         inlineSchemaNameMappings.put("_redfish_v1_odata_get_200_response", "odata-v4_ServiceDocument");
         inlineSchemaNameMappings.put("_redfish_v1_odata_get_200_response_value_inner", "odata-v4_Service");
 
-        OpenapiSpecification specification = new OpenapiSpecification(Path.of(specDirectory), inlineSchemaNameMappings);
+        Pattern[] ignoredSchemaFiles = new Pattern[2];
+        ignoredSchemaFiles[0] = Pattern.compile("^odata.*$");
+        ignoredSchemaFiles[1] = Pattern.compile("^redfish-payload-annotations-.*$");
+        OpenapiSpecification specification = new OpenapiSpecification(Path.of(specDirectory), inlineSchemaNameMappings,
+                ignoredSchemaFiles);
         this.document = specification.getRedfishDataModel();
     }
 

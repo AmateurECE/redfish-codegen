@@ -27,16 +27,14 @@ import com.fasterxml.jackson.databind.MapperFeature;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import io.swagger.parser.OpenAPIParser;
 import io.swagger.v3.core.util.Json;
-import io.swagger.v3.oas.models.OpenAPI;
-import io.swagger.v3.oas.models.Operation;
-import io.swagger.v3.oas.models.PathItem;
-import io.swagger.v3.oas.models.Paths;
+import io.swagger.v3.oas.models.*;
 import io.swagger.v3.oas.models.callbacks.Callback;
 import io.swagger.v3.oas.models.media.*;
 import io.swagger.v3.oas.models.parameters.Parameter;
 import io.swagger.v3.oas.models.parameters.RequestBody;
 import io.swagger.v3.oas.models.responses.ApiResponse;
 import io.swagger.v3.oas.models.responses.ApiResponses;
+import io.swagger.v3.parser.OpenAPIV3Parser;
 import io.swagger.v3.parser.core.models.ParseOptions;
 import io.swagger.v3.parser.core.models.SwaggerParseResult;
 import org.slf4j.Logger;
@@ -81,7 +79,15 @@ public class DocumentParser {
     public OpenAPI parse() {
         ParseOptions parseOptions = new ParseOptions();
         parseOptions.setResolve(true);
-        SwaggerParseResult result = new OpenAPIParser().readLocation(this.path, null, parseOptions);
+        SwaggerParseResult result = new OpenAPIV3Parser().readLocation(this.path, null, parseOptions);
+
+        List<String> messages = result.getMessages();
+        if (null != messages) {
+            for (String message : messages) {
+                LOGGER.warn(message);
+            }
+        }
+
         this.openAPI = result.getOpenAPI();
         if (null == openAPI) {
             throw new RuntimeException("Couldn't parse " + this.path);
@@ -97,7 +103,12 @@ public class DocumentParser {
      * Flatten inline models in components
      */
     private void flattenComponents() {
-        Map<String, Schema> models = openAPI.getComponents().getSchemas();
+        Components components = openAPI.getComponents();
+        if (components == null) {
+            return;
+        }
+
+        Map<String, Schema> models = components.getSchemas();
         if (models == null) {
             return;
         }
