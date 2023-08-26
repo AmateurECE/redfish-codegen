@@ -31,7 +31,7 @@ use std::{
     sync::{Arc, Mutex},
 };
 use tower_http::trace::TraceLayer;
-use tracing::{event, Level};
+use valuable::Valuable;
 
 /// Command Line Interface, courtesy of the `clap` crate.
 #[derive(Parser)]
@@ -177,7 +177,7 @@ async fn computer_system_reset(
         resource::PowerState::PoweringOn => ResourceEvent::ResourcePoweringOn(name),
         resource::PowerState::Paused => ResourceEvent::ResourcePaused(name),
     };
-    event!(Level::INFO, ?event);
+    tracing::info!(event=event.as_value());
     systems.lock().unwrap().get_mut(id - 1).unwrap().0 = power_state;
     Ok(StatusCode::NO_CONTENT)
 }

@@ -13,10 +13,11 @@ serde_yaml = { version = "0.9.21", default-features = false }
 tokio = { version = "1.28.2", default-features = false, features = ["full"] }
 tower-http = { version = "0.4.1", default-features = false, features = ["trace"] }
 tracing = { version = "0.1.37", default-features = false }
-tracing-subscriber = { version = "0.3.17", default-features = false, features = ["fmt", "ansi"] }
+tracing-subscriber = { version = "0.3.17", default-features = false, features = ["fmt", "ansi", "valuable"] }
 
 redfish-axum = { version = "0.3.1", path = "../../redfish-axum" }
 redfish-codegen = { version = "0.3.1", path = "../../redfish-codegen" }
 redfish-core = { version = "0.3.1", path = "../../redfish-core" }
 seuss = { version = "0.3.1", path = "../../seuss", features = ["router", "serde", "auth-pam"] }
 strum = "0.25.0"
+valuable = "0.1.0"
