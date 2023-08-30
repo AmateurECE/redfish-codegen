@@ -5,6 +5,7 @@ use axum::{
     Extension, Json,
 };
 use clap::Parser;
+use redfish_core::message::IntoRedfishMessage;
 use seuss::{
     auth::{pam::LinuxPamAuthenticator, CombinedAuthenticationProxy, InMemorySessionManager},
     components::{
@@ -22,7 +23,7 @@ use seuss::{
         resource::{self, ResetType},
         service_root::v1_16_0::{Links, ServiceRoot as ServiceRootModel},
     },
-    registries::{resource_event::v1_3_0::ResourceEvent, base::v1_16_0::Base},
+    registries::{base::v1_16_0::Base, resource_event::v1_3_0::ResourceEvent},
     service::{AccountService, RedfishService, SessionService},
 };
 use std::{
@@ -153,18 +154,14 @@ async fn computer_system_reset(
     request: ResetRequestBody,
 ) -> impl IntoResponse {
     let power_state = match request.reset_type.unwrap() {
-        ResetType::On => {
-            resource::PowerState::On
-        },
-        ResetType::ForceOff | ResetType::GracefulShutdown => {
-            resource::PowerState::Off
-        },
+        ResetType::On => resource::PowerState::On,
+        ResetType::ForceOff | ResetType::GracefulShutdown => resource::PowerState::Off,
         _ => {
             // If the requested power state is not one of the handled variants, return a
             // redfish error.
             return Err(seuss::Response(error::one_message(
                 Base::ActionParameterNotSupported("ResetType".to_string(), "Reset".to_string())
-                    .into(),
+                    .into_redfish_message(),
             )));
         }
     };
@@ -177,7 +174,7 @@ async fn computer_system_reset(
         resource::PowerState::PoweringOn => ResourceEvent::ResourcePoweringOn(name),
         resource::PowerState::Paused => ResourceEvent::ResourcePaused(name),
     };
-    tracing::info!(event=event.as_value());
+    tracing::info!(event = event.as_value());
     systems.lock().unwrap().get_mut(id - 1).unwrap().0 = power_state;
     Ok(StatusCode::NO_CONTENT)
 }

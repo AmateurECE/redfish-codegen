@@ -19,3 +19,22 @@ pub trait Metadata<'a> {
     /// service, or the public Redfish schema index.
     const JSON_SCHEMA: &'a str;
 }
+
+/// Metadata for an item in a registry
+pub trait Registry<'a> {
+    /// Composes this registry items message, consuming its arguments and the instance itself in the process.
+    fn message(self) -> String;
+
+    /// Creates a vector of this instances arguments in string representation.
+    fn args(&self) -> Option<Vec<String>>;
+
+    /// Returns the severity associated with this registry item.
+    fn severity(&self) -> crate::models::resource::Health;
+
+    /// Obtain a reference to this registry items unique identifier.
+    fn id(&self) -> &'a str;
+
+    /// Obtain a reference to a message that indicates how to resolve the condition indicated by this registry item,
+    /// if resolution is required.
+    fn resolution(&self) -> &'a str;
+}

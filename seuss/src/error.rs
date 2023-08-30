@@ -4,7 +4,7 @@ use axum::{
     Json,
 };
 use redfish_codegen::registries::base::v1_16_0::Base;
-use redfish_core::error;
+use redfish_core::{error, message::IntoRedfishMessage};
 use tracing::{event, Level};
 
 /// The same as [redfish_map_err_no_log], but also create a [tracing] event for the error.
@@ -20,7 +20,9 @@ where
 pub fn redfish_map_err_no_log<E>(_: E) -> Response {
     (
         StatusCode::BAD_REQUEST,
-        Json(error::one_message(Base::InternalError.into())),
+        Json(error::one_message(
+            Base::InternalError.into_redfish_message(),
+        )),
     )
         .into_response()
 }

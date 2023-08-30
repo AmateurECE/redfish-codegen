@@ -178,7 +178,9 @@ where
             members_router.fallback(|| async {
                 (
                     axum::http::StatusCode::METHOD_NOT_ALLOWED,
-                    axum::Json(redfish_core::error::one_message({{baseRegistry}}::OperationNotAllowed.into())),
+                    axum::Json(redfish_core::error::one_message(
+                        redfish_core::message::IntoRedfishMessage::into_redfish_message(
+                            {{baseRegistry}}::OperationNotAllowed))),
                 )
             })
         );
@@ -194,7 +196,9 @@ where
             router.fallback(|| async {
                 (
                     axum::http::StatusCode::METHOD_NOT_ALLOWED,
-                    axum::Json(redfish_core::error::one_message({{baseRegistry}}::OperationNotAllowed.into())),
+                    axum::Json(redfish_core::error::one_message(
+                        redfish_core::message::IntoRedfishMessage::into_redfish_message(
+                            {{baseRegistry}}::OperationNotAllowed))),
                 )
             })
             .route_layer(axum::middleware::from_fn_with_state(

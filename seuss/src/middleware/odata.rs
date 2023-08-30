@@ -15,7 +15,7 @@ use axum::{
     Json,
 };
 use redfish_codegen::{registries::base::v1_16_0::Base, ODATA_VERSION};
-use redfish_core::error;
+use redfish_core::{error, message::IntoRedfishMessage};
 use tower::{Layer, Service};
 
 const ODATA_VERSION_HEADER: &str = "OData-Version";
@@ -28,7 +28,7 @@ impl IntoResponse for ODataVersionRejection {
         (
             StatusCode::PRECONDITION_FAILED,
             Json(error::one_message(
-                Base::HeaderInvalid(ODATA_VERSION_HEADER.to_string()).into(),
+                Base::HeaderInvalid(ODATA_VERSION_HEADER.to_string()).into_redfish_message(),
             )),
         )
             .into_response()

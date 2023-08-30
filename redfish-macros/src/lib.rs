@@ -9,7 +9,7 @@ use syn::spanned::Spanned;
 use syn::{Attribute, DeriveInput, Lit, Meta, MetaNameValue, NestedMeta};
 
 const NOT_LIST_ERROR: &str = "attribute requires a list of key/value pairs";
-const MESSAGE_IDENT: &str = "message";
+const REGISTRY_IDENT: &str = "registry";
 
 #[derive(Default)]
 struct VariantContext {
@@ -17,6 +17,15 @@ struct VariantContext {
     id: Option<syn::LitStr>,
     severity: Option<syn::Path>,
     resolution: Option<syn::LitStr>,
+}
+
+#[derive(Default)]
+struct VariantExpressions {
+    message: TokenStream,
+    args: TokenStream,
+    severity: TokenStream,
+    id: TokenStream,
+    resolution: TokenStream,
 }
 
 fn attribute_list<'a, I>(attributes: I, ident: &str) -> Vec<Meta>
@@ -48,21 +57,6 @@ where
         .concat()
 }
 
-fn attribute_path_list<'a, I>(attributes: I, ident: &str) -> Vec<syn::Path>
-where
-    I: Iterator<Item = &'a Attribute>,
-{
-    attribute_list(attributes, ident)
-        .into_iter()
-        .filter_map(|meta| match meta {
-            Meta::Path(ref path) => Some(path.clone()),
-            _ => {
-                panic!("{}", NOT_LIST_ERROR)
-            }
-        })
-        .collect::<Vec<_>>()
-}
-
 // Obtain an iterator over the list of nested Meta attributes of a field
 fn attribute_name_value_list<'a, I>(attributes: I, ident: &str) -> Vec<MetaNameValue>
 where
@@ -77,12 +71,6 @@ where
             }
         })
         .collect::<Vec<_>>()
-}
-
-fn get_message_type(input: &DeriveInput) -> TokenStream {
-    let attributes = attribute_path_list(input.attrs.iter(), MESSAGE_IDENT);
-    let message_type = attributes.into_iter().last().unwrap();
-    quote!(#message_type)
 }
 
 fn field_name_for_index(number: usize) -> Ident {
@@ -123,8 +111,49 @@ fn construct_format(literal: &syn::LitStr) -> TokenStream {
     }
 }
 
-fn construct_message_args(fields: &syn::Fields) -> TokenStream {
-    match fields {
+fn get_variant_context(variant: &syn::Variant) -> VariantContext {
+    let mut context = VariantContext {
+        ..Default::default()
+    };
+
+    for attribute in attribute_name_value_list(variant.attrs.iter(), REGISTRY_IDENT) {
+        if attribute.path.is_ident("message") {
+            match attribute.lit {
+                Lit::Str(ref value) => context.message = Some(value.clone()),
+                _ => panic!("{}", NOT_LIST_ERROR),
+            }
+        } else if attribute.path.is_ident("id") {
+            match attribute.lit {
+                Lit::Str(ref value) => context.id = Some(value.clone()),
+                _ => panic!("{}", NOT_LIST_ERROR),
+            }
+        } else if attribute.path.is_ident("severity") {
+            match attribute.lit {
+                Lit::Str(ref value) => {
+                    context.severity = Some(
+                        value
+                            .parse()
+                            .expect("severity expects a path to a resource::Health variant"),
+                    )
+                }
+                _ => panic!("{}", NOT_LIST_ERROR),
+            }
+        } else if attribute.path.is_ident("resolution") {
+            match attribute.lit {
+                Lit::Str(ref value) => context.resolution = Some(value.clone()),
+                _ => panic!("{}", NOT_LIST_ERROR),
+            }
+        } else {
+            panic!("{}", NOT_LIST_ERROR)
+        }
+    }
+
+    context
+}
+
+fn args_variant(variant: &syn::Variant, destructured_fields: &TokenStream) -> TokenStream {
+    let name = &variant.ident;
+    let expression = match &variant.fields {
         syn::Fields::Unnamed(inner_fields) => {
             let field_names = (0..inner_fields.unnamed.len()).map(|i| {
                 let name = field_name_for_index(i);
@@ -136,93 +165,89 @@ fn construct_message_args(fields: &syn::Fields) -> TokenStream {
         }
         syn::Fields::Unit => quote!(None),
         _ => panic!("Enum variants must either be units or contain unnamed fields"),
+    };
+
+    quote_spanned! {
+        variant.span() => Self::#name #destructured_fields => #expression
     }
 }
 
-fn define_variant_coersion(data: &syn::Data, message_type: &TokenStream) -> TokenStream {
+fn get_variant_expressions(data: &syn::Data) -> Vec<VariantExpressions> {
     match *data {
         syn::Data::Enum(ref data) => {
-            let variants = data.variants.iter().map(|variant| {
+            data.variants.iter().map(|variant| {
+                let destructured_fields = destructure_fields(&variant.fields);
+
                 let name = &variant.ident;
-                let mut context = VariantContext {
-                    ..Default::default()
-                };
-
-                for attribute in attribute_name_value_list(variant.attrs.iter(), MESSAGE_IDENT) {
-                    if attribute.path.is_ident("message") {
-                        match attribute.lit {
-                            Lit::Str(ref value) => context.message = Some(value.clone()),
-                            _ => panic!("{}", NOT_LIST_ERROR),
-                        }
-                    } else if attribute.path.is_ident("id") {
-                        match attribute.lit {
-                            Lit::Str(ref value) => context.id = Some(value.clone()),
-                            _ => panic!("{}", NOT_LIST_ERROR),
-                        }
-                    } else if attribute.path.is_ident("severity") {
-                        match attribute.lit {
-                            Lit::Str(ref value) => {
-                                context.severity = Some(value.parse().expect(
-                                    "severity expects a path to a resource::Health variant",
-                                ))
-                            }
-                            _ => panic!("{}", NOT_LIST_ERROR),
-                        }
-                    } else if attribute.path.is_ident("resolution") {
-                        match attribute.lit {
-                            Lit::Str(ref value) => context.resolution = Some(value.clone()),
-                            _ => panic!("{}", NOT_LIST_ERROR),
-                        }
-                    } else {
-                        panic!("{}", NOT_LIST_ERROR)
-                    }
-                }
-
-                let message = context.message.expect("Missing \"message\" property");
+                let context = get_variant_context(variant);
                 let severity = context.severity.expect("Missing \"severity\" property");
                 let id = context.id.expect("Missing \"id\" property");
                 let resolution = context.resolution.expect("Missing \"resolution\"property");
 
-                let destructured_fields = destructure_fields(&variant.fields);
+                let message = context.message.expect("Missing \"message\" property");
                 let message_format = construct_format(&message);
-                let message_args = construct_message_args(&variant.fields);
-                quote_spanned! {
-                    variant.span() => Self::#name #destructured_fields => #message_type {
-                        message: Some(#message_format),
-                        message_args: #message_args,
-                        message_id: #id.to_string(),
-                        message_severity: Some(#severity),
-                        resolution: Some(#resolution.to_string()),
-                        ..Default::default()
-                    }
+                VariantExpressions {
+                    message: quote_spanned!(variant.span() => Self::#name #destructured_fields => #message_format),
+                    args: args_variant(variant, &destructured_fields),
+                    severity: quote_spanned!(variant.span() => Self::#name #destructured_fields => #severity),
+                    id: quote_spanned!(variant.span() => Self::#name #destructured_fields => #id),
+                    resolution: quote_spanned!(variant.span() => Self::#name #destructured_fields => #resolution),
                 }
-            });
-
-            quote! { #(#variants ,)* }
+            }).collect::<Vec<VariantExpressions>>()
         }
 
         syn::Data::Struct(_) | syn::Data::Union(_) => unimplemented!(),
     }
 }
 
-#[proc_macro_derive(IntoRedfishMessage, attributes(message))]
+#[proc_macro_derive(Registry, attributes(registry))]
 pub fn derive_into_redfish_message(input: proc_macro::TokenStream) -> proc_macro::TokenStream {
     let input = syn::parse_macro_input!(input as DeriveInput);
     let (impl_generics, ty_generics, where_clause) = input.generics.split_for_impl();
 
     let name = &input.ident;
-    let message_type = get_message_type(&input);
-    let variant_coersion = define_variant_coersion(&input.data, &message_type);
+    let variant_expressions = get_variant_expressions(&input.data);
+
+    let message_variants = variant_expressions.iter().map(|e| &e.message);
+    let args_variants = variant_expressions.iter().map(|e| &e.args);
+    let severity_variants = variant_expressions.iter().map(|e| &e.severity);
+    let id_variants = variant_expressions.iter().map(|e| &e.id);
+    let resolution_variants = variant_expressions.iter().map(|e| &e.resolution);
+
     let expanded = quote! {
         // The generated impl
-        impl #impl_generics Into< #message_type > for #name #ty_generics
+        impl #impl_generics crate::Registry<'static> for #name #ty_generics
            #where_clause
         {
-           fn into(self) -> #message_type {
-               match self {
-                   #variant_coersion
-               }
-           }
+            fn message(self) -> String {
+                match self {
+                    #(#message_variants ,)*
+                }
+            }
+
+            fn args(&self) -> Option<Vec<String>> {
+                match &self {
+                    #(#args_variants ,)*
+                }
+            }
+
+            fn severity(&self) -> crate::models::resource::Health {
+                match &self {
+                    #(#severity_variants ,)*
+                }
+            }
+
+            fn id(&self) -> &'static str {
+                match &self {
+                    #(#id_variants ,)*
+                }
+            }
+
+            fn resolution(&self) -> &'static str {
+                match &self {
+                    #(#resolution_variants ,)*
+                }
+            }
         }
     };
 

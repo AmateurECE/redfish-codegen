@@ -3,7 +3,7 @@ use redfish_codegen::{
     models::{odata_v4, redfish, resource, session::v1_6_0},
     registries::base::v1_16_0::Base,
 };
-use redfish_core::{auth::AuthenticatedUser, error};
+use redfish_core::{auth::AuthenticatedUser, error, message::IntoRedfishMessage};
 use std::{
     collections::{hash_map::DefaultHasher, HashMap},
     hash::Hasher,
@@ -87,12 +87,14 @@ where
         let sessions = self.sessions.lock().unwrap();
         let session = sessions
             .get(&token)
-            .ok_or_else(|| error::one_message(Base::NoValidSession.into()))?;
+            .ok_or_else(|| error::one_message(Base::NoValidSession.into_redfish_message()))?;
         if self.session_is_active()(&session) && session.session.client_origin_ip_address == origin
         {
             Ok(session.user.clone())
         } else {
-            Err(error::one_message(Base::NoValidSession.into()))
+            Err(error::one_message(
+                Base::NoValidSession.into_redfish_message(),
+            ))
         }
     }
 
@@ -113,10 +115,10 @@ where
         base_path: String,
     ) -> Result<v1_6_0::Session, redfish::Error> {
         let user_name = session.user_name.clone().ok_or_else(|| {
-            error::one_message(Base::PropertyMissing("UserName".to_string()).into())
+            error::one_message(Base::PropertyMissing("UserName".to_string()).into_redfish_message())
         })?;
         let password = session.password.ok_or_else(|| {
-            error::one_message(Base::PropertyMissing("Password".to_string()).into())
+            error::one_message(Base::PropertyMissing("Password".to_string()).into_redfish_message())
         })?;
         let user = self
             .auth_handler
@@ -163,7 +165,7 @@ where
             })
             .and_then(|id| sessions.remove(&id))
             .map(|_| ())
-            .ok_or_else(|| error::one_message(Base::NoValidSession.into()))
+            .ok_or_else(|| error::one_message(Base::NoValidSession.into_redfish_message()))
     }
 
     fn get_session(&self, id: Self::Id) -> Result<v1_6_0::Session, redfish::Error> {
@@ -177,6 +179,6 @@ where
                     None
                 }
             })
-            .ok_or_else(|| error::one_message(Base::NoValidSession.into()))
+            .ok_or_else(|| error::one_message(Base::NoValidSession.into_redfish_message()))
     }
 }

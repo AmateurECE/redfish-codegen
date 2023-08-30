@@ -5,8 +5,8 @@ use axum::{
 };
 use redfish_codegen::{models::redfish, registries::base::v1_16_0::Base};
 
-use crate::error;
 use crate::privilege::Role;
+use crate::{error, message::IntoRedfishMessage};
 
 #[derive(Clone)]
 pub struct AuthenticatedUser {
@@ -25,13 +25,13 @@ pub fn unauthorized_with_error(error: redfish::Error, challenge: &[&str]) -> Res
 
 pub fn unauthorized(challenge: &[&str]) -> Response {
     unauthorized_with_error(
-        error::one_message(Base::InsufficientPrivilege.into()),
+        error::one_message(Base::InsufficientPrivilege.into_redfish_message()),
         challenge,
     )
 }
 
 pub fn insufficient_privilege() -> redfish::Error {
-    error::one_message(Base::InsufficientPrivilege.into())
+    error::one_message(Base::InsufficientPrivilege.into_redfish_message())
 }
 
 pub trait AuthenticateRequest {
