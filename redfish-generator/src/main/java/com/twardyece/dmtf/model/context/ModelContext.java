@@ -2,9 +2,11 @@ package com.twardyece.dmtf.model.context;
 
 import com.twardyece.dmtf.CratePath;
 import com.twardyece.dmtf.ModuleContext;
+import com.twardyece.dmtf.rust.IRustExpression;
 import com.twardyece.dmtf.rust.RustType;
 import com.twardyece.dmtf.text.SnakeCaseName;
 
+import java.util.ArrayList;
 import java.util.List;
 
 public class ModelContext {
@@ -14,6 +16,7 @@ public class ModelContext {
     public EnumContext enumContext;
     public TupleContext tupleContext;
     public boolean unitContext;
+    public List<IRustExpression> additionalAttributes;
     public String docComment;
     public Metadata metadata;
 
@@ -24,6 +27,7 @@ public class ModelContext {
 
         modelContext.rustType = rustType;
         modelContext.unitContext = false;
+        modelContext.additionalAttributes = new ArrayList<>();
         modelContext.docComment = docComment;
         return modelContext;
     }

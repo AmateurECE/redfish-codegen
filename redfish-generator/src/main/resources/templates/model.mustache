@@ -10,6 +10,9 @@ use {{{path}}};
 /// {{{docComment}}}
 {{/docComment}}
 #[derive(Clone, Debug, serde::Deserialize, serde::Serialize)]
+{{#additionalAttributes}}
+{{{expression}}}
+{{/additionalAttributes}}
 {{#structContext}}
 #[derive(derivative::Derivative)]
 #[derivative(Default)]
