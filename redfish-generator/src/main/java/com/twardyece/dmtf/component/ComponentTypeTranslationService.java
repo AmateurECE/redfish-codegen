@@ -1,7 +1,7 @@
 package com.twardyece.dmtf.component;
 
 import com.twardyece.dmtf.CratePath;
-import com.twardyece.dmtf.RustType;
+import com.twardyece.dmtf.rust.RustType;
 import com.twardyece.dmtf.model.ModelResolver;
 import com.twardyece.dmtf.text.ICaseConvertible;
 import com.twardyece.dmtf.text.PascalCaseName;

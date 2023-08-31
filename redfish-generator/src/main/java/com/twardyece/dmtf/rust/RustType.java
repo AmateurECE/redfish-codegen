@@ -1,5 +1,6 @@
-package com.twardyece.dmtf;
+package com.twardyece.dmtf.rust;
 
+import com.twardyece.dmtf.CratePath;
 import com.twardyece.dmtf.text.ICaseConvertible;
 import com.twardyece.dmtf.text.PascalCaseName;
 import com.twardyece.dmtf.text.SnakeCaseName;

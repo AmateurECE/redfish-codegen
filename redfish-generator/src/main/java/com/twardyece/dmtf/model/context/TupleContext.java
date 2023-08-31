@@ -1,6 +1,6 @@
 package com.twardyece.dmtf.model.context;
 
-import com.twardyece.dmtf.RustType;
+import com.twardyece.dmtf.rust.RustType;
 
 import java.util.ArrayList;
 import java.util.List;

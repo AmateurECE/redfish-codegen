@@ -1,6 +1,6 @@
 package com.twardyece.dmtf.component;
 
-import com.twardyece.dmtf.RustType;
+import com.twardyece.dmtf.rust.RustType;
 import org.jgrapht.Graph;
 import org.jgrapht.Graphs;
 import org.jgrapht.graph.DefaultDirectedGraph;

@@ -1,5 +1,6 @@
 package com.twardyece.dmtf;
 
+import com.twardyece.dmtf.rust.RustConfig;
 import com.twardyece.dmtf.text.ICaseConvertible;
 import com.twardyece.dmtf.text.SnakeCaseName;
 

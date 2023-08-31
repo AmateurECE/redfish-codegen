@@ -1,5 +1,7 @@
 package com.twardyece.dmtf;
 
+import com.twardyece.dmtf.rust.RustConfig;
+import com.twardyece.dmtf.rust.RustType;
 import com.twardyece.dmtf.text.SnakeCaseName;
 
 import java.util.*;

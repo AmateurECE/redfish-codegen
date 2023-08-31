@@ -1,11 +1,8 @@
 package com.twardyece.dmtf.component;
 
 import com.twardyece.dmtf.CratePath;
-import com.twardyece.dmtf.ModuleContext;
-import com.twardyece.dmtf.RustType;
-import com.twardyece.dmtf.registry.RegistryContext;
+import com.twardyece.dmtf.rust.RustType;
 import com.twardyece.dmtf.text.PascalCaseName;
-import io.swagger.v3.oas.models.PathItem;
 import org.apache.commons.lang3.tuple.ImmutablePair;
 import org.apache.commons.lang3.tuple.Pair;
 import org.json.JSONArray;

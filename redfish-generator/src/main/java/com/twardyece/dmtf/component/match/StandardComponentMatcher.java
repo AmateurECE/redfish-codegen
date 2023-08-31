@@ -1,6 +1,6 @@
 package com.twardyece.dmtf.component.match;
 
-import com.twardyece.dmtf.RustType;
+import com.twardyece.dmtf.rust.RustType;
 import com.twardyece.dmtf.component.ComponentContext;
 import com.twardyece.dmtf.component.ComponentRepository;
 import com.twardyece.dmtf.component.ComponentTypeTranslationService;

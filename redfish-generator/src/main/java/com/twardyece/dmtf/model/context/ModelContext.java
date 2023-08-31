@@ -2,7 +2,7 @@ package com.twardyece.dmtf.model.context;
 
 import com.twardyece.dmtf.CratePath;
 import com.twardyece.dmtf.ModuleContext;
-import com.twardyece.dmtf.RustType;
+import com.twardyece.dmtf.rust.RustType;
 import com.twardyece.dmtf.text.SnakeCaseName;
 
 import java.util.List;

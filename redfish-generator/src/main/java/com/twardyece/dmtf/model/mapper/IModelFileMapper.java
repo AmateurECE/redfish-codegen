@@ -1,7 +1,7 @@
 package com.twardyece.dmtf.model.mapper;
 
 import com.twardyece.dmtf.CratePath;
-import com.twardyece.dmtf.RustConfig;
+import com.twardyece.dmtf.rust.RustConfig;
 import com.twardyece.dmtf.text.PascalCaseName;
 import com.twardyece.dmtf.text.SnakeCaseName;
 

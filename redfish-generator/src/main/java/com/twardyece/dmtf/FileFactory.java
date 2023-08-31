@@ -8,6 +8,7 @@ import com.twardyece.dmtf.component.ODataContext;
 import com.twardyece.dmtf.model.context.ModelContext;
 import com.twardyece.dmtf.model.context.factory.IModelContextFactory;
 import com.twardyece.dmtf.registry.RegistryContext;
+import com.twardyece.dmtf.rust.RustType;
 import io.swagger.v3.oas.models.media.Schema;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;

@@ -1,6 +1,6 @@
 package com.twardyece.dmtf.model;
 
-import com.twardyece.dmtf.RustType;
+import com.twardyece.dmtf.rust.RustType;
 import com.twardyece.dmtf.model.mapper.IModelFileMapper;
 import com.twardyece.dmtf.text.PascalCaseName;
 import com.twardyece.dmtf.text.SnakeCaseName;

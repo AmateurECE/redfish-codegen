@@ -1,7 +1,7 @@
 package com.twardyece.dmtf.model.context;
 
-import com.twardyece.dmtf.RustIdentifier;
-import com.twardyece.dmtf.RustType;
+import com.twardyece.dmtf.rust.RustIdentifier;
+import com.twardyece.dmtf.rust.RustType;
 
 import java.util.List;
 import java.util.stream.Collectors;

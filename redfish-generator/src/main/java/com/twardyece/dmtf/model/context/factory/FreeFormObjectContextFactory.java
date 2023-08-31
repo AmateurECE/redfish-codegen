@@ -1,7 +1,7 @@
 package com.twardyece.dmtf.model.context.factory;
 
 import com.twardyece.dmtf.CratePath;
-import com.twardyece.dmtf.RustType;
+import com.twardyece.dmtf.rust.RustType;
 import com.twardyece.dmtf.model.context.ModelContext;
 import com.twardyece.dmtf.model.context.TupleContext;
 import com.twardyece.dmtf.text.PascalCaseName;

@@ -1,8 +1,8 @@
 package com.twardyece.dmtf.registry;
 
 import com.twardyece.dmtf.ModuleContext;
-import com.twardyece.dmtf.RustIdentifier;
-import com.twardyece.dmtf.RustType;
+import com.twardyece.dmtf.rust.RustIdentifier;
+import com.twardyece.dmtf.rust.RustType;
 import com.twardyece.dmtf.model.ModelResolver;
 import com.twardyece.dmtf.text.PascalCaseName;
 import org.json.JSONArray;

@@ -1,7 +1,7 @@
 package com.twardyece.dmtf.component;
 
 import com.twardyece.dmtf.ModuleContext;
-import com.twardyece.dmtf.RustType;
+import com.twardyece.dmtf.rust.RustType;
 import com.twardyece.dmtf.text.PascalCaseName;
 import com.twardyece.dmtf.text.SnakeCaseName;
 import io.swagger.v3.oas.models.PathItem;
