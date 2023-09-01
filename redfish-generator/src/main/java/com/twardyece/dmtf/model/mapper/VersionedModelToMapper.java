@@ -7,8 +7,8 @@ import com.twardyece.dmtf.text.SnakeCaseName;
 import java.util.ArrayList;
 import java.util.List;
 
-public class VersionedModelMapper implements IModelFileMapper {
-    public VersionedModelMapper() {}
+public class VersionedModelToMapper implements IModelTypeMapper {
+    public VersionedModelToMapper() {}
 
     @Override
     public ModelMatchResult matches(String name) {

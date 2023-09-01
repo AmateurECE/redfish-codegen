@@ -1,22 +1,19 @@
 package com.twardyece.dmtf.model.mapper;
 
 import com.twardyece.dmtf.specification.SimpleModelIdentifierFactory;
-import com.twardyece.dmtf.text.CaseConversion;
 import com.twardyece.dmtf.text.PascalCaseName;
 import com.twardyece.dmtf.text.SnakeCaseName;
 
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
 
-public class SimpleModelMapper implements IModelFileMapper {
+public class SimpleModelToMapper implements IModelTypeMapper {
     private final SimpleModelIdentifierFactory identifierFactory;
     private final SnakeCaseName module;
 
     // TODO: Seems like we have some duplicated classes. Can we consolidate this class with the NameMapper class somehow?
-    public SimpleModelMapper(SimpleModelIdentifierFactory identifierFactory, SnakeCaseName module) {
+    public SimpleModelToMapper(SimpleModelIdentifierFactory identifierFactory, SnakeCaseName module) {
         this.identifierFactory = identifierFactory;
         this.module = module;
     }

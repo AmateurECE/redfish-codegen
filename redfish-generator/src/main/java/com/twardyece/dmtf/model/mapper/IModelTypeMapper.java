@@ -7,7 +7,10 @@ import com.twardyece.dmtf.text.SnakeCaseName;
 
 import java.util.List;
 
-public interface IModelFileMapper {
+/**
+ * This interface is used to map model names (e.g. in the form "Namespace_version_Model" to RustTypes.
+ */
+public interface IModelTypeMapper {
     // TODO: Replace this with Optional<ModelMatchResult>
     ModelMatchResult matches(String name);
 

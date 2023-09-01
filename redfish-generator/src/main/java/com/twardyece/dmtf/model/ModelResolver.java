@@ -1,7 +1,7 @@
 package com.twardyece.dmtf.model;
 
 import com.twardyece.dmtf.rust.RustType;
-import com.twardyece.dmtf.model.mapper.IModelFileMapper;
+import com.twardyece.dmtf.model.mapper.IModelTypeMapper;
 import com.twardyece.dmtf.text.PascalCaseName;
 import com.twardyece.dmtf.text.SnakeCaseName;
 import io.swagger.v3.oas.models.media.Schema;
@@ -14,7 +14,7 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 public class ModelResolver {
-    private final IModelFileMapper[] mappers;
+    private final IModelTypeMapper[] mappers;
     private final NamespaceMapper[] namespaceMappers;
     private static final Logger LOGGER = LoggerFactory.getLogger(ModelResolver.class);
     private static final PascalCaseName VEC_NAME = new PascalCaseName("Vec");
@@ -30,7 +30,7 @@ public class ModelResolver {
     }
 
 
-    public ModelResolver(IModelFileMapper[] mappers, NamespaceMapper[] namespaceMappers) {
+    public ModelResolver(IModelTypeMapper[] mappers, NamespaceMapper[] namespaceMappers) {
         this.mappers = mappers;
         this.namespaceMappers = namespaceMappers;
     }
@@ -53,8 +53,8 @@ public class ModelResolver {
             }
         }
 
-        for (IModelFileMapper mapper : this.mappers) {
-            IModelFileMapper.ModelMatchResult module = mapper.matches(name);
+        for (IModelTypeMapper mapper : this.mappers) {
+            IModelTypeMapper.ModelMatchResult module = mapper.matches(name);
             if (null != module) {
                 return new RustType(module.path, module.model);
             }

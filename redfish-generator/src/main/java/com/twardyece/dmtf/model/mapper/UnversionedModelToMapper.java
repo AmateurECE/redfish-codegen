@@ -7,8 +7,8 @@ import com.twardyece.dmtf.text.SnakeCaseName;
 import java.util.ArrayList;
 import java.util.List;
 
-public class UnversionedModelMapper implements IModelFileMapper {
-    public UnversionedModelMapper() {}
+public class UnversionedModelToMapper implements IModelTypeMapper {
+    public UnversionedModelToMapper() {}
 
     @Override
     public ModelMatchResult matches(String name) {
