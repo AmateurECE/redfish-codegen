@@ -6,7 +6,7 @@ import com.twardyece.dmtf.component.match.ActionComponentMatcher;
 import com.twardyece.dmtf.component.match.IComponentMatcher;
 import com.twardyece.dmtf.component.match.StandardComponentMatcher;
 import com.twardyece.dmtf.model.NameMapper;
-import com.twardyece.dmtf.model.NamespaceMapper;
+import com.twardyece.dmtf.model.mapper.NamespaceMapper;
 import com.twardyece.dmtf.policies.*;
 import com.twardyece.dmtf.rust.CfgAttrExpression;
 import com.twardyece.dmtf.rust.RustConfig;

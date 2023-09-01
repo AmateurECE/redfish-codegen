@@ -1,5 +1,6 @@
 package com.twardyece.dmtf.model;
 
+import com.twardyece.dmtf.model.mapper.NamespaceMapper;
 import com.twardyece.dmtf.rust.RustType;
 import com.twardyece.dmtf.model.mapper.IModelTypeMapper;
 import com.twardyece.dmtf.text.PascalCaseName;
@@ -10,6 +11,7 @@ import org.slf4j.LoggerFactory;
 
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Optional;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -48,8 +50,9 @@ public class ModelResolver {
 
     public RustType resolvePath(String name) {
         for (NamespaceMapper namespaceMapper : namespaceMappers) {
-            if (namespaceMapper.matches(name)) {
-                name = namespaceMapper.translate(name);
+            Optional<String> match = namespaceMapper.match(name);
+            if (match.isPresent()) {
+                name = match.get();
             }
         }
 
