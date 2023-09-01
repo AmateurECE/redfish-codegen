@@ -19,15 +19,15 @@ public class SimpleModelToMapper implements IModelTypeMapper {
     }
 
     @Override
-    public ModelMatchResult matches(String name) {
+    public Optional<ModelMatchResult> matches(String name) {
         Optional<PascalCaseName> model = this.identifierFactory.identify(name);
         if (model.isEmpty()) {
-            return null;
+            return Optional.empty();
         }
 
         List<SnakeCaseName> module = new ArrayList<>();
         module.add(this.module);
 
-        return new ModelMatchResult(module, model.get());
+        return Optional.of(new ModelMatchResult(module, model.get()));
     }
 }

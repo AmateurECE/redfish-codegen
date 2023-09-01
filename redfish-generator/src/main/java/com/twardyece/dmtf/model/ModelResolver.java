@@ -57,9 +57,9 @@ public class ModelResolver {
         }
 
         for (IModelTypeMapper mapper : this.mappers) {
-            IModelTypeMapper.ModelMatchResult module = mapper.matches(name);
-            if (null != module) {
-                return new RustType(module.path, module.model);
+            Optional<IModelTypeMapper.ModelMatchResult> module = mapper.matches(name);
+            if (module.isPresent()) {
+                return new RustType(module.get().path, module.get().model);
             }
         }
 

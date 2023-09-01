@@ -6,13 +6,18 @@ import com.twardyece.dmtf.text.PascalCaseName;
 import com.twardyece.dmtf.text.SnakeCaseName;
 
 import java.util.List;
+import java.util.Optional;
 
 /**
  * This interface is used to map model names (e.g. in the form "Namespace_version_Model" to RustTypes.
  */
 public interface IModelTypeMapper {
-    // TODO: Replace this with Optional<ModelMatchResult>
-    ModelMatchResult matches(String name);
+    /**
+     * Map a model name to a rust type
+     * @param name The model name
+     * @return Optional.empty() if the model is not a match, else Optional.of(the new model).
+     */
+    Optional<ModelMatchResult> matches(String name);
 
     class ModelMatchResult {
         public ModelMatchResult(List<SnakeCaseName> path, PascalCaseName model) {

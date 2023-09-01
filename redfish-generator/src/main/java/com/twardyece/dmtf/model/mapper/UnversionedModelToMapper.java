@@ -6,20 +6,21 @@ import com.twardyece.dmtf.text.SnakeCaseName;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Optional;
 
 public class UnversionedModelToMapper implements IModelTypeMapper {
     public UnversionedModelToMapper() {}
 
     @Override
-    public ModelMatchResult matches(String name) {
+    public Optional<ModelMatchResult> matches(String name) {
         try {
             UnversionedSchemaIdentifier identifier = new UnversionedSchemaIdentifier(name);
             List<SnakeCaseName> module = new ArrayList<>();
             module.add(new SnakeCaseName(identifier.getModule()));
 
-            return new ModelMatchResult(module, identifier.getModel());
+            return Optional.of(new ModelMatchResult(module, identifier.getModel()));
         } catch (IdentifierParseError e) {
-            return null;
+            return Optional.empty();
         }
     }
 }
