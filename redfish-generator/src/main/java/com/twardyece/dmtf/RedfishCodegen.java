@@ -5,23 +5,18 @@ import com.twardyece.dmtf.component.*;
 import com.twardyece.dmtf.component.match.ActionComponentMatcher;
 import com.twardyece.dmtf.component.match.IComponentMatcher;
 import com.twardyece.dmtf.component.match.StandardComponentMatcher;
-import com.twardyece.dmtf.model.NameMapper;
-import com.twardyece.dmtf.model.mapper.NamespaceMapper;
+import com.twardyece.dmtf.model.ModelResolver;
+import com.twardyece.dmtf.model.context.ModelContext;
+import com.twardyece.dmtf.model.context.factory.*;
+import com.twardyece.dmtf.model.mapper.*;
 import com.twardyece.dmtf.policies.*;
+import com.twardyece.dmtf.registry.RegistryContext;
+import com.twardyece.dmtf.registry.RegistryFactory;
+import com.twardyece.dmtf.registry.RegistryFileDiscovery;
 import com.twardyece.dmtf.rust.CfgAttrExpression;
 import com.twardyece.dmtf.rust.RustConfig;
 import com.twardyece.dmtf.rust.RustType;
 import com.twardyece.dmtf.specification.*;
-import com.twardyece.dmtf.model.ModelResolver;
-import com.twardyece.dmtf.model.context.ModelContext;
-import com.twardyece.dmtf.model.context.factory.*;
-import com.twardyece.dmtf.model.mapper.IModelTypeMapper;
-import com.twardyece.dmtf.model.mapper.SimpleModelTypeMapper;
-import com.twardyece.dmtf.model.mapper.UnversionedModelTypeMapper;
-import com.twardyece.dmtf.model.mapper.VersionedModelTypeMapper;
-import com.twardyece.dmtf.registry.RegistryContext;
-import com.twardyece.dmtf.registry.RegistryFactory;
-import com.twardyece.dmtf.registry.RegistryFileDiscovery;
 import com.twardyece.dmtf.specification.file.DirectoryFileList;
 import com.twardyece.dmtf.text.CamelCaseName;
 import com.twardyece.dmtf.text.CaseConversion;
@@ -93,10 +88,12 @@ public class RedfishCodegen {
         factories[1] = new FreeFormObjectContextFactory();
         factories[2] = new StructContextFactory(this.modelResolver);
         factories[3] = new TupleContextFactory(this.modelResolver);
-        NameMapper[] nameMappers = new NameMapper[2];
-        nameMappers[0] = new NameMapper(Pattern.compile("odata-v4_(?<model>[a-zA-Z0-9]*)"), "model");
-        nameMappers[1] = new NameMapper(Pattern.compile("^Resource_(?<model>[a-zA-Z0-9]*)$"), "model");
-        factories[4] = new UnionContextFactory(this.modelResolver, new UnionVariantParser(nameMappers));
+        SimpleModelIdentifierFactory[] identifierParsers = new SimpleModelIdentifierFactory[2];
+        identifierParsers[0] = odataModelIdentifierFactory;
+        identifierParsers[1] = new SimpleModelIdentifierFactory(
+                Pattern.compile("^Resource_(?<model>[a-zA-Z0-9]*)$"), "model",
+                name -> "Resource_" + name);
+        factories[4] = new UnionContextFactory(this.modelResolver, new UnionVariantParser(identifierParsers));
         factories[5] = new UnitContextFactory();
         this.fileFactory = new FileFactory(new DefaultMustacheFactory(), factories);
 
