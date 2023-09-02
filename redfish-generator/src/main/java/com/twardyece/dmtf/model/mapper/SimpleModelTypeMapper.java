@@ -8,12 +8,12 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 
-public class SimpleModelToMapper implements IModelTypeMapper {
+public class SimpleModelTypeMapper implements IModelTypeMapper {
     private final SimpleModelIdentifierFactory identifierFactory;
     private final SnakeCaseName module;
 
     // TODO: Seems like we have some duplicated classes. Can we consolidate this class with the NameMapper class somehow?
-    public SimpleModelToMapper(SimpleModelIdentifierFactory identifierFactory, SnakeCaseName module) {
+    public SimpleModelTypeMapper(SimpleModelIdentifierFactory identifierFactory, SnakeCaseName module) {
         this.identifierFactory = identifierFactory;
         this.module = module;
     }

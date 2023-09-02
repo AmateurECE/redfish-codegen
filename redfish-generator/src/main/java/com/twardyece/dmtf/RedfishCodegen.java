@@ -16,9 +16,9 @@ import com.twardyece.dmtf.model.ModelResolver;
 import com.twardyece.dmtf.model.context.ModelContext;
 import com.twardyece.dmtf.model.context.factory.*;
 import com.twardyece.dmtf.model.mapper.IModelTypeMapper;
-import com.twardyece.dmtf.model.mapper.SimpleModelToMapper;
-import com.twardyece.dmtf.model.mapper.UnversionedModelToMapper;
-import com.twardyece.dmtf.model.mapper.VersionedModelToMapper;
+import com.twardyece.dmtf.model.mapper.SimpleModelTypeMapper;
+import com.twardyece.dmtf.model.mapper.UnversionedModelTypeMapper;
+import com.twardyece.dmtf.model.mapper.VersionedModelTypeMapper;
 import com.twardyece.dmtf.registry.RegistryContext;
 import com.twardyece.dmtf.registry.RegistryFactory;
 import com.twardyece.dmtf.registry.RegistryFileDiscovery;
@@ -74,10 +74,10 @@ public class RedfishCodegen {
 
         // Model generation setup
         IModelTypeMapper[] modelMappers = new IModelTypeMapper[4];
-        modelMappers[0] = new VersionedModelToMapper();
-        modelMappers[1] = new SimpleModelToMapper(redfishModelIdentifierFactory, new SnakeCaseName("redfish"));
-        modelMappers[2] = new SimpleModelToMapper(odataModelIdentifierFactory, new SnakeCaseName("odata_v4"));
-        modelMappers[3] = new UnversionedModelToMapper();
+        modelMappers[0] = new VersionedModelTypeMapper();
+        modelMappers[1] = new SimpleModelTypeMapper(redfishModelIdentifierFactory, new SnakeCaseName("redfish"));
+        modelMappers[2] = new SimpleModelTypeMapper(odataModelIdentifierFactory, new SnakeCaseName("odata_v4"));
+        modelMappers[3] = new UnversionedModelTypeMapper();
 
         NamespaceMapper[] namespaceMappers = new NamespaceMapper[1];
         Pattern odataModelPattern = Pattern.compile("odata_v?4_0_[0-9]_");
