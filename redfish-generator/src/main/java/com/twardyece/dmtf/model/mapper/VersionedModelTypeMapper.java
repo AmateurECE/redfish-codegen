@@ -12,7 +12,7 @@ public class VersionedModelTypeMapper implements IModelTypeMapper {
     public VersionedModelTypeMapper() {}
 
     @Override
-    public Optional<ModelMatchSpecification> matches(String name) {
+    public Optional<ModelMatchSpecification> matchesType(String name) {
         try {
             VersionedSchemaIdentifier identifier = new VersionedSchemaIdentifier(name);
             List<SnakeCaseName> module = new ArrayList<>();

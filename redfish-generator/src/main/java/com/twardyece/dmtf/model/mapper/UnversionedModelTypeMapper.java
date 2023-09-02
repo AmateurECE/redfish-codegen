@@ -12,7 +12,7 @@ public class UnversionedModelTypeMapper implements IModelTypeMapper {
     public UnversionedModelTypeMapper() {}
 
     @Override
-    public Optional<ModelMatchSpecification> matches(String name) {
+    public Optional<ModelMatchSpecification> matchesType(String name) {
         try {
             UnversionedSchemaIdentifier identifier = new UnversionedSchemaIdentifier(name);
             List<SnakeCaseName> module = new ArrayList<>();

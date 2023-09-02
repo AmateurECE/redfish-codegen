@@ -17,7 +17,7 @@ public interface IModelTypeMapper {
      * @param name The model name
      * @return Optional.empty() if the model is not a match, else Optional.of(the new model).
      */
-    Optional<ModelMatchSpecification> matches(String name);
+    Optional<ModelMatchSpecification> matchesType(String name);
 
     class ModelMatchSpecification {
         public ModelMatchSpecification(List<SnakeCaseName> path, PascalCaseName model) {

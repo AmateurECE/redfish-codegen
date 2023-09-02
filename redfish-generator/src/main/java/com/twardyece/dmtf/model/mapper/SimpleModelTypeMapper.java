@@ -19,7 +19,7 @@ public class SimpleModelTypeMapper implements IModelTypeMapper {
     }
 
     @Override
-    public Optional<ModelMatchSpecification> matches(String name) {
+    public Optional<ModelMatchSpecification> matchesType(String name) {
         Optional<PascalCaseName> model = this.identifierFactory.identify(name);
         if (model.isEmpty()) {
             return Optional.empty();
