@@ -1,6 +1,8 @@
 package com.twardyece.dmtf.model;
 
+import com.twardyece.dmtf.CratePath;
 import com.twardyece.dmtf.model.mapper.NamespaceMapper;
+import com.twardyece.dmtf.rust.RustConfig;
 import com.twardyece.dmtf.rust.RustType;
 import com.twardyece.dmtf.model.mapper.IModelTypeMapper;
 import com.twardyece.dmtf.text.PascalCaseName;
@@ -10,6 +12,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.regex.Matcher;
@@ -18,6 +21,7 @@ import java.util.regex.Pattern;
 public class ModelResolver {
     private final IModelTypeMapper[] mappers;
     private final NamespaceMapper[] namespaceMappers;
+    private final RustTypeFactory rustTypeFactory;
     private static final Logger LOGGER = LoggerFactory.getLogger(ModelResolver.class);
     private static final PascalCaseName VEC_NAME = new PascalCaseName("Vec");
     public static final Map<String, RustType> RUST_TYPE_MAP;
@@ -35,10 +39,12 @@ public class ModelResolver {
     public ModelResolver(IModelTypeMapper[] mappers, NamespaceMapper[] namespaceMappers) {
         this.mappers = mappers;
         this.namespaceMappers = namespaceMappers;
+        this.rustTypeFactory = new RustTypeFactory();
     }
 
     public static String getSchemaIdentifier(Schema schema) {
         String url = schema.get$ref();
+        // TODO: There's a faster way to do this than pattern matching.
         Matcher matcher = schemaPath.matcher(url);
         if (!matcher.find()) {
             throw new RuntimeException("Schema $ref path " + url + " appears to be malformed");
@@ -59,7 +65,7 @@ public class ModelResolver {
         for (IModelTypeMapper mapper : this.mappers) {
             Optional<IModelTypeMapper.ModelMatchSpecification> module = mapper.matchesType(name);
             if (module.isPresent()) {
-                return new RustType(module.get().path, module.get().model);
+                return rustTypeFactory.toRustType(module.get());
             }
         }
 
@@ -79,6 +85,37 @@ public class ModelResolver {
                 LOGGER.warn("No mapping for type " + type);
             }
             return RUST_TYPE_MAP.get(type);
+        }
+    }
+
+    /**
+     * This little class encapsulates the logic of translating ModelMatchSpecification instances (from IModelTypeMapper)
+     * to instances of RustType. It's not a complicated conversion, which is why it lives here. In the future, we can
+     * move this class elsewhere if more configuration is required, so that it can be injected to the ModelResolver.
+     */
+    private class RustTypeFactory {
+        public RustTypeFactory() {}
+
+        /**
+         *
+         * @param matchResult The ModelMatchSpecification from an IModelTypeMapper
+         * @return The corresponding RustType
+         */
+        public RustType toRustType(IModelTypeMapper.ModelMatchSpecification matchResult) {
+            List<SnakeCaseName> path = matchResult.path();
+            path.add(0, RustConfig.MODELS_BASE_MODULE);
+            return new RustType(CratePath.crateLocal(path), matchResult.model());
+        }
+
+        /**
+         *
+         * @param rustType The RustType
+         * @return A ModelMatchSpecification.
+         */
+        public IModelTypeMapper.ModelMatchSpecification toModelMatchSpecification(RustType rustType) {
+            List<SnakeCaseName> path = rustType.getPath().getComponents();
+            path.remove(0);
+            return new IModelTypeMapper.ModelMatchSpecification(path, new PascalCaseName(rustType.getName()));
         }
     }
 }
