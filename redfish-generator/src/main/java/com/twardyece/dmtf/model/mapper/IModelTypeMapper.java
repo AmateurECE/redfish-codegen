@@ -17,10 +17,10 @@ public interface IModelTypeMapper {
      * @param name The model name
      * @return Optional.empty() if the model is not a match, else Optional.of(the new model).
      */
-    Optional<ModelMatchResult> matches(String name);
+    Optional<ModelMatchSpecification> matches(String name);
 
-    class ModelMatchResult {
-        public ModelMatchResult(List<SnakeCaseName> path, PascalCaseName model) {
+    class ModelMatchSpecification {
+        public ModelMatchSpecification(List<SnakeCaseName> path, PascalCaseName model) {
             path.add(0, RustConfig.MODELS_BASE_MODULE);
             this.path = CratePath.crateLocal(path);
             this.model = model;

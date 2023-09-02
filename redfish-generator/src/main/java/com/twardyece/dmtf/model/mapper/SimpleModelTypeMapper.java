@@ -19,7 +19,7 @@ public class SimpleModelTypeMapper implements IModelTypeMapper {
     }
 
     @Override
-    public Optional<ModelMatchResult> matches(String name) {
+    public Optional<ModelMatchSpecification> matches(String name) {
         Optional<PascalCaseName> model = this.identifierFactory.identify(name);
         if (model.isEmpty()) {
             return Optional.empty();
@@ -28,6 +28,6 @@ public class SimpleModelTypeMapper implements IModelTypeMapper {
         List<SnakeCaseName> module = new ArrayList<>();
         module.add(this.module);
 
-        return Optional.of(new ModelMatchResult(module, model.get()));
+        return Optional.of(new ModelMatchSpecification(module, model.get()));
     }
 }

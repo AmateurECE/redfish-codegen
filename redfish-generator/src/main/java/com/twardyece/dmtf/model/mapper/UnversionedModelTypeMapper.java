@@ -12,13 +12,13 @@ public class UnversionedModelTypeMapper implements IModelTypeMapper {
     public UnversionedModelTypeMapper() {}
 
     @Override
-    public Optional<ModelMatchResult> matches(String name) {
+    public Optional<ModelMatchSpecification> matches(String name) {
         try {
             UnversionedSchemaIdentifier identifier = new UnversionedSchemaIdentifier(name);
             List<SnakeCaseName> module = new ArrayList<>();
             module.add(new SnakeCaseName(identifier.getModule()));
 
-            return Optional.of(new ModelMatchResult(module, identifier.getModel()));
+            return Optional.of(new ModelMatchSpecification(module, identifier.getModel()));
         } catch (IdentifierParseError e) {
             return Optional.empty();
         }
