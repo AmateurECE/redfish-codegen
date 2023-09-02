@@ -22,6 +22,11 @@ public class CamelCaseName implements ICaseConvertible, Comparable<CamelCaseName
         words.addAll(new PascalCaseName(matcher.replaceAll("")).words());
     }
 
+    public CamelCaseName(ICaseConvertible phrase) {
+        this.words = new ArrayList<>();
+        words.addAll(phrase.words());
+    }
+
     @Override
     public Collection<? extends IWord> words() {
         return this.words;
@@ -29,11 +34,14 @@ public class CamelCaseName implements ICaseConvertible, Comparable<CamelCaseName
 
     @Override
     public String toString() {
-        String value = "";
-        for (IWord word : this.words) {
-            value += word.capitalize();
+        StringBuilder value = new StringBuilder();
+        if (!this.words.isEmpty()) {
+            value.append(this.words.get(0).toLowerCase());
+            for (int i = 1; i < this.words.size(); ++i) {
+                value.append(this.words.get(i).capitalize());
+            }
         }
-        return value;
+        return value.toString();
     }
 
     @Override

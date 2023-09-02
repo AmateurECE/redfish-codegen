@@ -3,7 +3,7 @@ package com.twardyece.dmtf.text;
 import com.twardyece.dmtf.text.IWord;
 
 public class Word implements IWord {
-    private String word;
+    private final String word;
     public Word(String word) {
         this.word = word;
     }
