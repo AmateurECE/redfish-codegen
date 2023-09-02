@@ -23,6 +23,7 @@ import com.twardyece.dmtf.registry.RegistryContext;
 import com.twardyece.dmtf.registry.RegistryFactory;
 import com.twardyece.dmtf.registry.RegistryFileDiscovery;
 import com.twardyece.dmtf.specification.file.DirectoryFileList;
+import com.twardyece.dmtf.text.CamelCaseName;
 import com.twardyece.dmtf.text.CaseConversion;
 import com.twardyece.dmtf.text.PascalCaseName;
 import com.twardyece.dmtf.text.SnakeCaseName;
@@ -69,8 +70,12 @@ public class RedfishCodegen {
         this.specDirectory = specDirectory;
         this.specVersion = specVersion;
 
-        SimpleModelIdentifierFactory redfishModelIdentifierFactory = new SimpleModelIdentifierFactory(Pattern.compile("Redfish(?<model>[a-zA-Z0-9]*)"), "model");
-        SimpleModelIdentifierFactory odataModelIdentifierFactory = new SimpleModelIdentifierFactory(Pattern.compile("odata-v4_(?<model>[a-zA-Z0-9]*)"), "model");
+        SimpleModelIdentifierFactory redfishModelIdentifierFactory = new SimpleModelIdentifierFactory(
+                Pattern.compile("Redfish(?<model>[a-zA-Z0-9]*)"), "model",
+                name -> "Redfish" + name);
+        SimpleModelIdentifierFactory odataModelIdentifierFactory = new SimpleModelIdentifierFactory(
+                Pattern.compile("odata-v4_(?<model>[a-zA-Z0-9]*)"), "model",
+                name -> "odata-v4_" + new CamelCaseName(name));
 
         // Model generation setup
         IModelTypeMapper[] modelMappers = new IModelTypeMapper[4];

@@ -6,6 +6,7 @@ import com.twardyece.dmtf.text.SnakeCaseName;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
+// TODO: Replace this class with SimpleModelIdentifierFactory
 public class NameMapper {
     private final Pattern pattern;
     private final String groupName;

@@ -15,7 +15,7 @@ public class JsonSchemaMapper {
     }
 
     public Optional<String> matchJsonSchema(String openapiPath) {
-        return this.identifierFactory.identify(openapiPath)
+        return this.identifierFactory.modelName(openapiPath)
                 .map((unused) -> this.jsonSchema);
     }
 }
