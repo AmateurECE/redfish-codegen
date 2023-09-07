@@ -99,7 +99,7 @@ public class RedfishCodegen {
 
         // These intrusive/low-level policies need to be applied to the set of models as a whole, but should not be
         // coupled to context factories.
-        this.modelGenerationPolicies = new IModelGenerationPolicy[4];
+        this.modelGenerationPolicies = new IModelGenerationPolicy[3];
         this.modelGenerationPolicies[0] = new ModelDeletionPolicy(odataModelPattern);
         this.modelGenerationPolicies[1] = new ODataPropertyPolicy(new ODataTypeIdentifier());
         JsonSchemaMapper[] jsonSchemaMappers = new JsonSchemaMapper[2];
@@ -124,12 +124,6 @@ public class RedfishCodegen {
                 odataModelIdentifierFactory,
                 odataJsonSchema.get().file.getFileName().toString());
         this.modelGenerationPolicies[2] = new ModelMetadataPolicy(new JsonSchemaIdentifier(jsonSchemaMappers));
-        this.modelGenerationPolicies[3] = new AdditionalModelAttributesPolicy(
-                Pattern.compile("^(Event|Message)_v[0-9_]+(Event|Message)$"),
-                CfgAttrExpression.Builder.withEqualityPredicate("feature", "\"valuable\"")
-                        .attribute("derive(valuable::Valuable)")
-                        .build()
-        );
 
         // Registry generation
         Path registryDirectoryPath = Path.of(registryDirectory);
