@@ -342,12 +342,9 @@ public class RedfishCodegen {
     }
 
     private RustType getMessageType(Map<String, ModuleFile<ModelContext>> models) {
-        Pattern messagePattern = Pattern.compile("^Message_.*");
+        // TODO: Utilize VersionedFileDiscovery for this?
         Version latestVersion = models.keySet().stream()
-                .filter((k) -> {
-                    Matcher matcher = messagePattern.matcher(k);
-                    return matcher.find();
-                })
+                .filter((k) -> k.startsWith("Message_"))
                 .map((m) -> {
                     try {
                         VersionedSchemaIdentifier identifier = new VersionedSchemaIdentifier(m);
