@@ -24,4 +24,8 @@ public class UnversionedSchemaIdentifier {
 
     public PascalCaseName getModule() { return this.module; }
     public PascalCaseName getModel() { return this.model; }
+
+    public static String schemaIdentifier(PascalCaseName module, PascalCaseName model) {
+        return module + "_" + model;
+    }
 }

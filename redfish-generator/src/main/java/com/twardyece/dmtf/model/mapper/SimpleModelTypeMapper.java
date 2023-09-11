@@ -12,7 +12,6 @@ public class SimpleModelTypeMapper implements IModelTypeMapper {
     private final SimpleModelIdentifierFactory identifierFactory;
     private final SnakeCaseName module;
 
-    // TODO: Seems like we have some duplicated classes. Can we consolidate this class with the NameMapper class somehow?
     public SimpleModelTypeMapper(SimpleModelIdentifierFactory identifierFactory, SnakeCaseName module) {
         this.identifierFactory = identifierFactory;
         this.module = module;
@@ -29,5 +28,19 @@ public class SimpleModelTypeMapper implements IModelTypeMapper {
         module.add(this.module);
 
         return Optional.of(new ModelMatchSpecification(module, model.get()));
+    }
+
+    @Override
+    public Optional<String> matchesName(ModelMatchSpecification model) {
+        if (model.path().isEmpty()) {
+            return Optional.empty();
+        }
+
+        SnakeCaseName module = model.path().get(model.path().size() - 1);
+        if (module != this.module) {
+            return Optional.empty();
+        }
+
+        return Optional.of(this.identifierFactory.schemaIdentifier(model.model()));
     }
 }

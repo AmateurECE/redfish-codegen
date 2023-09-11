@@ -2,6 +2,7 @@ package com.twardyece.dmtf.model.mapper;
 
 import com.twardyece.dmtf.specification.IdentifierParseError;
 import com.twardyece.dmtf.specification.UnversionedSchemaIdentifier;
+import com.twardyece.dmtf.text.PascalCaseName;
 import com.twardyece.dmtf.text.SnakeCaseName;
 
 import java.util.ArrayList;
@@ -22,5 +23,15 @@ public class UnversionedModelTypeMapper implements IModelTypeMapper {
         } catch (IdentifierParseError e) {
             return Optional.empty();
         }
+    }
+
+    @Override
+    public Optional<String> matchesName(ModelMatchSpecification model) {
+        if (model.path().isEmpty()) {
+            return Optional.empty();
+        }
+
+        PascalCaseName module = new PascalCaseName(model.path().get(model.path().size() - 1));
+        return Optional.of(UnversionedSchemaIdentifier.schemaIdentifier(module, model.model()));
     }
 }

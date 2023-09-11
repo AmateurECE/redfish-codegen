@@ -19,5 +19,12 @@ public interface IModelTypeMapper {
      */
     Optional<ModelMatchSpecification> matchesType(String name);
 
+    /**
+     * Map a rust type to a model name. This is the inverse of matchesType
+     * @param model A ModelMatchSpecification describing the model
+     * @return Optional.of(the Redfish Data Model identifier for the model, if it matches a model).
+     */
+    Optional<String> matchesName(ModelMatchSpecification model);
+
     record ModelMatchSpecification(List<SnakeCaseName> path, PascalCaseName model) {}
 }
