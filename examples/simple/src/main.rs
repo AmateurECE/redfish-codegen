@@ -23,7 +23,7 @@ use seuss::{
         resource::{self, ResetType},
         service_root::v1_16_0::{Links, ServiceRoot as ServiceRootModel},
     },
-    registries::{base::v1_16_0::Base, resource_event::v1_3_0::ResourceEvent},
+    registries::base::v1_16_0::Base,
     service::{AccountService, RedfishService, SessionService},
 };
 use std::{
@@ -32,7 +32,6 @@ use std::{
     sync::{Arc, Mutex},
 };
 use tower_http::trace::TraceLayer;
-use valuable::Valuable;
 
 /// Command Line Interface, courtesy of the `clap` crate.
 #[derive(Parser)]
@@ -166,15 +165,6 @@ async fn computer_system_reset(
         }
     };
 
-    let name = format!("SimpleSystem-{}", id);
-    let event = match power_state {
-        resource::PowerState::On => ResourceEvent::ResourcePoweredOn(name),
-        resource::PowerState::Off => ResourceEvent::ResourcePoweredOff(name),
-        resource::PowerState::PoweringOff => ResourceEvent::ResourcePoweringOff(name),
-        resource::PowerState::PoweringOn => ResourceEvent::ResourcePoweringOn(name),
-        resource::PowerState::Paused => ResourceEvent::ResourcePaused(name),
-    };
-    tracing::info!(event = event.as_value());
     systems.lock().unwrap().get_mut(id - 1).unwrap().0 = power_state;
     Ok(StatusCode::NO_CONTENT)
 }
