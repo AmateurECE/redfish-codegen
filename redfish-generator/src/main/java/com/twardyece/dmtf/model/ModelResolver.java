@@ -42,6 +42,13 @@ public class ModelResolver {
         this.rustTypeFactory = new RustTypeFactory();
     }
 
+    /**
+     * Obtain just the schema identifier from the OpenAPI path. For example, converts
+     * #/components/schemas/Message_v1_1_2_Message to Message_v1_1_2_Message. Throws RuntimeException if the Schema does
+     * not contain a valid $ref.
+     * @param schema The schema containing the path
+     * @return the Redfish schema identifier.
+     */
     public static String getSchemaIdentifier(Schema schema) {
         String url = schema.get$ref();
         // TODO: There's a faster way to do this than pattern matching.
@@ -54,6 +61,12 @@ public class ModelResolver {
         return matcher.replaceFirst("");
     }
 
+    /**
+     * Use the injected IModelTypeMappers to resolve a Redfish Data Model identifier (in OpenAPI path format, such as
+     * #/components/schemas/Message_v1_1_2_Message) to a Rust type.
+     * @param name The OpenAPI path to resolve
+     * @return The corresponding Rust type.
+     */
     public RustType resolvePath(String name) {
         for (NamespaceMapper namespaceMapper : namespaceMappers) {
             Optional<String> match = namespaceMapper.match(name);
@@ -72,7 +85,32 @@ public class ModelResolver {
         return null;
     }
 
-    // Resolve an OpenAPI path, such as '#/components/schemas/RedfishError' to a RustType.
+    /**
+     * Utilize the injected ModelTypeMappers to perform reverse resolution on a rust type.
+     * @param rustType The rust type to resolve.
+     * @return A string corresponding to the identifier used for this type in the Redfish Data Model.
+     */
+    public String reverseResolveIdentifier(RustType rustType) {
+        // TODO: Today, namespace mapping is only necessary for forward resolution. This indicates a bit of potential
+        //  fragility in the model resolution system that should be addressed.
+        IModelTypeMapper.ModelMatchSpecification modelMatchSpecification = rustTypeFactory.toModelMatchSpecification(rustType);
+        for (IModelTypeMapper mapper : this.mappers) {
+            Optional<String> identifier = mapper.matchesName(modelMatchSpecification);
+            if (identifier.isPresent()) {
+                return identifier.get();
+            }
+        }
+
+        return null;
+    }
+
+    /**
+     * Resolve a Schema to a Rust type. If this schema represents a Redfish Data Model object, the corresponding type is
+     * determined using resolvePath. If the Schema refers to a primitive type or a container type, this method correctly
+     * resolves the type.
+     * @param schema The schema to resolve.
+     * @return A Rust type corresponding to the OpenAPI schema object.
+     */
     public RustType resolveSchema(Schema schema) {
         String type = schema.getType();
         if (null == type) {
