@@ -8,6 +8,7 @@ import com.twardyece.dmtf.text.SnakeCaseName;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+import java.util.Objects;
 
 public class RustType implements Comparable<RustType> {
     // The absolute path of the type (i.e., where its definition lives)
@@ -25,15 +26,15 @@ public class RustType implements Comparable<RustType> {
     }
 
     public RustType(CratePath path, PascalCaseName name) {
-        this.path = path;
-        this.importPath = path;
+        this.path = Objects.requireNonNull(path);
+        this.importPath = Objects.requireNonNull(path);
         this.name = name;
         this.innerTypes = new ArrayList<>();
     }
 
     public RustType(CratePath path, PascalCaseName name, RustType[] innerTypes) {
-        this.path = path;
-        this.importPath = path;
+        this.path = Objects.requireNonNull(path);
+        this.importPath = Objects.requireNonNull(path);
         this.name = name;
         this.innerTypes = Arrays.stream(innerTypes).toList();
     }
