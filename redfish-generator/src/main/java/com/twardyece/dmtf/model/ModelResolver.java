@@ -32,7 +32,7 @@ public class ModelResolver {
         RUST_TYPE_MAP.put("integer", new RustType(new SnakeCaseName("i64")));
         RUST_TYPE_MAP.put("boolean", new RustType(new SnakeCaseName("bool")));
         RUST_TYPE_MAP.put("number", new RustType(new SnakeCaseName("f64")));
-        RUST_TYPE_MAP.put("string", new RustType(null, new PascalCaseName("String")));
+        RUST_TYPE_MAP.put("string", new RustType(CratePath.empty(), new PascalCaseName("String")));
     }
 
 
@@ -117,7 +117,7 @@ public class ModelResolver {
             return this.resolvePath(getSchemaIdentifier(schema));
         } else if ("array".equals(schema.getType())) {
             // It's an array type
-            return new RustType(null, VEC_NAME, new RustType[]{this.resolveSchema(schema.getItems())});
+            return new RustType(CratePath.empty(), VEC_NAME, new RustType[]{this.resolveSchema(schema.getItems())});
         } else {
             if (!RUST_TYPE_MAP.containsKey(type)) {
                 LOGGER.warn("No mapping for type " + type);
