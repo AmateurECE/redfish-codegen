@@ -34,12 +34,12 @@ public class VersionedModelTypeMapper implements IModelTypeMapper {
             return Optional.empty();
         }
 
-        SnakeCaseName version = path.get(pathSize - 2);
+        SnakeCaseName version = path.get(pathSize - 1);
         if (!VersionedSchemaIdentifier.isVersion(version.toString())) {
             return Optional.empty();
         }
 
-        SnakeCaseName namespace = path.get(pathSize - 1);
+        SnakeCaseName namespace = path.get(pathSize - 2);
         return Optional.of(VersionedSchemaIdentifier.identifier(new PascalCaseName(namespace), version, model.model()));
     }
 }
