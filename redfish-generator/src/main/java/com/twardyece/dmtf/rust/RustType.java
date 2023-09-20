@@ -11,15 +11,16 @@ import java.util.List;
 
 public class RustType implements Comparable<RustType> {
     // The absolute path of the type (i.e., where its definition lives)
-    private CratePath path;
+    private final CratePath path;
     // The path of the type, taking into consideration any namespaces which are importing with "use" statements
     // TODO: Removing importPath will make this class much simpler.
     private CratePath importPath;
     private ICaseConvertible name;
-    private List<RustType> innerTypes;
+    private final List<RustType> innerTypes;
 
     public RustType(SnakeCaseName name) {
         this.name = name;
+        this.path = CratePath.empty();
         this.innerTypes = new ArrayList<>();
     }
 
@@ -53,10 +54,9 @@ public class RustType implements Comparable<RustType> {
     }
 
     public CratePath getPath() { return this.path; }
-    public void setPath(CratePath cratePath) { this.path = cratePath; }
 
     // A type is primitive if it does not require importing its containing module.
-    public boolean isPrimitive() { return null == this.path; }
+    public boolean isPrimitive() { return this.path.isEmpty(); }
 
     public void setImportPath(CratePath path) { this.importPath = path; }
 
