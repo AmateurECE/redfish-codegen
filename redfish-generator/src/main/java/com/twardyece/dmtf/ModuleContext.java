@@ -1,7 +1,6 @@
 package com.twardyece.dmtf;
 
 import com.twardyece.dmtf.rust.RustConfig;
-import com.twardyece.dmtf.rust.RustType;
 import com.twardyece.dmtf.text.SnakeCaseName;
 
 import java.util.*;
@@ -12,35 +11,9 @@ public class ModuleContext {
     private final Set<Submodule> submoduleSet;
     public Set<Import> imports;
 
-    public ModuleContext(CratePath path, List<RustType> dependentTypes) {
+    public ModuleContext(CratePath path) {
         this.path = path;
         this.submoduleSet = new HashSet<>();
-
-        if (null != dependentTypes) {
-            this.imports = new HashSet<>();
-            for (RustType type : dependentTypes) {
-                addImports(this.imports, type);
-            }
-        }
-    }
-
-    private static void addImports(Set<Import> imports, RustType rustType) {
-        if (!rustType.getInnerTypes().isEmpty()) {
-            for (RustType innerType : rustType.getInnerTypes()) {
-                addImports(imports, innerType);
-            }
-        }
-
-        if (!rustType.isPrimitive() && rustType.getPath().isCrateLocal()) {
-            List<SnakeCaseName> components = rustType.getPath().getComponents();
-            if (components.size() > 1) {
-                List<SnakeCaseName> front = components.subList(0, 2);
-                List<SnakeCaseName> back = components.subList(1, components.size());
-                CratePath importPath = CratePath.relative(front);
-                imports.add(new Import(importPath));
-                rustType.setImportPath(CratePath.relative(back));
-            }
-        }
     }
 
     public List<Submodule> submodules() { return this.submoduleSet.stream().sorted().collect(Collectors.toList()); }
@@ -79,7 +52,7 @@ public class ModuleContext {
             SnakeCaseName component = components.get(i);
             if (!path.isEmpty()) {
                 if (!modules.containsKey(path.toString())) {
-                    modules.put(path.toString(), new ModuleContext(path, null));
+                    modules.put(path.toString(), new ModuleContext(path));
                 }
 
                 if (components.size() - 1 == i) {

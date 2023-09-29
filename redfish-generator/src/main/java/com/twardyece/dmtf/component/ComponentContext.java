@@ -21,7 +21,7 @@ public class ComponentContext implements Comparable<ComponentContext> {
     public final List<SubordinatePrivilegeOverride> subordinatePrivilegeOverrides;
 
     public ComponentContext(RustType rustType, RustType baseRegistry) {
-        this.moduleContext = new ModuleContext(rustType.getPath(), null);
+        this.moduleContext = new ModuleContext(rustType.getPath());
         this.rustType = rustType;
         this.baseRegistry = baseRegistry;
         this.operationMap = new HashMap<>();

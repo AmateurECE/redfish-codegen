@@ -1,9 +1,9 @@
 package com.twardyece.dmtf.registry;
 
 import com.twardyece.dmtf.ModuleContext;
+import com.twardyece.dmtf.model.ModelResolver;
 import com.twardyece.dmtf.rust.RustIdentifier;
 import com.twardyece.dmtf.rust.RustType;
-import com.twardyece.dmtf.model.ModelResolver;
 import com.twardyece.dmtf.text.PascalCaseName;
 import org.json.JSONArray;
 import org.json.JSONObject;
@@ -31,7 +31,7 @@ public class RegistryFactory {
             variants.add(makeVariant(key, messages.getJSONObject(key), idBase));
         }
 
-        return new RegistryContext(new ModuleContext(rustType.getPath(), null), rustType,
+        return new RegistryContext(new ModuleContext(rustType.getPath()), rustType,
                 object.getString("Description"), this.messageType, variants);
     }
 

@@ -20,10 +20,10 @@ public class ModelContext {
     public String docComment;
     public Metadata metadata;
 
-    private static ModelContext generic(RustType rustType, List<RustType> dependentTypes, String docComment) {
+    private static ModelContext generic(RustType rustType, String docComment) {
         ModelContext modelContext = new ModelContext();
         CratePath path = rustType.getPath().append(new SnakeCaseName(rustType.getName()));
-        modelContext.moduleContext = new ModuleContext(path, dependentTypes);
+        modelContext.moduleContext = new ModuleContext(path);
 
         modelContext.rustType = rustType;
         modelContext.unitContext = false;
@@ -33,25 +33,25 @@ public class ModelContext {
     }
 
     public static ModelContext forStruct(RustType rustType, StructContext structContext, String docComment) {
-        ModelContext modelContext = ModelContext.generic(rustType, structContext.getDependentTypes(), docComment);
+        ModelContext modelContext = ModelContext.generic(rustType, docComment);
         modelContext.structContext = structContext;
         return modelContext;
     }
 
     public static ModelContext forEnum(RustType rustType, EnumContext enumContext, String docComment) {
-        ModelContext modelContext = ModelContext.generic(rustType, enumContext.getDependentTypes(), docComment);
+        ModelContext modelContext = ModelContext.generic(rustType, docComment);
         modelContext.enumContext = enumContext;
         return modelContext;
     }
 
     public static ModelContext forTuple(RustType rustType, TupleContext tupleContext, String docComment) {
-        ModelContext modelContext = ModelContext.generic(rustType, tupleContext.getDependentTypes(), docComment);
+        ModelContext modelContext = ModelContext.generic(rustType, docComment);
         modelContext.tupleContext = tupleContext;
         return modelContext;
     }
 
     public static ModelContext forUnit(RustType rustType, String docComment) {
-        ModelContext modelContext = ModelContext.generic(rustType, null, docComment);
+        ModelContext modelContext = ModelContext.generic(rustType, docComment);
         modelContext.unitContext = true;
         return modelContext;
     }

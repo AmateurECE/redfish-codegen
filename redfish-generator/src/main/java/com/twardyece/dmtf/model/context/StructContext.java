@@ -4,20 +4,11 @@ import com.twardyece.dmtf.rust.RustType;
 import com.twardyece.dmtf.text.SnakeCaseName;
 
 import java.util.List;
-import java.util.Objects;
-import java.util.stream.Collectors;
 
 public class StructContext {
     public List<Property> properties;
     public StructContext(List<Property> properties) {
         this.properties = properties;
-    }
-
-    public List<RustType> getDependentTypes() {
-        return this.properties.stream()
-                .map((p) -> p.rustType)
-                .filter(Objects::nonNull)
-                .collect(Collectors.toList());
     }
 
     public static class Property {

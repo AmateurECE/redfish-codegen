@@ -14,8 +14,6 @@ public class RustType implements Comparable<RustType> {
     // The absolute path of the type (i.e., where its definition lives)
     private final CratePath path;
     // The path of the type, taking into consideration any namespaces which are importing with "use" statements
-    // TODO: Removing importPath will make this class much simpler.
-    private CratePath importPath;
     private ICaseConvertible name;
     private final List<RustType> innerTypes;
 
@@ -27,26 +25,19 @@ public class RustType implements Comparable<RustType> {
 
     public RustType(CratePath path, PascalCaseName name) {
         this.path = Objects.requireNonNull(path);
-        this.importPath = Objects.requireNonNull(path);
         this.name = name;
         this.innerTypes = new ArrayList<>();
     }
 
     public RustType(CratePath path, PascalCaseName name, RustType[] innerTypes) {
         this.path = Objects.requireNonNull(path);
-        this.importPath = Objects.requireNonNull(path);
         this.name = name;
         this.innerTypes = Arrays.stream(innerTypes).toList();
     }
 
     @Override
     public String toString() {
-        String value;
-        if (null != this.importPath) {
-            value = this.importPath.joinComponent(this.name);
-        } else {
-            value = this.name.toString();
-        }
+        String value = this.path.joinComponent(this.name);
         if (!this.innerTypes.isEmpty()) {
                 value += "<" + String.join(",", this.innerTypes.stream().map(RustType::toString).toList()) + ">";
         }
@@ -58,8 +49,6 @@ public class RustType implements Comparable<RustType> {
 
     // A type is primitive if it does not require importing its containing module.
     public boolean isPrimitive() { return this.path.isEmpty(); }
-
-    public void setImportPath(CratePath path) { this.importPath = path; }
 
     public List<RustType> getInnerTypes() { return this.innerTypes; }
 

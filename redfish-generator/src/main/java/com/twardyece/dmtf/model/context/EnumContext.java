@@ -4,7 +4,6 @@ import com.twardyece.dmtf.rust.RustIdentifier;
 import com.twardyece.dmtf.rust.RustType;
 
 import java.util.List;
-import java.util.stream.Collectors;
 
 public class EnumContext {
     List<Variant> variants;
@@ -15,14 +14,6 @@ public class EnumContext {
         this.variants = variants;
         this.defaultVariantIndex = defaultVariantIndex;
         this.tagged = tagged;
-    }
-
-
-    public List<RustType> getDependentTypes() {
-        return this.variants.stream()
-                .filter((v) -> null != v.type)
-                .map((v) -> v.type.rustType)
-                .collect(Collectors.toList());
     }
 
     public Variant defaultVariant() { return this.variants.get(this.defaultVariantIndex); }

@@ -9,11 +9,13 @@ import com.twardyece.dmtf.model.ModelResolver;
 import com.twardyece.dmtf.model.context.ModelContext;
 import com.twardyece.dmtf.model.context.factory.*;
 import com.twardyece.dmtf.model.mapper.*;
-import com.twardyece.dmtf.policies.*;
+import com.twardyece.dmtf.policies.IModelGenerationPolicy;
+import com.twardyece.dmtf.policies.ModelDeletionPolicy;
+import com.twardyece.dmtf.policies.ModelMetadataPolicy;
+import com.twardyece.dmtf.policies.ODataPropertyPolicy;
 import com.twardyece.dmtf.registry.RegistryContext;
 import com.twardyece.dmtf.registry.RegistryFactory;
 import com.twardyece.dmtf.registry.RegistryFileDiscovery;
-import com.twardyece.dmtf.rust.CfgAttrExpression;
 import com.twardyece.dmtf.rust.RustConfig;
 import com.twardyece.dmtf.rust.RustType;
 import com.twardyece.dmtf.specification.*;
@@ -42,7 +44,6 @@ import java.nio.charset.StandardCharsets;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.*;
-import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
@@ -202,7 +203,7 @@ public class RedfishCodegen {
     }
 
     public void generateModelsLib() throws IOException {
-        ModuleContext module = new ModuleContext(CratePath.crateRoot(), null);
+        ModuleContext module = new ModuleContext(CratePath.crateRoot());
         LibContext context = new LibContext(module, specVersion, getResourceFileAsString("codegen.rs"));
         ModuleFile<LibContext> file = this.fileFactory.makeLibFile(context);
         file.getContext().moduleContext.addNamedSubmodule(RustConfig.MODELS_BASE_MODULE);
@@ -229,7 +230,7 @@ public class RedfishCodegen {
     }
 
     private void generateRouting(Map<PascalCaseName, RegistryContext> registries) throws IOException, URISyntaxException, ParserConfigurationException, SAXException {
-        ModuleContext moduleContext = new ModuleContext(CratePath.crateRoot(), null);
+        ModuleContext moduleContext = new ModuleContext(CratePath.crateRoot());
         LibContext libContext = new LibContext(moduleContext, this.specVersion);
         ModuleFile<LibContext> libFile = this.fileFactory.makeLibFile(libContext);
         Map<String, PathItem> paths = this.document.getPaths();
@@ -238,7 +239,7 @@ public class RedfishCodegen {
         MetadataFileDiscovery fileDiscovery = new MetadataFileDiscovery(Path.of(this.specDirectory + "/csdl"));
         SnakeCaseName metadata = new SnakeCaseName("metadata");
         CratePath metadataPath = CratePath.parse("crate::" + metadata);
-        MetadataRoutingContext metadataContext = new MetadataRoutingContext(new ModuleContext(metadataPath, null),
+        MetadataRoutingContext metadataContext = new MetadataRoutingContext(new ModuleContext(metadataPath),
         fileDiscovery.getServiceRootVersion(), fileDiscovery.getReferences());
         ModuleFile<MetadataRoutingContext> metadataFile = this.fileFactory.makeMetadataRoutingFile(metadataContext);
         metadataFile.generate();
@@ -248,7 +249,7 @@ public class RedfishCodegen {
         // OData router, a submodule of the routing module that handles the OData service document.
         SnakeCaseName odata = new SnakeCaseName("odata");
         CratePath odataPath = CratePath.parse("crate::" + odata);
-        ODataContext odataContext = new ODataContext(new ModuleContext(odataPath, null));
+        ODataContext odataContext = new ODataContext(new ModuleContext(odataPath));
         ModuleFile<ODataContext> odataFile = this.fileFactory.makeODataRoutingFile(odataContext);
         odataFile.generate();
         libFile.getContext().moduleContext.addNamedSubmodule(odata);
@@ -292,7 +293,7 @@ public class RedfishCodegen {
 
     private void generateRegistries(Map<PascalCaseName, RegistryContext> registries) throws IOException {
         CratePath registryModulePath = CratePath.parse("crate::" + RustConfig.REGISTRY_BASE_MODULE);
-        ModuleContext registriesModule = new ModuleContext(registryModulePath, null);
+        ModuleContext registriesModule = new ModuleContext(registryModulePath);
 
         for (RegistryContext registry : registries.values()) {
             registriesModule.addNamedSubmodule(CaseConversion.toSnakeCase(registry.name()));
@@ -302,7 +303,7 @@ public class RedfishCodegen {
             ModuleContext previous = null;
             for (SnakeCaseName component : components.subList(registryModulePath.getComponents().size(), components.size() - 1)) {
                 path = path.append(component);
-                ModuleContext current = new ModuleContext(path, null);
+                ModuleContext current = new ModuleContext(path);
                 moduleContexts.add(current);
                 Objects.requireNonNullElse(previous, registriesModule).addNamedSubmodule(component);
                 previous = current;
