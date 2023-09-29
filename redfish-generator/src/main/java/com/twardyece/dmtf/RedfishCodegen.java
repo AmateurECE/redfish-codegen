@@ -9,10 +9,7 @@ import com.twardyece.dmtf.model.ModelResolver;
 import com.twardyece.dmtf.model.context.ModelContext;
 import com.twardyece.dmtf.model.context.factory.*;
 import com.twardyece.dmtf.model.mapper.*;
-import com.twardyece.dmtf.policies.IModelGenerationPolicy;
-import com.twardyece.dmtf.policies.ModelDeletionPolicy;
-import com.twardyece.dmtf.policies.ModelMetadataPolicy;
-import com.twardyece.dmtf.policies.ODataPropertyPolicy;
+import com.twardyece.dmtf.policies.*;
 import com.twardyece.dmtf.registry.RegistryContext;
 import com.twardyece.dmtf.registry.RegistryFactory;
 import com.twardyece.dmtf.registry.RegistryFileDiscovery;
@@ -100,9 +97,10 @@ public class RedfishCodegen {
 
         // These intrusive/low-level policies need to be applied to the set of models as a whole, but should not be
         // coupled to context factories.
-        this.modelGenerationPolicies = new IModelGenerationPolicy[3];
+        this.modelGenerationPolicies = new IModelGenerationPolicy[4];
         this.modelGenerationPolicies[0] = new ModelDeletionPolicy(odataModelPattern);
-        this.modelGenerationPolicies[1] = new ODataPropertyPolicy(new ODataTypeIdentifier());
+        this.modelGenerationPolicies[1] = new OemModelDeletionPolicy();
+        this.modelGenerationPolicies[2] = new ODataPropertyPolicy(new ODataTypeIdentifier());
         JsonSchemaMapper[] jsonSchemaMappers = new JsonSchemaMapper[2];
 
         Pattern versionParsePattern = Pattern.compile("([0-9]+)_([0-9]+)_([0-9]+)");
@@ -124,7 +122,7 @@ public class RedfishCodegen {
         jsonSchemaMappers[1] = new JsonSchemaMapper(
                 odataModelIdentifierFactory,
                 odataJsonSchema.get().file.getFileName().toString());
-        this.modelGenerationPolicies[2] = new ModelMetadataPolicy(new JsonSchemaIdentifier(jsonSchemaMappers));
+        this.modelGenerationPolicies[3] = new ModelMetadataPolicy(new JsonSchemaIdentifier(jsonSchemaMappers));
 
         // Registry generation
         Path registryDirectoryPath = Path.of(registryDirectory);
