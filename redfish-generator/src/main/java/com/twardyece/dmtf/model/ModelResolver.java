@@ -11,10 +11,7 @@ import io.swagger.v3.oas.models.media.Schema;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.Optional;
+import java.util.*;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -151,7 +148,7 @@ public class ModelResolver {
          * @return A ModelMatchSpecification.
          */
         public IModelTypeMapper.ModelMatchSpecification toModelMatchSpecification(RustType rustType) {
-            List<SnakeCaseName> path = rustType.getPath().getComponents();
+            List<SnakeCaseName> path = new ArrayList<>(rustType.getPath().getComponents());
             path.remove(0);
             return new IModelTypeMapper.ModelMatchSpecification(path, new PascalCaseName(rustType.getName()));
         }
