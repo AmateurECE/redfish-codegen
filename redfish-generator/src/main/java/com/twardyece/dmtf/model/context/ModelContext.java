@@ -2,12 +2,13 @@ package com.twardyece.dmtf.model.context;
 
 import com.twardyece.dmtf.CratePath;
 import com.twardyece.dmtf.ModuleContext;
-import com.twardyece.dmtf.rust.IRustExpression;
 import com.twardyece.dmtf.rust.RustType;
+import com.twardyece.dmtf.rust.ToRustExpression;
 import com.twardyece.dmtf.text.SnakeCaseName;
 
-import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 
 public class ModelContext {
     public ModuleContext moduleContext;
@@ -16,7 +17,7 @@ public class ModelContext {
     public EnumContext enumContext;
     public TupleContext tupleContext;
     public boolean unitContext;
-    public List<IRustExpression> additionalAttributes;
+    public Set<ToRustExpression.RustExpression> additionalAttributes;
     public String docComment;
     public Metadata metadata;
 
@@ -27,7 +28,7 @@ public class ModelContext {
 
         modelContext.rustType = rustType;
         modelContext.unitContext = false;
-        modelContext.additionalAttributes = new ArrayList<>();
+        modelContext.additionalAttributes = new HashSet<>();
         modelContext.docComment = docComment;
         return modelContext;
     }
