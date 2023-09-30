@@ -13,6 +13,7 @@ import com.twardyece.dmtf.policies.*;
 import com.twardyece.dmtf.registry.RegistryContext;
 import com.twardyece.dmtf.registry.RegistryFactory;
 import com.twardyece.dmtf.registry.RegistryFileDiscovery;
+import com.twardyece.dmtf.rust.CfgAttrExpression;
 import com.twardyece.dmtf.rust.RustConfig;
 import com.twardyece.dmtf.rust.RustType;
 import com.twardyece.dmtf.specification.*;
@@ -97,7 +98,7 @@ public class RedfishCodegen {
 
         // These intrusive/low-level policies need to be applied to the set of models as a whole, but should not be
         // coupled to context factories.
-        this.modelGenerationPolicies = new IModelGenerationPolicy[3];
+        this.modelGenerationPolicies = new IModelGenerationPolicy[4];
         this.modelGenerationPolicies[0] = new ModelDeletionPolicy(Pattern.compile(odataModelPattern + "|.*_(EventRecord)?Oem(Actions)?"));
         this.modelGenerationPolicies[1] = new ODataPropertyPolicy(new ODataTypeIdentifier());
         JsonSchemaMapper[] jsonSchemaMappers = new JsonSchemaMapper[2];
@@ -122,6 +123,14 @@ public class RedfishCodegen {
                 odataModelIdentifierFactory,
                 odataJsonSchema.get().file.getFileName().toString());
         this.modelGenerationPolicies[2] = new ModelMetadataPolicy(new JsonSchemaIdentifier(jsonSchemaMappers));
+        this.modelGenerationPolicies[3] = new AdditionalModelAttributesPolicy(
+                Pattern.compile("^(Event|Message)_v[0-9_]+(Event|Message)$"),
+                CfgAttrExpression.withEqualityPredicate("feature", "\"valuable\"")
+                        .attribute("derive(valuable::Valuable)")
+                        .toRustExpression(),
+                modelResolver,
+                true
+        );
 
         // Registry generation
         Path registryDirectoryPath = Path.of(registryDirectory);
