@@ -6,7 +6,7 @@ import com.twardyece.dmtf.rust.RustType;
 import java.util.List;
 
 public class EnumContext {
-    List<Variant> variants;
+    public List<Variant> variants;
     int defaultVariantIndex;
     boolean tagged;
 
@@ -22,7 +22,7 @@ public class EnumContext {
         RustIdentifier variantName;
         String serdeName;
         String docComment;
-        Type type;
+        public Type type;
 
         public Variant(RustIdentifier variantName, Type type, String serdeName, String docComment) {
             this.variantName = variantName;
@@ -34,7 +34,7 @@ public class EnumContext {
         public String name() { return this.variantName.toString(); }
 
         public static class Type {
-            RustType rustType;
+            public RustType rustType;
 
             public Type(RustType rustType) { this.rustType = rustType; }
             public String type() { return this.rustType.toString(); }
