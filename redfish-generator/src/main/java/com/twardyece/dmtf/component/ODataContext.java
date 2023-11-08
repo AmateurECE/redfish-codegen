@@ -25,13 +25,19 @@ public class ODataContext {
             services.add(new Service(new PascalCaseName("Chassis"), new URI("/redfish/v1/Chassis")));
             services.add(new Service(new PascalCaseName("Managers"), new URI("/redfish/v1/Managers")));
             services.add(new Service(new PascalCaseName("TaskService"), new URI("/redfish/v1/TaskService")));
+            services.add(new Service(new PascalCaseName("TelemetryService"), new URI("/redfish/v1/TelemetryService")));
+            services.add(new Service(new PascalCaseName("JobService"), new URI("/redfish/v1/JobService")));
             services.add(new Service(new PascalCaseName("AccountService"), new URI("/redfish/v1/AccountService")));
+            services.add(new Service(new PascalCaseName("AggregationService"), new URI("/redfish/v1/AggregationService")));
             services.add(new Service(new PascalCaseName("SessionService"), new URI("/redfish/v1/SessionService")));
             services.add(new Service(new PascalCaseName("EventService"), new URI("/redfish/v1/EventService")));
             services.add(new Service(new PascalCaseName("Registries"), new URI("/redfish/v1/Registries")));
             services.add(new Service(new PascalCaseName("JsonSchemas"), new URI("/redfish/v1/JsonSchemas")));
             services.add(new Service(new PascalCaseName("CertificateService"), new URI("/redfish/v1/CertificateService")));
+            services.add(new Service(new PascalCaseName("CompositionService"), new URI("/redfish/v1/CompositionService")));
             services.add(new Service(new PascalCaseName("KeyService"), new URI("/redfish/v1/KeyService")));
+            services.add(new Service(new PascalCaseName("LicenseService"), new URI("/redfish/v1/LicenseService")));
+            services.add(new Service(new PascalCaseName("LogService"), new URI("/redfish/v1/LogService")));
             services.add(new Service(new PascalCaseName("UpdateService"), new URI("/redfish/v1/UpdateService")));
             services.add(new Service(new PascalCaseName("Sessions"), new URI("/redfish/v1/SessionService/Sessions")));
         } catch (URISyntaxException e) {
