@@ -5,14 +5,13 @@ use axum::{
     Extension, Json,
 };
 use clap::Parser;
-use redfish_core::convert::IntoRedfishMessage;
 use seuss::{
     auth::{pam::LinuxPamAuthenticator, CombinedAuthenticationProxy, InMemorySessionManager},
     components::{
         computer_system::ComputerSystem, computer_system_collection::ComputerSystemCollection,
         odata::OData, service_root::ServiceRoot,
     },
-    core::{error, privilege},
+    core::{error, privilege, convert::IntoRedfishMessage},
     middleware::ResourceLocator,
     models::{
         computer_system::v1_20_1::{
