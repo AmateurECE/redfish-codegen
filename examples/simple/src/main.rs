@@ -5,7 +5,7 @@ use axum::{
     Extension, Json,
 };
 use clap::Parser;
-use redfish_core::message::IntoRedfishMessage;
+use redfish_core::convert::IntoRedfishMessage;
 use seuss::{
     auth::{pam::LinuxPamAuthenticator, CombinedAuthenticationProxy, InMemorySessionManager},
     components::{

@@ -3,7 +3,7 @@ use redfish_codegen::{
     models::{odata_v4, redfish, resource, session::v1_6_0},
     registries::base::v1_16_0::Base,
 };
-use redfish_core::{auth::AuthenticatedUser, error, message::IntoRedfishMessage};
+use redfish_core::{auth::AuthenticatedUser, error, convert::IntoRedfishMessage};
 use std::{
     collections::{hash_map::DefaultHasher, HashMap},
     hash::Hasher,

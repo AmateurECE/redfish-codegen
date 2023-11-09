@@ -15,7 +15,7 @@ use axum::{
     Json,
 };
 use redfish_codegen::{registries::base::v1_16_0::Base, ODATA_VERSION};
-use redfish_core::{error, message::IntoRedfishMessage};
+use redfish_core::{error, convert::IntoRedfishMessage};
 use tower::{Layer, Service};
 
 const ODATA_VERSION_HEADER: &str = "OData-Version";

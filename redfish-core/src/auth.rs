@@ -6,7 +6,7 @@ use axum::{
 use redfish_codegen::{models::redfish, registries::base::v1_16_0::Base};
 
 use crate::privilege::Role;
-use crate::{error, message::IntoRedfishMessage};
+use crate::{convert::IntoRedfishMessage, error};
 
 #[derive(Clone)]
 pub struct AuthenticatedUser {

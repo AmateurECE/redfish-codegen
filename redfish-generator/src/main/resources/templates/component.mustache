@@ -179,7 +179,7 @@ where
                 (
                     axum::http::StatusCode::METHOD_NOT_ALLOWED,
                     axum::Json(redfish_core::error::one_message(
-                        redfish_core::message::IntoRedfishMessage::into_redfish_message(
+                        redfish_core::convert::IntoRedfishMessage::into_redfish_message(
                             {{baseRegistry}}::OperationNotAllowed))),
                 )
             })
@@ -197,7 +197,7 @@ where
                 (
                     axum::http::StatusCode::METHOD_NOT_ALLOWED,
                     axum::Json(redfish_core::error::one_message(
-                        redfish_core::message::IntoRedfishMessage::into_redfish_message(
+                        redfish_core::convert::IntoRedfishMessage::into_redfish_message(
                             {{baseRegistry}}::OperationNotAllowed))),
                 )
             })
