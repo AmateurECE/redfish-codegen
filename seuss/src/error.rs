@@ -4,7 +4,7 @@ use axum::{
     Json,
 };
 use redfish_codegen::registries::base::v1_16_0::Base;
-use redfish_core::{error, convert::IntoRedfishMessage};
+use redfish_core::{convert::IntoRedfishMessage, error};
 use tracing::{event, Level};
 
 /// The same as [redfish_map_err_no_log], but also create a [tracing] event for the error.
