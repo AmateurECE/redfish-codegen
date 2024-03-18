@@ -3,7 +3,7 @@ resolver = "2"
 members = [
         "redfish-axum",
         "redfish-core",
-        "redfish-codegen",
+        "redfish-models",
         "redfish-macros",
         "seuss",
         "examples/simple",

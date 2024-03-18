@@ -13,7 +13,7 @@ keywords = ["redfish"]
 
 [dependencies]
 axum = { version = "0.6.18", features = ["json"], default-features = false, optional = true }
-redfish-codegen = { version = "0.3.1", path = "../redfish-codegen" }
+redfish-models = { version = "0.3.1", path = "../redfish-models" }
 serde = { version = "1.0.164", features = ["derive"], optional = true }
 strum = { version = "0.25.0", features = ["derive"] }
 

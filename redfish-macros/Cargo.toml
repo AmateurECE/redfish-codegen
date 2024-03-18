@@ -5,9 +5,9 @@ authors = ["Ethan D. Twardy <ethan.twardy@gmail.com>"]
 description = "Macros useful in Redfish service implementation."
 license = "MIT OR Apache-2.0"
 edition = "2021"
-homepage = "https://github.com/AmateurECE/redfish-codegen"
+homepage = "https://github.com/AmateurECE/redfish-models"
 documentation = "https://docs.rs/redfish-macros"
-repository = "https://github.com/AmateurECE/redfish-codegen"
+repository = "https://github.com/AmateurECE/redfish-models"
 readme = "README.md"
 keywords = ["redfish"]
 

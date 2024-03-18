@@ -38,11 +38,11 @@ CODEGEN_DEPENDENCIES += api/openapi/openapi.yaml
 CODEGEN_DEPENDENCIES += registry/DSP8011_$(RELEASE_VERSION).pdf
 CODEGEN_DEPENDENCIES += $(JAR_FILE)
 
-models: redfish-codegen/src/lib.rs
+models: redfish-models/src/lib.rs
 routing: redfish-axum/src/lib.rs
 
-redfish-codegen/src/lib.rs: $(CODEGEN_DEPENDENCIES)
-	$(call redfish_codegen,redfish-codegen,models)
+redfish-models/src/lib.rs: $(CODEGEN_DEPENDENCIES)
+	$(call redfish_codegen,redfish-models,models)
 
 redfish-axum/src/lib.rs: $(CODEGEN_DEPENDENCIES)
 	$(call redfish_codegen,redfish-axum,routing)

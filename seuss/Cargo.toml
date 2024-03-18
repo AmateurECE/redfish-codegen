@@ -31,7 +31,7 @@ users = { version = "0.11.0", optional = true }
 
 redfish-axum = { version = "0.3.1", path = "../redfish-axum" }
 redfish-core = { version = "0.3.1", path = "../redfish-core" }
-redfish-codegen = { version = "0.3.1", path = "../redfish-codegen" }
+redfish-models = { version = "0.3.1", path = "../redfish-models" }
 strum = "0.25.0"
 
 [features]

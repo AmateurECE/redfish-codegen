@@ -1,4 +1,4 @@
-# `redfish-codegen`
+# `redfish-models`
 
 An unopinionated translation of the [Redfish][1] Schema Bundle (DSP8010) and
 the Base Registries Specification (DSP8011) into Rust. Models are translated
