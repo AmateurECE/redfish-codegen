@@ -7,4 +7,5 @@ members = [
         "redfish-macros",
         "seuss",
         "examples/simple",
+        "redfish-codegen",
 ]
