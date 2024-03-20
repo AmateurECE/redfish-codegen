@@ -15,7 +15,45 @@ lazy_static! {
 #[derive(Debug, Eq, PartialEq, Hash)]
 pub struct PascalCaseName(Vec<Word>);
 impl PascalCaseName {
-    pub fn new(name: String) -> Result<Self, CaseConversionError> {
+    fn parse_pascal_case_name(&mut self, name: &str) -> Result<(), CaseConversionError> {
+        for capture in PASCAL_CASE.captures_iter(name) {
+            if let Err(e) = capture {
+                return Err(CaseConversionError::new(
+                    "PascalCase".to_string(),
+                    e.to_string(),
+                ));
+            }
+
+            let capture = capture.unwrap();
+            if let Some(group) = capture.get(1) {
+                self.0.push(Word::Word(group.as_str().to_string()));
+            } else if let Some(group) = capture.get(2) {
+                self.0.push(Word::Abbreviation(group.as_str().to_string()));
+            } else if let Some(group) = capture.get(3) {
+                self.0.push(Word::Abbreviation(group.as_str().to_string()));
+            } else {
+                return Err(CaseConversionError::new(
+                    "PascalCase".to_string(),
+                    name.to_string(),
+                ));
+            }
+        }
+
+        if self.0.is_empty() && !name.is_empty() {
+            return Err(CaseConversionError::new(
+                "PascalCase".to_string(),
+                name.to_string(),
+            ));
+        }
+
+        Ok(())
+    }
+}
+
+impl TryFrom<String> for PascalCaseName {
+    type Error = CaseConversionError;
+
+    fn try_from(name: String) -> Result<Self, Self::Error> {
         // PascalCase is a little harder than other cases. Since PascalCase
         // strings may contain substrings that are not in PascalCase, e.g.
         // abbreviations like "PCIe", we have to intentionally handle those
@@ -103,40 +141,6 @@ impl PascalCaseName {
 
         Ok(pascal_case_name)
     }
-
-    fn parse_pascal_case_name(&mut self, name: &str) -> Result<(), CaseConversionError> {
-        for capture in PASCAL_CASE.captures_iter(name) {
-            if let Err(e) = capture {
-                return Err(CaseConversionError::new(
-                    "PascalCase".to_string(),
-                    e.to_string(),
-                ));
-            }
-
-            let capture = capture.unwrap();
-            if let Some(group) = capture.get(1) {
-                self.0.push(Word::Word(group.as_str().to_string()));
-            } else if let Some(group) = capture.get(2) {
-                self.0.push(Word::Abbreviation(group.as_str().to_string()));
-            } else if let Some(group) = capture.get(3) {
-                self.0.push(Word::Abbreviation(group.as_str().to_string()));
-            } else {
-                return Err(CaseConversionError::new(
-                    "PascalCase".to_string(),
-                    name.to_string(),
-                ));
-            }
-        }
-
-        if self.0.is_empty() && !name.is_empty() {
-            return Err(CaseConversionError::new(
-                "PascalCase".to_string(),
-                name.to_string(),
-            ));
-        }
-
-        Ok(())
-    }
 }
 
 impl IntoWords for PascalCaseName {
@@ -160,6 +164,7 @@ impl ToString for PascalCaseName {
 mod test {
     use super::PascalCaseName;
 
+    /// Test that parsing a mix of valid PascalCase identifiers succeeds.
     #[test]
     fn pascal_case_parsing() {
         // This mix catches any obvious error with the parsing of PascalCase
@@ -173,9 +178,23 @@ mod test {
         ];
 
         for name in names.iter() {
-            let parsed = PascalCaseName::new(name.to_string());
+            let parsed = PascalCaseName::try_from(name.to_string());
             assert!(parsed.is_ok());
             assert_eq!(*name, &parsed.unwrap().to_string());
         }
+    }
+
+    /// Test that parsing camelCase identifiers fails
+    #[test]
+    fn camel_case_fails() {
+        let parsed = PascalCaseName::try_from("camelCaseName".to_string());
+        assert!(parsed.is_err());
+    }
+
+    /// Test that parsing snake_case identifiers fails
+    #[test]
+    fn snake_case_fails() {
+        let parsed = PascalCaseName::try_from("snake_case_name".to_string());
+        assert!(parsed.is_err());
     }
 }
