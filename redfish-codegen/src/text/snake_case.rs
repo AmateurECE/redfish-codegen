@@ -1,7 +1,7 @@
 use fancy_regex::Regex;
 
 use super::{
-    word::{FromWords, IntoWords, Word},
+    word::{FromWords, IntoWords, ToWords, Word},
     CaseConversionError,
 };
 
@@ -38,6 +38,14 @@ impl SnakeCaseName {
     }
 }
 
+impl ToWords for SnakeCaseName {
+    type Iter<'a> = std::slice::Iter<'a, Word>;
+
+    fn to_words(&self) -> Self::Iter<'_> {
+        self.0.iter()
+    }
+}
+
 impl IntoWords for SnakeCaseName {
     type IntoIter = std::vec::IntoIter<Word>;
 
@@ -57,9 +65,8 @@ impl FromWords for SnakeCaseName {
 
 impl ToString for SnakeCaseName {
     fn to_string(&self) -> String {
-        self.clone()
-            .into_words()
-            .map(|w| w.into_lower_case())
+        self.to_words()
+            .map(|w| w.to_lowercase())
             .collect::<Vec<String>>()
             .join("_")
     }

@@ -3,7 +3,7 @@ use lazy_static::lazy_static;
 
 use super::{
     lexer::{Lexer, Token},
-    word::{FromWords, IntoWords, Word},
+    word::{FromWords, IntoWords, ToWords, Word},
     CaseConversionError,
 };
 
@@ -45,6 +45,14 @@ impl PascalCaseName {
     }
 }
 
+impl ToWords for PascalCaseName {
+    type Iter<'a> = std::slice::Iter<'a, Word>;
+
+    fn to_words(&self) -> Self::Iter<'_> {
+        self.0.iter()
+    }
+}
+
 impl IntoWords for PascalCaseName {
     type IntoIter = std::vec::IntoIter<Word>;
 
@@ -66,7 +74,7 @@ impl ToString for PascalCaseName {
     fn to_string(&self) -> String {
         self.0
             .iter()
-            .map(|w| w.clone().into_capitalized())
+            .map(|w| w.to_capitalized())
             .collect::<String>()
     }
 }

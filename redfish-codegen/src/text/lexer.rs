@@ -64,7 +64,7 @@ impl Lexer {
             let identifier = match identifiers.last().unwrap() {
                 Token::Regular(name) => name,
                 Token::Irregular(ref abbreviation) => {
-                    discovered_length += abbreviation.clone().into_lower_case().len();
+                    discovered_length += abbreviation.as_str().len();
                     continue;
                 }
             };

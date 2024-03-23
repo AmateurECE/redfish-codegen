@@ -11,14 +11,14 @@ pub enum Word {
 }
 
 impl Word {
-    pub fn into_upper_case(self) -> String {
+    pub fn to_uppercase(&self) -> String {
         match self {
             Word::Word(value) => value.to_uppercase(),
-            Word::Abbreviation(value) => value,
+            Word::Abbreviation(value) => value.clone(),
         }
     }
 
-    pub fn into_capitalized(self) -> String {
+    pub fn to_capitalized(&self) -> String {
         match self {
             Word::Word(value) => {
                 let mut iter = value.chars();
@@ -29,26 +29,45 @@ impl Word {
                 let rest = iter.collect::<String>().to_lowercase();
                 first + &rest
             }
-            Word::Abbreviation(value) => value,
+            Word::Abbreviation(value) => value.clone(),
         }
     }
 
-    pub fn into_lower_case(self) -> String {
+    pub fn to_lowercase(&self) -> String {
         match self {
             Word::Word(value) => value.to_lowercase(),
             Word::Abbreviation(value) => value.to_lowercase(),
+        }
+    }
+
+    /// Access the word as a [str][std::str]. This method makes no guarantee
+    /// about the case of the result.
+    pub fn as_str(&self) -> &str {
+        match self {
+            Word::Word(ref value) => value,
+            Word::Abbreviation(ref value) => value,
         }
     }
 }
 
 /// Represents a phrase that consumers can break down into words and iterate
 /// over.
-pub trait IntoWords {
+pub trait ToWords {
     /// The type of the word iterator.
-    type IntoIter: Iterator<Item = Word>;
+    type Iter<'a>: Iterator<Item = &'a Word>
+    where
+        Self: 'a;
 
     /// Consume the phrase, breaking it down into words that can be iterated
     /// over.
+    fn to_words(&self) -> Self::Iter<'_>;
+}
+
+/// Similar to [ToWords], but consumes the underlying object, yielding its
+/// words.
+pub trait IntoWords {
+    type IntoIter: Iterator<Item = Word>;
+
     fn into_words(self) -> Self::IntoIter;
 }
 

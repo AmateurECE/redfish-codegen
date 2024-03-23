@@ -1,6 +1,6 @@
 use super::{
     pascal_case::PascalCaseName,
-    word::{IntoWords, Word},
+    word::{IntoWords, ToWords, Word},
     CaseConversionError,
 };
 use fancy_regex::Regex;
@@ -30,6 +30,14 @@ impl CamelCaseName {
     }
 }
 
+impl ToWords for CamelCaseName {
+    type Iter<'a> = std::slice::Iter<'a, Word>;
+
+    fn to_words(&self) -> Self::Iter<'_> {
+        self.0.iter()
+    }
+}
+
 impl IntoWords for CamelCaseName {
     type IntoIter = std::vec::IntoIter<Word>;
 
@@ -40,9 +48,9 @@ impl IntoWords for CamelCaseName {
 
 impl ToString for CamelCaseName {
     fn to_string(&self) -> String {
-        let mut iter = self.clone().into_words();
-        iter.next().map(|w| w.into_lower_case()).unwrap_or_default()
-            + &iter.map(|w| w.into_capitalized()).collect::<String>()
+        let mut iter = self.to_words();
+        iter.next().map(|w| w.to_lowercase()).unwrap_or_default()
+            + &iter.map(|w| w.to_capitalized()).collect::<String>()
     }
 }
 
