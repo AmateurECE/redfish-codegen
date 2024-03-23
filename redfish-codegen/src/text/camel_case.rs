@@ -22,7 +22,7 @@ impl CamelCaseName {
             .ok_or_else(error)?
             .as_str();
         let mut words = vec![Word::Word(prefix.to_string())];
-        if prefix != &name {
+        if prefix != name {
             let suffix = PascalCaseName::parse(name.strip_prefix(prefix).unwrap().to_string())?;
             words.extend(suffix.into_words());
         }

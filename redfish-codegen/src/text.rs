@@ -42,14 +42,14 @@ impl Error for CaseConversionError {}
 
 pub fn to_pascal_case(name: String) -> Result<PascalCaseName, CaseConversionError> {
     PascalCaseName::parse(name.clone())
-        .or_else(|_| SnakeCaseName::parse(name.clone()).map(|n| PascalCaseName::from_words(n)))
-        .or_else(|_| CamelCaseName::parse(name).map(|n| PascalCaseName::from_words(n)))
+        .or_else(|_| SnakeCaseName::parse(name.clone()).map(PascalCaseName::from_words))
+        .or_else(|_| CamelCaseName::parse(name).map(PascalCaseName::from_words))
 }
 
 pub fn to_snake_case(name: String) -> Result<SnakeCaseName, CaseConversionError> {
     SnakeCaseName::parse(name.clone())
-        .or_else(|_| PascalCaseName::parse(name.clone()).map(|n| SnakeCaseName::from_words(n)))
-        .or_else(|_| CamelCaseName::parse(name.clone()).map(|n| SnakeCaseName::from_words(n)))
+        .or_else(|_| PascalCaseName::parse(name.clone()).map(SnakeCaseName::from_words))
+        .or_else(|_| CamelCaseName::parse(name.clone()).map(SnakeCaseName::from_words))
 }
 
 #[cfg(test)]
