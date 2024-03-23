@@ -19,20 +19,18 @@ lazy_static! {
 #[derive(Clone, Debug, Eq, PartialEq, Hash)]
 pub struct PascalCaseName(Vec<Word>);
 impl PascalCaseName {
-    fn parse(name: String) -> Result<Self, CaseConversionError> {
+    pub fn parse(name: String) -> Result<Self, CaseConversionError> {
+        // NOTE: This check is required in order to "fail" camelCase identifiers
+        let uppercase_first_letter = name
+            .chars()
+            .nth(0)
+            .map_or_else(|| false, char::is_uppercase);
+        if !uppercase_first_letter {
+            return Err(CaseConversionError::new("PascalCase".to_string(), name));
+        }
+
         let lexer = Lexer::new();
         let identifiers = lexer.analyze(name.clone());
-
-        // NOTE: This check is required in order to "fail" camelCase identifiers
-        if let Some(Token::Regular(ref identifier)) = identifiers.first() {
-            let uppercase_first_letter = identifier
-                .chars()
-                .nth(0)
-                .map_or_else(|| false, char::is_uppercase);
-            if !uppercase_first_letter {
-                return Err(CaseConversionError::new("PascalCase".to_string(), name));
-            }
-        }
 
         let mut words = Vec::new();
         for token in identifiers.into_iter() {

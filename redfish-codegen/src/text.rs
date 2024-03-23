@@ -1,5 +1,6 @@
 use std::{error::Error, fmt::Display};
 
+mod camel_case;
 mod lexer;
 mod pascal_case;
 mod snake_case;
