@@ -2,11 +2,15 @@ use fancy_regex::Regex;
 use lazy_static::lazy_static;
 
 use super::{
-    word::{IntoWords, Word, SPECIAL_ABBREVIATIONS},
+    lexer::{Lexer, Token},
+    word::{IntoWords, Word},
     CaseConversionError,
 };
 
 lazy_static! {
+    // TODO: This regex uses look-around groups, which are not supported by
+    // the standard regex crate. Refactor this class not to use regex so that
+    // we can drop the dependency.
     static ref PASCAL_CASE: Regex =
         Regex::new("([A-Z][a-z]+)|([A-Z]+)(?=[A-Z][a-z])|([A-Z0-9]+)").unwrap();
 }
@@ -15,131 +19,30 @@ lazy_static! {
 #[derive(Debug, Eq, PartialEq, Hash)]
 pub struct PascalCaseName(Vec<Word>);
 impl PascalCaseName {
-    fn parse_pascal_case_name(&mut self, name: &str) -> Result<(), CaseConversionError> {
-        for capture in PASCAL_CASE.captures_iter(name) {
-            if let Err(e) = capture {
-                return Err(CaseConversionError::new(
-                    "PascalCase".to_string(),
-                    e.to_string(),
-                ));
-            }
+    fn parse(name: String) -> Result<Self, CaseConversionError> {
+        let lexer = Lexer::new();
+        let identifiers = lexer.analyze(name.clone());
 
-            let capture = capture.unwrap();
-            if let Some(group) = capture.get(1) {
-                self.0.push(Word::Word(group.as_str().to_string()));
-            } else if let Some(group) = capture.get(2) {
-                self.0.push(Word::Abbreviation(group.as_str().to_string()));
-            } else if let Some(group) = capture.get(3) {
-                self.0.push(Word::Abbreviation(group.as_str().to_string()));
-            } else {
-                return Err(CaseConversionError::new(
-                    "PascalCase".to_string(),
-                    name.to_string(),
-                ));
-            }
-        }
-
-        if self.0.is_empty() && !name.is_empty() {
-            return Err(CaseConversionError::new(
-                "PascalCase".to_string(),
-                name.to_string(),
-            ));
-        }
-
-        Ok(())
-    }
-}
-
-impl TryFrom<String> for PascalCaseName {
-    type Error = CaseConversionError;
-
-    fn try_from(name: String) -> Result<Self, Self::Error> {
-        // PascalCase is a little harder than other cases. Since PascalCase
-        // strings may contain substrings that are not in PascalCase, e.g.
-        // abbreviations like "PCIe", we have to intentionally handle those
-        // before attempting to parse the identifier(s) as PascalCase.
-        let mut identifiers = Vec::new();
-        identifiers.push(name.clone());
-        let mut discovered_length = 0;
-        while discovered_length < name.len() {
-            let identifier = identifiers.get(identifiers.len() - 1).unwrap();
-            let mut index_of_largest_abbreviation: Option<usize> = None;
-            let mut length_of_largest_abbreviation = 0;
-            SPECIAL_ABBREVIATIONS.keys().for_each(|abbreviation| {
-                let index = identifier.find(abbreviation);
-                if index.is_some() && abbreviation.len() > length_of_largest_abbreviation {
-                    index_of_largest_abbreviation = index;
-                    length_of_largest_abbreviation = abbreviation.len();
-                }
-            });
-
-            if index_of_largest_abbreviation.is_none() {
-                // This identifier does not contain an abbreviation.
-                discovered_length += identifier.len();
-                continue;
-            }
-
-            let abbreviation = SPECIAL_ABBREVIATIONS
-                .keys()
-                .nth(index_of_largest_abbreviation.unwrap())
-                .unwrap();
-            discovered_length += abbreviation.len();
-
-            // We may run into a case where the current identifier is equal to
-            // the current abbreviation. There's nothing we must do in that
-            // scenario.
-            if abbreviation == identifier {
-                continue;
-            }
-
-            if let Some(index) = identifier.find(abbreviation) {
-                // Three cases:
-                //   1. It's at the beginning of the string (result is two strings)
-                if 0 == index {
-                    let first = identifier[..abbreviation.len()].to_owned();
-                    let second = identifier[abbreviation.len()..].to_owned();
-                    *identifiers.last_mut().unwrap() = first.to_string();
-                    identifiers.push(second.to_owned());
-                }
-                //   2. It's at the end of the string (result is two strings)
-                else if index + abbreviation.len() == identifier.len() {
-                    let first = identifier[..index].to_owned();
-                    let second = identifier[index..].to_owned();
-                    *identifiers.last_mut().unwrap() = first.to_string();
-                    identifiers.push(second.to_owned());
-                }
-                //   3. It's in the middle of the string (result is three strings)
-                else {
-                    let first = identifier[..index].to_owned();
-                    let second = identifier[index..index + abbreviation.len()].to_owned();
-                    let third = identifier[index + abbreviation.len()..].to_owned();
-                    *identifiers.last_mut().unwrap() = first.to_string();
-                    identifiers.push(second.to_owned());
-                    identifiers.push(third.to_owned());
-                }
-            }
-        }
-
-        if let Some(identifier) = identifiers.get(0) {
-            if !SPECIAL_ABBREVIATIONS.contains_key(identifier.as_str())
-                && !char::is_uppercase(identifier.chars().nth(0).unwrap())
-            {
+        // NOTE: This check is required in order to "fail" camelCase identifiers
+        if let Some(Token::Regular(ref identifier)) = identifiers.first() {
+            let uppercase_first_letter = identifier
+                .chars()
+                .nth(0)
+                .map_or_else(|| false, char::is_uppercase);
+            if !uppercase_first_letter {
                 return Err(CaseConversionError::new("PascalCase".to_string(), name));
             }
         }
 
-        let mut pascal_case_name = PascalCaseName(Vec::new());
-        for identifier in identifiers.iter() {
-            // Each identifier is either a special abbreviation, or a PascalCased string.
-            if SPECIAL_ABBREVIATIONS.contains_key(identifier.as_str()) {
-                let word = SPECIAL_ABBREVIATIONS.get(identifier.as_str()).unwrap();
-                pascal_case_name.0.push(word.clone());
-            } else {
-                pascal_case_name.parse_pascal_case_name(identifier)?;
+        let mut words = Vec::new();
+        for token in identifiers.into_iter() {
+            match token {
+                Token::Regular(name) => parse_pascal_case_name(&mut words, name)?,
+                Token::Irregular(word) => words.push(word),
             }
         }
 
-        Ok(pascal_case_name)
+        Ok(Self(words))
     }
 }
 
@@ -160,6 +63,34 @@ impl ToString for PascalCaseName {
     }
 }
 
+fn parse_pascal_case_name(words: &mut Vec<Word>, name: String) -> Result<(), CaseConversionError> {
+    for capture in PASCAL_CASE.captures_iter(&name) {
+        if let Err(e) = capture {
+            return Err(CaseConversionError::new(
+                "PascalCase".to_string(),
+                e.to_string(),
+            ));
+        }
+
+        let capture = capture.unwrap();
+        if let Some(group) = capture.get(1) {
+            words.push(Word::Word(group.as_str().to_string()));
+        } else if let Some(group) = capture.get(2) {
+            words.push(Word::Abbreviation(group.as_str().to_string()));
+        } else if let Some(group) = capture.get(3) {
+            words.push(Word::Abbreviation(group.as_str().to_string()));
+        } else {
+            return Err(CaseConversionError::new("PascalCase".to_string(), name));
+        }
+    }
+
+    if words.is_empty() && !name.is_empty() {
+        return Err(CaseConversionError::new("PascalCase".to_string(), name));
+    }
+
+    Ok(())
+}
+
 #[cfg(test)]
 mod test {
     use super::PascalCaseName;
@@ -178,7 +109,7 @@ mod test {
         ];
 
         for name in names.iter() {
-            let parsed = PascalCaseName::try_from(name.to_string());
+            let parsed = PascalCaseName::parse(name.to_string());
             assert!(parsed.is_ok());
             assert_eq!(*name, &parsed.unwrap().to_string());
         }
@@ -187,14 +118,14 @@ mod test {
     /// Test that parsing camelCase identifiers fails
     #[test]
     fn camel_case_fails() {
-        let parsed = PascalCaseName::try_from("camelCaseName".to_string());
+        let parsed = PascalCaseName::parse("camelCaseName".to_string());
         assert!(parsed.is_err());
     }
 
     /// Test that parsing snake_case identifiers fails
     #[test]
     fn snake_case_fails() {
-        let parsed = PascalCaseName::try_from("snake_case_name".to_string());
+        let parsed = PascalCaseName::parse("snake_case_name".to_string());
         assert!(parsed.is_err());
     }
 }

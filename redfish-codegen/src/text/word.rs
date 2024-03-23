@@ -1,6 +1,3 @@
-use lazy_static::lazy_static;
-use std::collections::HashMap;
-
 /// A Word can be one of two things.
 /// 1. A single uninterruptible sentence elment, which is treated in the
 ///    usual way.
@@ -11,28 +8,6 @@ use std::collections::HashMap;
 pub enum Word {
     Word(String),
     Abbreviation(String),
-}
-
-lazy_static! {
-    /// List of known special abbreviations.
-    pub static ref SPECIAL_ABBREVIATIONS: HashMap<&'static str, Word> = {
-        let mut m = HashMap::new();
-        m.insert("PCIe", Word::Abbreviation("PCIe".to_string()));
-        m.insert("VLan", Word::Abbreviation("VLan".to_string()));
-        m.insert("VLANs", Word::Abbreviation("VLANs".to_string()));
-        m.insert("mUSB", Word::Word("mUSB".to_string()));
-        m.insert("uUSB", Word::Word("uUSB".to_string()));
-        m.insert("cSFP", Word::Word("cSFP".to_string()));
-        m.insert("IPv4", Word::Abbreviation("IPv4".to_string()));
-        m.insert("IPv6", Word::Abbreviation("IPv6".to_string()));
-        m.insert("kWh", Word::Abbreviation("kWh".to_string()));
-        m.insert("iSCSI", Word::Word("iSCSI".to_string()));
-        m.insert("NVMe", Word::Abbreviation("NVMe".to_string()));
-        m.insert("oF", Word::Abbreviation("oF".to_string()));
-        m.insert("OAuth2", Word::Abbreviation("OAuth2".to_string()));
-        m.insert("OAuth", Word::Abbreviation("OAuth".to_string()));
-        m
-    };
 }
 
 impl Word {
