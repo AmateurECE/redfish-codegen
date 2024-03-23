@@ -9,9 +9,11 @@ lazy_static::lazy_static! {
     static ref PREFIX: Regex = Regex::new("^[a-z0-9]+").unwrap();
 }
 
+/// A name in camelCase.
 #[derive(Clone, Debug, Eq, Hash, PartialEq)]
 pub struct CamelCaseName(Vec<Word>);
 impl CamelCaseName {
+    /// Parse an identifier in camelCase to produce a [CamelCaseName].
     pub fn parse(name: String) -> Result<Self, CaseConversionError> {
         let error = || CaseConversionError::new("camelCase".to_string(), name.to_string());
         let prefix = PREFIX

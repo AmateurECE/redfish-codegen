@@ -1,7 +1,7 @@
 use fancy_regex::Regex;
 
 use super::{
-    word::{IntoWords, Word},
+    word::{FromWords, IntoWords, Word},
     CaseConversionError,
 };
 
@@ -9,9 +9,11 @@ lazy_static::lazy_static! {
     static ref SNAKE_CASE: Regex = Regex::new("([a-z0-9]+)").unwrap();
 }
 
+/// A name in snake_case.
 #[derive(Clone, Debug, Eq, PartialEq, Hash)]
 pub struct SnakeCaseName(Vec<Word>);
 impl SnakeCaseName {
+    /// Parse an identifier in snake_case to produce a [SnakeCaseName].
     pub fn parse(name: String) -> Result<Self, CaseConversionError> {
         if name.find(char::is_uppercase).is_some() {
             return Err(CaseConversionError::new("SnakeCaseName".to_string(), name));
@@ -41,6 +43,15 @@ impl IntoWords for SnakeCaseName {
 
     fn into_words(self) -> Self::IntoIter {
         self.0.into_iter()
+    }
+}
+
+impl FromWords for SnakeCaseName {
+    fn from_words<W>(words: W) -> Self
+    where
+        W: IntoWords,
+    {
+        Self(words.into_words().collect::<Vec<Word>>())
     }
 }
 

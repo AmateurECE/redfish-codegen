@@ -51,3 +51,11 @@ pub trait IntoWords {
     /// over.
     fn into_words(self) -> Self::IntoIter;
 }
+
+/// Allows types to instantiate themselves from a type that implements
+/// [IntoWords]
+pub trait FromWords {
+    fn from_words<W>(words: W) -> Self
+    where
+        W: IntoWords;
+}

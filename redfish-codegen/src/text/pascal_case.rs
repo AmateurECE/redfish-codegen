@@ -3,7 +3,7 @@ use lazy_static::lazy_static;
 
 use super::{
     lexer::{Lexer, Token},
-    word::{IntoWords, Word},
+    word::{FromWords, IntoWords, Word},
     CaseConversionError,
 };
 
@@ -19,6 +19,7 @@ lazy_static! {
 #[derive(Clone, Debug, Eq, PartialEq, Hash)]
 pub struct PascalCaseName(Vec<Word>);
 impl PascalCaseName {
+    /// Parse a name in PascalCase to produce a [PascalCaseName].
     pub fn parse(name: String) -> Result<Self, CaseConversionError> {
         // NOTE: This check is required in order to "fail" camelCase identifiers
         let uppercase_first_letter = name
@@ -49,6 +50,15 @@ impl IntoWords for PascalCaseName {
 
     fn into_words(self) -> Self::IntoIter {
         self.0.into_iter()
+    }
+}
+
+impl FromWords for PascalCaseName {
+    fn from_words<W>(words: W) -> Self
+    where
+        W: IntoWords,
+    {
+        Self(words.into_words().collect::<Vec<Word>>())
     }
 }
 
