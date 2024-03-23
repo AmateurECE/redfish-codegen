@@ -95,7 +95,7 @@ impl Lexer {
 fn find_largest_abbreviation(name: &str) -> Option<TokenMatch> {
     let mut result: Option<TokenMatch> = None;
     SPECIAL_ABBREVIATIONS.keys().for_each(|abbreviation| {
-        if let Some(_) = name.find(abbreviation) {
+        if name.contains(abbreviation) {
             let replace = match &result {
                 Some(lexeme) => abbreviation.len() > lexeme.length,
                 None => true,

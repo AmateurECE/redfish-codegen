@@ -2,6 +2,7 @@ use std::{error::Error, fmt::Display};
 
 mod lexer;
 mod pascal_case;
+mod snake_case;
 mod word;
 
 /// An error that results when it's not possible to convert a phrase to a

@@ -16,7 +16,7 @@ lazy_static! {
 }
 
 /// A name in PascalCase.
-#[derive(Debug, Eq, PartialEq, Hash)]
+#[derive(Clone, Debug, Eq, PartialEq, Hash)]
 pub struct PascalCaseName(Vec<Word>);
 impl PascalCaseName {
     fn parse(name: String) -> Result<Self, CaseConversionError> {
@@ -65,11 +65,8 @@ impl ToString for PascalCaseName {
 
 fn parse_pascal_case_name(words: &mut Vec<Word>, name: String) -> Result<(), CaseConversionError> {
     for capture in PASCAL_CASE.captures_iter(&name) {
-        if let Err(e) = capture {
-            return Err(CaseConversionError::new(
-                "PascalCase".to_string(),
-                e.to_string(),
-            ));
+        if capture.is_err() {
+            return Err(CaseConversionError::new("PascalCase".to_string(), name));
         }
 
         let capture = capture.unwrap();
