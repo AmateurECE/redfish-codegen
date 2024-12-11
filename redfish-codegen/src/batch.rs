@@ -1,102 +1,62 @@
-//! "Wiring" types that reify concepts from the Batch-sequential architecture pattern.
+//! Wiring types that reify concepts from the Batch-sequential architecture pattern.
+//!
+//! A pipeline produces a batch of data in one stage, transforms it through subsequent stages, and
+//! consumes it through its final stage. Use [Pipeline::builder] to construct a [Pipeline], and
+//! execute it using [Execute].
+//!
+//! ```
+//! fn make_message(input: ()) -> String {
+//!     "Hello, world!".to_string()
+//! }
+//!
+//! fn print_message(input: String) {
+//!     println!("{}", &input);
+//! }
+//!
+//! let pipeline = Pipeline::builder()
+//!     .stage(make_message)
+//!     .stage(print_message);
+//! pipeline.execute();
+//! ```
+//!
+//! Stages can be constructed using bare functions, or types that implement [Process].
+//!
+//! ```
+//! struct Hello;
+//! impl Process<()> for Hello {
+//!     type Output = String;
+//!     fn process(self, input: ()) -> Self::Output {
+//!         "Hello, world!".to_string()
+//!     }
+//! }
+//!
+//! # fn print_message(input: String) {
+//! #     println!("{}", &input);
+//! # }
+//! #
+//! Pipeline::builder()
+//!     .stage(Hello)
+//!     .stage(print_message)
+//!     .execute();
+//! ```
+//!
+//! Signatures of [Process]es are type-checked, so that it's only possible to connect two stages
+//! together if the output of the previous stage is compatible with the input of the next stage.
+//! Likewise, it's not possible to execute a pipeline until a final stage that produces no output
+//! value is connected.
 
-pub trait Process<Input> {
-    type Output;
-    fn process(self, input: Input) -> Self::Output;
-}
+mod process;
+pub use execute::*;
 
-pub trait Stage<P, In, Out> {
-    type Result<R>;
-    fn stage<Q>(self, process: Q) -> Self::Result<Q>
-    where
-        Q: Process<Out>;
-}
+mod execute;
+pub use process::*;
 
-pub struct Pipeline<Proc, PreviousStage> {
-    process: Proc,
-    previous: PreviousStage,
-}
+mod stage;
+pub use stage::*;
 
-pub struct PipelineBuilder;
-impl Stage<(), (), ()> for PipelineBuilder {
-    type Result<R> = Pipeline<R, ()>;
-    fn stage<Q>(self, process: Q) -> Self::Result<Q>
-    where
-        Q: Process<()>,
-    {
-        Pipeline {
-            process,
-            previous: (),
-        }
-    }
-}
+mod pipeline;
+pub use pipeline::*;
 
-impl Pipeline<(), ()> {
-    pub fn builder() -> PipelineBuilder {
-        PipelineBuilder
-    }
-}
-
-impl<P, S, Input, Output> Stage<P, Input, Output> for Pipeline<P, S>
-where
-    P: Process<Input, Output = Output>,
-{
-    type Result<R> = Pipeline<R, Self>;
-    fn stage<Q>(self, process: Q) -> Self::Result<Q>
-    where
-        Q: Process<Output>,
-    {
-        Pipeline {
-            process,
-            previous: self,
-        }
-    }
-}
-
-impl<F, In, Out> Process<In> for F
-where
-    F: FnOnce(In) -> Out,
-{
-    type Output = Out;
-    fn process(self, input: In) -> Out {
-        self(input)
-    }
-}
-
-trait RunStage {
-    type Output;
-    fn run_stage(self) -> Self::Output;
-}
-
-impl RunStage for () {
-    type Output = ();
-    fn run_stage(self) -> Self::Output {
-        ()
-    }
-}
-
-impl<P, R> RunStage for Pipeline<P, R>
-where
-    P: Process<<R as RunStage>::Output>,
-    R: RunStage,
-{
-    type Output = P::Output;
-    fn run_stage(self) -> Self::Output {
-        let Self { process, previous } = self;
-        process.process(previous.run_stage())
-    }
-}
-
-pub trait Execute<In> {
-    fn execute(self);
-}
-
-impl<P, In, N> Execute<In> for Pipeline<P, N>
-where
-    P: Process<In, Output = ()>,
-    Self: RunStage,
-{
-    fn execute(self) {
-        self.run_stage();
-    }
+mod private {
+    pub trait Sealed {}
 }
