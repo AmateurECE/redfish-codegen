@@ -1,5 +1,10 @@
 //! Wiring types that reify concepts from the Batch-sequential architecture pattern.
 //!
+//! In the Batch-sequential architecture pattern, data flows from one [Stage] in the [Pipeline] to
+//! the next. Each stage fully consumes its input data before producing output. This differentiates
+//! it from the so-called "Pipe-and-filter" architecture pattern, where data flows incrementally
+//! through the pipeline.
+//!
 //! A pipeline produces a batch of data in one stage, transforms it through subsequent stages, and
 //! consumes it through its final stage. Use [Pipeline::builder] to construct a [Pipeline], and
 //! execute it using [Execute].
@@ -40,7 +45,7 @@
 //!     .execute();
 //! ```
 //!
-//! Signatures of [Process]es are type-checked, so that it's only possible to connect two stages
+//! Signatures of [Processes][Process] are type-checked, so that it's only possible to connect two stages
 //! together if the output of the previous stage is compatible with the input of the next stage.
 //! Likewise, it's not possible to execute a pipeline until a final stage that produces no output
 //! value is connected.
