@@ -1,8 +1,8 @@
 use super::{private, Process, Stage};
 
 pub struct Pipeline<Proc, PreviousStage> {
-    process: Proc,
-    previous: PreviousStage,
+    pub(super) process: Proc,
+    pub(super) previous: PreviousStage,
 }
 
 pub struct PipelineBuilder;
