@@ -3,8 +3,17 @@ name = "redfish-codegen"
 version = "0.1.0"
 edition = "2021"
 
-# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
-
 [dependencies]
 fancy-regex = "0.13.0"
 lazy_static = "1.4.0"
+zip = "2.2.1"
+
+# Binary-only dependencies
+clap = { version = "4.5.23", features = ["derive"], optional = true }
+
+[features]
+build-binary = ["clap"]
+
+[[bin]]
+name = "redfish-codegen"
+required-features = ["build-binary"]
