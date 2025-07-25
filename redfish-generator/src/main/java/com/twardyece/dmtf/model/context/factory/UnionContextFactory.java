@@ -21,7 +21,9 @@ public class UnionContextFactory implements IModelContextFactory {
 
     @Override
     public ModelContext makeModelContext(RustType type, Schema schema) {
-        if (null == schema.getAnyOf()) {
+        // Since Redfish 2024.1, anyOf is not used anymore
+        // Only one (the latest) of all schemes is declared in the $ref field,
+        if (null == schema.getAnyOf() && null == schema.get$ref()) {
             return null;
         }
 
@@ -32,7 +34,17 @@ public class UnionContextFactory implements IModelContextFactory {
     private List<EnumContext.Variant> makeVariants(Schema schema) {
         List<EnumContext.Variant> variants = new ArrayList<>();
 
-        for (Object object : schema.getAnyOf()) {
+        List<Object> schemataToResolve = new ArrayList<>();
+
+        if (null != schema.getAnyOf()) {
+                schemataToResolve.addAll(schema.getAnyOf());
+        }
+
+        if (null != schema.get$ref()) {
+                schemataToResolve.add(schema);
+        }
+
+        for (Object object : schemataToResolve) {
             Schema variant = (Schema)object;
             String identifier = ModelResolver.getSchemaIdentifier(variant.get$ref());
             RustIdentifier value = this.variantParser.getVariantName(identifier);
